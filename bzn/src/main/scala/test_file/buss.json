@@ -1,0 +1,5855 @@
+{
+  "code": 0,
+  "message": null,
+  "visible": false,
+  "exception": null,
+  "paging": null,
+  "data": {
+    "list": [
+      {
+        "remark": "",
+        "companyId": 379,
+        "officeId": 418,
+        "customerId": 1045649,
+        "masterUserId": 1161,
+        "name": "苏州石博士石材养护工程有限公司",
+        "saleProcess": 5,
+        "preSignDate": "2019-01-22",
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1045649,
+          "deleteFlag": 0,
+          "name": "苏州石博士石材养护工程有限公司",
+          "officeId": 379,
+          "mobile": "18550264863",
+          "masterUserId": 1163,
+          "classification": 1,
+          "address": "",
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 880,
+          "city": 925,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-22 11:18:40.784",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8346,\"contentType\":\"number\",\"content\":\"20\",\"fieldCode\":\"CustomField_8346\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"30\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"注重细节\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8354,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8354\"},{\"id\":8321,\"contentType\":\"area_text\",\"content\":\"苏州石博士石材养护工程有限公司\",\"fieldCode\":\"CustomField_8321\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"18550264863\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8347,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8347\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"商小姐\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"18550264863\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"商小姐\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"3\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8350\"},{\"id\":8348,\"contentType\":\"checkbox\",\"content\":\"4,2\",\"fieldCode\":\"CustomField_8348\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8346": {
+            "id": 8346,
+            "contentType": "number",
+            "content": "20",
+            "fieldCode": "CustomField_8346"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "注重细节",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "30",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8321": {
+            "id": 8321,
+            "contentType": "area_text",
+            "content": "苏州石博士石材养护工程有限公司",
+            "fieldCode": "CustomField_8321"
+          },
+          "CustomField_8354": {
+            "id": 8354,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8354"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8348": {
+            "id": 8348,
+            "contentType": "checkbox",
+            "content": [
+              "4",
+              "2"
+            ],
+            "fieldCode": "CustomField_8348"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "18550264863",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "商小姐",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8347": {
+            "id": 8347,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8347"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "18550264863",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "商小姐",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "3"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-22 11:18:41",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22652,
+        "createUserId": 1161,
+        "createTime": "2019-01-21 16:57:35",
+        "updateUserId": 1161,
+        "updateTime": "2019-01-22 11:18:40",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1212072,
+        "masterUserId": 1157,
+        "name": "山西威圣人力资源有限公司",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1212072,
+          "deleteFlag": 0,
+          "name": "山西威圣人力资源有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1157,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1157,
+          "deleteFlag": 0,
+          "realname": "王宁",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1157,
+          "deleteFlag": 0,
+          "realname": "王宁",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1157,
+          "deleteFlag": 0,
+          "realname": "王宁",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-22 10:21:53.646",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"任杰\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13327435666\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13327435666",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "任杰",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22660,
+        "createUserId": 1157,
+        "createTime": "2019-01-22 10:20:53",
+        "updateUserId": 1157,
+        "updateTime": "2019-01-22 10:21:53",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1119487,
+        "masterUserId": 1176,
+        "name": "青岛志诚人力资源有限公司",
+        "saleProcess": 3,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1119487,
+          "deleteFlag": 0,
+          "name": "青岛志诚人力资源有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1176,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 18:37:28.918",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"微信\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"高总\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"暂时没有\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "微信",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "高总",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "暂时没有",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 18:37:29",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22352,
+        "createUserId": 1176,
+        "createTime": "2019-01-07 16:48:21",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-21 18:37:28",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 751510,
+        "masterUserId": 1176,
+        "name": "青岛扬子国际经济技术合作有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 751510,
+          "deleteFlag": 0,
+          "name": "青岛扬子国际经济技术合作有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1176,
+          "classification": 2,
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1497,
+          "district": 1501,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 18:37:04.150",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"50000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"王哥\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"有\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "50000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "有",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "王哥",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 18:37:04",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22038,
+        "createUserId": 1176,
+        "createTime": "2018-12-21 17:27:23",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-21 18:37:04",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 751864,
+        "masterUserId": 1176,
+        "name": "山东中企泰盛人力资源有限公司",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 751864,
+          "deleteFlag": 0,
+          "name": "山东中企泰盛人力资源有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1176,
+          "classification": 3,
+          "address": "青岛市黄岛区长江中路国贸大厦17层",
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1497,
+          "district": 1501,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 18:36:02.131",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"20000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"徐总\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"电话微信\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "20000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "电话微信",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "徐总",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 18:36:02",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22353,
+        "createUserId": 1176,
+        "createTime": "2019-01-07 16:54:12",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-21 18:36:02",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 752809,
+        "masterUserId": 1176,
+        "name": "青岛极地一槿韩餐餐饮服务有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 752809,
+          "deleteFlag": 0,
+          "name": "青岛极地一槿韩餐餐饮服务有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1176,
+          "classification": 1,
+          "address": "基地海洋世界",
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1497,
+          "district": 1499,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 18:35:34.596",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_8335\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"王姐\",\"fieldCode\":\"CustomField_8336\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "王姐",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 18:35:35",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 21729,
+        "createUserId": 1176,
+        "createTime": "2018-12-11 18:28:00",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-21 18:35:34",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1211891,
+        "masterUserId": 1637,
+        "name": "承德市双滦区昭阳劳务服务有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211891,
+          "deleteFlag": 0,
+          "name": "承德市双滦区昭阳劳务服务有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1637,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 18:07:34.969",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22654,
+        "createUserId": 1637,
+        "createTime": "2019-01-21 18:07:34",
+        "updateUserId": 1637,
+        "updateTime": "2019-01-21 18:07:34",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 418,
+        "customerId": 1211883,
+        "masterUserId": 1161,
+        "name": "十堰市佳合人力资源",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211883,
+          "deleteFlag": 0,
+          "name": "十堰市佳合人力资源",
+          "officeId": 418,
+          "mobile": "",
+          "masterUserId": 1161,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 1851,
+          "city": 1875,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 18:00:09.646",
+        "customFieldJson": "[{\"id\":8341,\"contentType\":\"text\",\"content\":\"何选林\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"13733595568\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8350\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "13733595568",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "何选林",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22653,
+        "createUserId": 1161,
+        "createTime": "2019-01-21 18:00:09",
+        "updateUserId": 1161,
+        "updateTime": "2019-01-21 18:00:09",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 821178,
+        "masterUserId": 1155,
+        "name": "南京艾克粹姆体育活动策划有限公司",
+        "saleProcess": 9,
+        "preSignDate": "2018-12-10",
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 821178,
+          "deleteFlag": 0,
+          "name": "南京艾克粹姆体育活动策划有限公司",
+          "officeId": 419,
+          "mobile": "13801592622",
+          "masterUserId": 1155,
+          "classification": 1,
+          "customerHighSeaId": 133,
+          "customerHighSeaReceiveTime": null,
+          "province": 880,
+          "city": 881,
+          "district": 883,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 17:32:27.526",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"99\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13801592622\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8347,\"contentType\":\"number\",\"content\":\"1800\",\"fieldCode\":\"CustomField_8347\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"宋\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"13801592622\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"宋\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"3\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8350\"},{\"id\":8346,\"contentType\":\"number\",\"content\":\"30\",\"fieldCode\":\"CustomField_8346\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8346": {
+            "id": 8346,
+            "contentType": "number",
+            "content": "30",
+            "fieldCode": "CustomField_8346"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "99",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13801592622",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "宋",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8347": {
+            "id": 8347,
+            "contentType": "number",
+            "content": "1800",
+            "fieldCode": "CustomField_8347"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "13801592622",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "宋",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "3"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 17:32:28",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 21643,
+        "createUserId": 1155,
+        "createTime": "2018-12-10 15:06:40",
+        "updateUserId": 1155,
+        "updateTime": "2019-01-21 17:32:27",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1211705,
+        "masterUserId": 1153,
+        "name": "潍坊同盟人力资源有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211705,
+          "deleteFlag": 0,
+          "name": "潍坊同盟人力资源有限公司",
+          "officeId": 419,
+          "mobile": "13905369516",
+          "masterUserId": 1153,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 16:51:43.388",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"丁天阳\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13905369516\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13905369516",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "丁天阳",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22651,
+        "createUserId": 1153,
+        "createTime": "2019-01-21 16:51:15",
+        "updateUserId": 1153,
+        "updateTime": "2019-01-21 16:51:43",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1211702,
+        "masterUserId": 1153,
+        "name": "潍坊诚通人力资源有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211702,
+          "deleteFlag": 0,
+          "name": "潍坊诚通人力资源有限公司",
+          "officeId": 419,
+          "mobile": "15275368208",
+          "masterUserId": 1153,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 16:50:39.089",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"2000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"刘存斌\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15275368208\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "2000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15275368208",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "刘存斌",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22650,
+        "createUserId": 1153,
+        "createTime": "2019-01-21 16:50:11",
+        "updateUserId": 1153,
+        "updateTime": "2019-01-21 16:50:39",
+        "deleteFlag": 0
+      },
+      {
+        "remark": "",
+        "companyId": 379,
+        "officeId": 418,
+        "customerId": 1160740,
+        "masterUserId": 1161,
+        "name": "福州众和信达人力资源有限公司",
+        "saleProcess": 5,
+        "preSignDate": "2019-01-21",
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 100,
+        "customer": {
+          "id": 1160740,
+          "deleteFlag": 0,
+          "name": "福州众和信达人力资源",
+          "officeId": 379,
+          "mobile": "",
+          "masterUserId": 1163,
+          "classification": 1,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 1257,
+          "city": 1258,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 16:50:21.933",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8346,\"contentType\":\"number\",\"content\":\"200\",\"fieldCode\":\"CustomField_8346\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"暂无\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"300\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8354,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8354\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13276916655\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"江美琴\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8347,\"contentType\":\"number\",\"content\":\"10000\",\"fieldCode\":\"CustomField_8347\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"13276916655\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"江美琴\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"3\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8350\"},{\"id\":8348,\"contentType\":\"checkbox\",\"content\":\"4,1,3,2\",\"fieldCode\":\"CustomField_8348\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8346": {
+            "id": 8346,
+            "contentType": "number",
+            "content": "200",
+            "fieldCode": "CustomField_8346"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "300",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "暂无",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8354": {
+            "id": 8354,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8354"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8348": {
+            "id": 8348,
+            "contentType": "checkbox",
+            "content": [
+              "4",
+              "1",
+              "3",
+              "2"
+            ],
+            "fieldCode": "CustomField_8348"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13276916655",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8347": {
+            "id": 8347,
+            "contentType": "number",
+            "content": "10000",
+            "fieldCode": "CustomField_8347"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "江美琴",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "13276916655",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "江美琴",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "3"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22443,
+        "createUserId": 1161,
+        "createTime": "2019-01-11 11:10:15",
+        "updateUserId": 1161,
+        "updateTime": "2019-01-21 16:50:21",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1211699,
+        "masterUserId": 1153,
+        "name": "山东裴岭人力资源有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211699,
+          "deleteFlag": 0,
+          "name": "山东裴岭人力资源有限公司",
+          "officeId": 419,
+          "mobile": "15166366506",
+          "masterUserId": 1153,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1153,
+          "deleteFlag": 0,
+          "realname": "余自磊",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 16:49:06.847",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"30000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"张大伟\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15166366506\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "30000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15166366506",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "张大伟",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22649,
+        "createUserId": 1153,
+        "createTime": "2019-01-21 16:48:36",
+        "updateUserId": 1153,
+        "updateTime": "2019-01-21 16:49:06",
+        "deleteFlag": 0
+      },
+      {
+        "remark": "1",
+        "companyId": 379,
+        "officeId": 499,
+        "customerId": 1210960,
+        "masterUserId": 1641,
+        "name": "雇主责任险",
+        "saleProcess": 1,
+        "preSaleAmount": 29800,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1210960,
+          "deleteFlag": 0,
+          "name": "北京铭泽源环境工程有限公司  刘鸿彬",
+          "officeId": 499,
+          "mobile": "13391888679",
+          "masterUserId": 1641,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1641,
+          "deleteFlag": 0,
+          "realname": "石俊宝",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1641,
+          "deleteFlag": 0,
+          "realname": "石俊宝",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1641,
+          "deleteFlag": 0,
+          "realname": "石俊宝",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 14:54:29.959",
+        "customFieldJson": "[{\"id\":8321,\"contentType\":\"area_text\",\"content\":\"北京铭泽源环境工程有限公司\",\"fieldCode\":\"CustomField_8321\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"刘鸿彬总监\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_8335\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8321": {
+            "id": 8321,
+            "contentType": "area_text",
+            "content": "北京铭泽源环境工程有限公司",
+            "fieldCode": "CustomField_8321"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "刘鸿彬总监",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22647,
+        "createUserId": 1641,
+        "createTime": "2019-01-21 14:54:29",
+        "updateUserId": 1641,
+        "updateTime": "2019-01-21 14:54:29",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1211533,
+        "masterUserId": 1179,
+        "name": "中食净化科技(北京)股份有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211533,
+          "deleteFlag": 0,
+          "name": "中食净化科技(北京)股份有限公司",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 14:10:52.354",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22646,
+        "createUserId": 1179,
+        "createTime": "2019-01-21 14:10:52",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-21 14:10:52",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1211528,
+        "masterUserId": 1637,
+        "name": "江苏人间人力资源有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1211528,
+          "deleteFlag": 0,
+          "name": "江苏人间人力资源有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1637,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 13:58:45.686",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22645,
+        "createUserId": 1637,
+        "createTime": "2019-01-21 13:58:45",
+        "updateUserId": 1637,
+        "updateTime": "2019-01-21 13:58:45",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1211471,
+        "masterUserId": 1179,
+        "name": "远江盛邦（北京）网络安全科技股份有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1211471,
+          "deleteFlag": 0,
+          "name": "远江盛邦（北京）网络安全科技股份有限公司",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 10:59:45.192",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22641,
+        "createUserId": 1179,
+        "createTime": "2019-01-21 10:59:45",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-21 10:59:45",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1211282,
+        "masterUserId": 1179,
+        "name": "天津君友物业",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1211282,
+          "deleteFlag": 0,
+          "name": "天津君友物业",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 09:16:10.064",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 09:16:10",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22636,
+        "createUserId": 1179,
+        "createTime": "2019-01-20 18:45:11",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-21 09:16:10",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1211283,
+        "masterUserId": 1179,
+        "name": "北京华润物业",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1211283,
+          "deleteFlag": 0,
+          "name": "北京华润物业",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 09:15:08.963",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 09:15:09",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22637,
+        "createUserId": 1179,
+        "createTime": "2019-01-20 18:46:07",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-21 09:15:08",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1211284,
+        "masterUserId": 1179,
+        "name": "邦尔人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1211284,
+          "deleteFlag": 0,
+          "name": "邦尔人力",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 09:14:39.176",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 09:14:39",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22638,
+        "createUserId": 1179,
+        "createTime": "2019-01-20 18:48:02",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-21 09:14:39",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1211285,
+        "masterUserId": 1179,
+        "name": "金牌护士",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 513,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1211285,
+          "deleteFlag": 0,
+          "name": "金牌护士",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "定制",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-21 09:12:42.480",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-21 09:12:42",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22639,
+        "createUserId": 1179,
+        "createTime": "2019-01-20 18:49:39",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-21 09:12:42",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210959,
+        "masterUserId": 1152,
+        "name": "青岛君安人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1210959,
+          "deleteFlag": 0,
+          "name": "青岛君安人力",
+          "officeId": 419,
+          "mobile": "15610528588",
+          "masterUserId": 1152,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:49:44.900",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"500\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"高\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15610528588\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "500",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15610528588",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "高",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:49:45",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22630,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 18:48:54",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:49:44",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210958,
+        "masterUserId": 1152,
+        "name": "青岛鑫飞人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1210958,
+          "deleteFlag": 0,
+          "name": "青岛鑫飞人力",
+          "officeId": 419,
+          "mobile": "13395425858",
+          "masterUserId": 1152,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:44:13.682",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"500\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13395425858\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"曲\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "500",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13395425858",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "曲",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:44:14",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22629,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 18:42:44",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:44:13",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210957,
+        "masterUserId": 1152,
+        "name": "青岛聚信人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1210957,
+          "deleteFlag": 0,
+          "name": "青岛聚信人力",
+          "officeId": 419,
+          "mobile": "15653244400",
+          "masterUserId": 1152,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:40:48.234",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15653244400\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"程\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15653244400",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "程",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:40:48",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22627,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 18:38:44",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:40:48",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210955,
+        "masterUserId": 1152,
+        "name": "青岛图腾人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1210955,
+          "deleteFlag": 0,
+          "name": "青岛图腾人力",
+          "officeId": 419,
+          "mobile": "13455261436",
+          "masterUserId": 1152,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:36:47.377",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"500\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13455261436\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"管\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "500",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13455261436",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "管",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:36:47",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22626,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 18:35:33",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:36:47",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210953,
+        "masterUserId": 1152,
+        "name": "青岛汇信英才人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1210953,
+          "deleteFlag": 0,
+          "name": "青岛汇信英才人力",
+          "officeId": 419,
+          "mobile": "18660275305",
+          "masterUserId": 1152,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:33:44.978",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"500\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"18660275305\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"陈\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "500",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "18660275305",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "陈",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:33:45",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22625,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 18:32:26",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:33:44",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1210943,
+        "masterUserId": 1179,
+        "name": "FLO福楼法餐",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1210943,
+          "deleteFlag": 0,
+          "name": "FLO福楼法餐",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:30:00.142",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22624,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 18:30:00",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 18:30:00",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210952,
+        "masterUserId": 1152,
+        "name": "青岛鼎盛信诚人力",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1210952,
+          "deleteFlag": 0,
+          "name": "青岛鼎盛信诚人力",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1152,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:28:19.671",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"500\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15866853968\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"孙\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "500",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15866853968",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "孙",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:28:20",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22622,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 18:26:35",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:28:19",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1118674,
+        "masterUserId": 1179,
+        "name": "熊猫窝",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1118674,
+          "deleteFlag": 0,
+          "name": "熊猫窝",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:27:50.244",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22623,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 18:27:50",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 18:27:50",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 418,
+        "customerId": 1108965,
+        "masterUserId": 1162,
+        "name": "开封市鑫桥劳务派遣有限公司",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1108965,
+          "deleteFlag": 0,
+          "name": "开封市鑫桥劳务派遣有限公司",
+          "officeId": 418,
+          "mobile": "",
+          "masterUserId": 1162,
+          "customerHighSeaId": 134,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1162,
+          "deleteFlag": 0,
+          "realname": "王磊",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1162,
+          "deleteFlag": 0,
+          "realname": "王磊",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1162,
+          "deleteFlag": 0,
+          "realname": "王磊",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:20:12.817",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"凡总\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"17839276888\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "17839276888",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "凡总",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:20:13",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22288,
+        "createUserId": 1162,
+        "createTime": "2019-01-03 18:03:36",
+        "updateUserId": 1162,
+        "updateTime": "2019-01-18 18:20:12",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1210944,
+        "masterUserId": 1179,
+        "name": "中体柠檬",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1210944,
+          "deleteFlag": 0,
+          "name": "中体柠檬",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:17:23.399",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22621,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 18:17:23",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 18:17:23",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1163755,
+        "masterUserId": 1176,
+        "name": "青岛思迈人力资源管理有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1163755,
+          "deleteFlag": 0,
+          "name": "青岛思迈人力资源管理有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1176,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:12:21.395",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"300\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"王希\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"电话\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "300",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "电话",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "王希",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:12:21",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22470,
+        "createUserId": 1176,
+        "createTime": "2019-01-11 17:21:05",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-18 18:12:21",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1118656,
+        "masterUserId": 1179,
+        "name": "彤德莱火锅",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1118656,
+          "deleteFlag": 0,
+          "name": "彤德莱火锅",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "address": "",
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 20,
+          "city": 21,
+          "district": 26,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:11:46.554",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22620,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 18:11:46",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 18:11:46",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 754818,
+        "masterUserId": 1176,
+        "name": "杭州今元标矩科技有限公司青岛分公司",
+        "saleProcess": 9,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 754818,
+          "deleteFlag": 0,
+          "name": "杭州今元标矩科技有限公司青岛分公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1176,
+          "classification": 2,
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1497,
+          "district": 1500,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:11:04.360",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"了解 并且考察了\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"4,3\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8354,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8354\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8348,\"contentType\":\"checkbox\",\"content\":\"\",\"fieldCode\":\"CustomField_8348\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"电话\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"陈\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"王总\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"3,4\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8350\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"微信\",\"fieldCode\":\"CustomField_8342\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "了解 并且考察了",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "4",
+              "3"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8354": {
+            "id": 8354,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8354"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "电话",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8348": {
+            "id": 8348,
+            "contentType": "checkbox",
+            "content": [],
+            "fieldCode": "CustomField_8348"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "陈",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "微信",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "王总",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "3",
+              "4"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:11:04",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 21626,
+        "createUserId": 1176,
+        "createTime": "2018-12-10 14:15:24",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-18 18:11:04",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 869288,
+        "masterUserId": 1176,
+        "name": "雒长清",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 869288,
+          "deleteFlag": 0,
+          "name": "雒长清",
+          "officeId": 419,
+          "mobile": "15865347688",
+          "masterUserId": 1176,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:10:51.576",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"0\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"0\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "0",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "0",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "无",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:10:52",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 21667,
+        "createUserId": 1176,
+        "createTime": "2018-12-10 17:58:22",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-18 18:10:51",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 752963,
+        "masterUserId": 1176,
+        "name": "平邑县东辉劳务有限公司",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 752963,
+          "deleteFlag": 0,
+          "name": "平邑县东辉劳务有限公司",
+          "officeId": 419,
+          "mobile": "13375325599",
+          "masterUserId": 1176,
+          "classification": 2,
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1497,
+          "district": 1502,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1176,
+          "deleteFlag": 0,
+          "realname": "隋韬远",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:10:40.535",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"20000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"韩姐王哥\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"有\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "20000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "有",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "韩姐王哥",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:10:41",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22040,
+        "createUserId": 1176,
+        "createTime": "2018-12-21 17:28:28",
+        "updateUserId": 1176,
+        "updateTime": "2019-01-18 18:10:40",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 418,
+        "customerId": 1210942,
+        "masterUserId": 1161,
+        "name": "十堰市佳合人力资源开发有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1210942,
+          "deleteFlag": 0,
+          "name": "十堰市佳合人力资源开发有限公司",
+          "officeId": 418,
+          "mobile": "",
+          "masterUserId": 1161,
+          "classification": 3,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 1851,
+          "city": 1875,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:09:15.517",
+        "customFieldJson": "[{\"id\":8341,\"contentType\":\"text\",\"content\":\"何选林\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"13733595568\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "13733595568",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "何选林",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22619,
+        "createUserId": 1161,
+        "createTime": "2019-01-18 18:09:15",
+        "updateUserId": 1161,
+        "updateTime": "2019-01-18 18:09:15",
+        "deleteFlag": 0
+      },
+      {
+        "remark": "加微信，发方案了解一下，有合作新华的",
+        "companyId": 379,
+        "officeId": 418,
+        "customerId": 1196678,
+        "masterUserId": 1161,
+        "name": "湖北汇杰人力资源开发有限公司",
+        "saleProcess": 3,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 1196678,
+          "deleteFlag": 0,
+          "name": "湖北汇杰人力资源开发有限公司",
+          "officeId": 418,
+          "mobile": "",
+          "masterUserId": 1161,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 1851,
+          "city": 1875,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1161,
+          "deleteFlag": 0,
+          "realname": "邓平",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:08:30.774",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15926163311\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"王刚\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"15926163311\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"王刚\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8350\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8345\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15926163311",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "王刚",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "15926163311",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "王刚",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:08:31",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22583,
+        "createUserId": 1161,
+        "createTime": "2019-01-17 18:03:42",
+        "updateUserId": 1161,
+        "updateTime": "2019-01-18 18:08:30",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1118672,
+        "masterUserId": 1179,
+        "name": "科林利康",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1118672,
+          "deleteFlag": 0,
+          "name": "科林利康",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:08:00.431",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22618,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 18:08:00",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 18:08:00",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1118674,
+        "masterUserId": 1179,
+        "name": "熊猫窝",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1118674,
+          "deleteFlag": 0,
+          "name": "熊猫窝",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:07:31.817",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22617,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 18:07:31",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 18:07:31",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 793113,
+        "masterUserId": 1152,
+        "name": "泰安泰兴劳务派遣有限公司",
+        "saleProcess": 9,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 793113,
+          "deleteFlag": 0,
+          "name": "泰安泰兴劳务派遣有限公司",
+          "officeId": 419,
+          "mobile": "15376214222",
+          "masterUserId": 1152,
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1575,
+          "district": 1581,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 18:01:40.594",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"2000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13658723615\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8347,\"contentType\":\"number\",\"content\":\"1000000\",\"fieldCode\":\"CustomField_8347\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"谭\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"13658723615\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"谭\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8350\"},{\"id\":8346,\"contentType\":\"number\",\"content\":\"3000\",\"fieldCode\":\"CustomField_8346\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8346": {
+            "id": 8346,
+            "contentType": "number",
+            "content": "3000",
+            "fieldCode": "CustomField_8346"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "2000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13658723615",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "谭",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8347": {
+            "id": 8347,
+            "contentType": "number",
+            "content": "1000000",
+            "fieldCode": "CustomField_8347"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "13658723615",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "谭",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 18:01:41",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22312,
+        "createUserId": 1152,
+        "createTime": "2019-01-04 18:13:23",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 18:01:40",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 499,
+        "customerId": 1160787,
+        "masterUserId": 1166,
+        "name": "北京迈恩特企业管理服务有限公司",
+        "saleProcess": 5,
+        "preSignDate": "2019-01-18",
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 100,
+        "customer": {
+          "id": 1160787,
+          "deleteFlag": 0,
+          "name": "北京迈恩特企业管理服务有限公司",
+          "officeId": 499,
+          "mobile": "",
+          "masterUserId": 1166,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1166,
+          "deleteFlag": 0,
+          "realname": "闫磊",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1166,
+          "deleteFlag": 0,
+          "realname": "闫磊",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1166,
+          "deleteFlag": 0,
+          "realname": "闫磊",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:59:44.065",
+        "customFieldJson": "[{\"id\":8467,\"contentType\":\"number\",\"content\":\"50\",\"fieldCode\":\"CustomField_8467\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"已婚无子女\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8466,\"contentType\":\"date\",\"content\":\"2019-02-01\",\"fieldCode\":\"CustomField_8466\"},{\"id\":8465,\"contentType\":\"area_text\",\"content\":\"服务\",\"fieldCode\":\"CustomField_8465\"},{\"id\":8464,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8464\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8459,\"contentType\":\"text\",\"content\":\"北京\",\"fieldCode\":\"CustomField_8459\"},{\"id\":8469,\"contentType\":\"date\",\"content\":\"2019-01-25\",\"fieldCode\":\"CustomField_8469\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"01064953403\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"李女士\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8468,\"contentType\":\"text\",\"content\":\"17000\",\"fieldCode\":\"CustomField_8468\"},{\"id\":8463,\"contentType\":\"area_text\",\"content\":\"否\",\"fieldCode\":\"CustomField_8463\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"01064953403\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8474,\"contentType\":\"droplist\",\"content\":3,\"fieldCode\":\"CustomField_8474\"},{\"id\":8353,\"contentType\":\"area_text\",\"content\":\"首次参保\",\"fieldCode\":\"CustomField_8353\"},{\"id\":8352,\"contentType\":\"area_text\",\"content\":\"平安\",\"fieldCode\":\"CustomField_8352\"},{\"id\":8473,\"contentType\":\"number\",\"content\":\"17000\",\"fieldCode\":\"CustomField_8473\"},{\"id\":8363,\"contentType\":\"droplist\",\"content\":5,\"fieldCode\":\"CustomField_8363\"},{\"id\":8462,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8462\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"李女士\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"3\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8471,\"contentType\":\"number\",\"content\":\"350\",\"fieldCode\":\"CustomField_8471\"},{\"id\":8460,\"contentType\":\"area_text\",\"content\":\"品牌效应\",\"fieldCode\":\"CustomField_8460\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8350\"},{\"id\":8470,\"contentType\":\"date\",\"content\":\"2019-01-30\",\"fieldCode\":\"CustomField_8470\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8459": {
+            "id": 8459,
+            "contentType": "text",
+            "content": "北京",
+            "fieldCode": "CustomField_8459"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "01064953403",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "李女士",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8470": {
+            "id": 8470,
+            "contentType": "date",
+            "content": "2019-01-30",
+            "fieldCode": "CustomField_8470"
+          },
+          "CustomField_8353": {
+            "id": 8353,
+            "contentType": "area_text",
+            "content": "首次参保",
+            "fieldCode": "CustomField_8353"
+          },
+          "CustomField_8474": {
+            "id": 8474,
+            "contentType": "droplist",
+            "content": 3,
+            "fieldCode": "CustomField_8474"
+          },
+          "CustomField_8473": {
+            "id": 8473,
+            "contentType": "number",
+            "content": "17000",
+            "fieldCode": "CustomField_8473"
+          },
+          "CustomField_8352": {
+            "id": 8352,
+            "contentType": "area_text",
+            "content": "平安",
+            "fieldCode": "CustomField_8352"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "3"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8350"
+          },
+          "CustomField_8471": {
+            "id": 8471,
+            "contentType": "number",
+            "content": "350",
+            "fieldCode": "CustomField_8471"
+          },
+          "CustomField_8467": {
+            "id": 8467,
+            "contentType": "number",
+            "content": "50",
+            "fieldCode": "CustomField_8467"
+          },
+          "CustomField_8466": {
+            "id": 8466,
+            "contentType": "date",
+            "content": "2019-02-01",
+            "fieldCode": "CustomField_8466"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "已婚无子女",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8465": {
+            "id": 8465,
+            "contentType": "area_text",
+            "content": "服务",
+            "fieldCode": "CustomField_8465"
+          },
+          "CustomField_8464": {
+            "id": 8464,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8464"
+          },
+          "CustomField_8469": {
+            "id": 8469,
+            "contentType": "date",
+            "content": "2019-01-25",
+            "fieldCode": "CustomField_8469"
+          },
+          "CustomField_8468": {
+            "id": 8468,
+            "contentType": "text",
+            "content": "17000",
+            "fieldCode": "CustomField_8468"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "01064953403",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8463": {
+            "id": 8463,
+            "contentType": "area_text",
+            "content": "否",
+            "fieldCode": "CustomField_8463"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "李女士",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8462": {
+            "id": 8462,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8462"
+          },
+          "CustomField_8363": {
+            "id": 8363,
+            "contentType": "droplist",
+            "content": 5,
+            "fieldCode": "CustomField_8363"
+          },
+          "CustomField_8460": {
+            "id": 8460,
+            "contentType": "area_text",
+            "content": "品牌效应",
+            "fieldCode": "CustomField_8460"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-16 16:20:58",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22542,
+        "createUserId": 1166,
+        "createTime": "2019-01-16 16:12:31",
+        "updateUserId": 1166,
+        "updateTime": "2019-01-18 17:59:44",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 771696,
+        "masterUserId": 1152,
+        "name": "青岛新海川人力",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 771696,
+          "deleteFlag": 0,
+          "name": "青岛新海川人力",
+          "officeId": 419,
+          "mobile": "13210174567",
+          "masterUserId": 1152,
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "province": 1484,
+          "city": 1497,
+          "district": 1501,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:58:44.195",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"1000\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13210174567\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"岳\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "1000",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13210174567",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "岳",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 17:58:44",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22616,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 17:55:42",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 17:58:44",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 772577,
+        "masterUserId": 1152,
+        "name": "青岛景诚人力（世纪正信）",
+        "saleProcess": 3,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 772577,
+          "deleteFlag": 0,
+          "name": "景诚人力（世纪正信）",
+          "officeId": 419,
+          "mobile": "15005323010",
+          "masterUserId": 1152,
+          "customerHighSeaId": 128,
+          "customerHighSeaReceiveTime": null,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1152,
+          "deleteFlag": 0,
+          "realname": "王聪",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:55:00.331",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"500\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15005323010\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"樊\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"15005323010\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"樊\",\"fieldCode\":\"CustomField_8341\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8362\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8350\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "500",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15005323010",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "樊",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "15005323010",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "樊",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8362"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 17:55:00",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22615,
+        "createUserId": 1152,
+        "createTime": "2019-01-18 17:51:37",
+        "updateUserId": 1152,
+        "updateTime": "2019-01-18 17:55:00",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210921,
+        "masterUserId": 1160,
+        "name": "沈阳山海源人力资源有限公司",
+        "saleProcess": 2,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1210921,
+          "deleteFlag": 0,
+          "name": "沈阳山海源人力资源有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1160,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1160,
+          "deleteFlag": 0,
+          "realname": "阮祥峰",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1160,
+          "deleteFlag": 0,
+          "realname": "阮祥峰",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1160,
+          "deleteFlag": 0,
+          "realname": "阮祥峰",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:32:42.098",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13386894455\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"孟铀\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"800\",\"fieldCode\":\"CustomField_8334\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "800",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13386894455",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "孟铀",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22614,
+        "createUserId": 1160,
+        "createTime": "2019-01-18 17:31:38",
+        "updateUserId": 1160,
+        "updateTime": "2019-01-18 17:32:42",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 930362,
+        "masterUserId": 1155,
+        "name": "无锡金和人力资源咨询服务有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 930362,
+          "deleteFlag": 0,
+          "name": "无锡金和人力资源咨询服务有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1155,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:31:31.483",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"900\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"姚菊芳\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"15852792225\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "900",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "15852792225",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "姚菊芳",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 17:31:31",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22001,
+        "createUserId": 1155,
+        "createTime": "2018-12-20 16:58:14",
+        "updateUserId": 1155,
+        "updateTime": "2019-01-18 17:31:31",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 903799,
+        "masterUserId": 1155,
+        "name": "禹州市天坤人力资源服务有限公司",
+        "saleProcess": 3,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 0,
+        "customer": {
+          "id": 903799,
+          "deleteFlag": 0,
+          "name": "禹州市天坤人力资源服务有限公司",
+          "officeId": 419,
+          "mobile": "13782286266",
+          "masterUserId": 1155,
+          "classification": 2,
+          "customerHighSeaId": 133,
+          "customerHighSeaReceiveTime": null,
+          "province": 1656,
+          "city": 1764,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1155,
+          "deleteFlag": 0,
+          "realname": "郎晔",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:31:01.978",
+        "customFieldJson": "[{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8335,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8335\"},{\"id\":8345,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8345\"},{\"id\":8334,\"contentType\":\"number\",\"content\":\"100\",\"fieldCode\":\"CustomField_8334\"},{\"id\":8355,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8355\"},{\"id\":8338,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8338\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13782286266\",\"fieldCode\":\"CustomField_8337\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"张\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8342,\"contentType\":\"text\",\"content\":\"13782286266\",\"fieldCode\":\"CustomField_8342\"},{\"id\":8340,\"contentType\":\"area_text\",\"content\":\"无\",\"fieldCode\":\"CustomField_8340\"},{\"id\":8351,\"contentType\":\"checkbox\",\"content\":\"1\",\"fieldCode\":\"CustomField_8351\"},{\"id\":8350,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8350\"},{\"id\":8341,\"contentType\":\"text\",\"content\":\"张\",\"fieldCode\":\"CustomField_8341\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8334": {
+            "id": 8334,
+            "contentType": "number",
+            "content": "100",
+            "fieldCode": "CustomField_8334"
+          },
+          "CustomField_8345": {
+            "id": 8345,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8345"
+          },
+          "CustomField_8355": {
+            "id": 8355,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8355"
+          },
+          "CustomField_8338": {
+            "id": 8338,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8338"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13782286266",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "张",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8342": {
+            "id": 8342,
+            "contentType": "text",
+            "content": "13782286266",
+            "fieldCode": "CustomField_8342"
+          },
+          "CustomField_8341": {
+            "id": 8341,
+            "contentType": "text",
+            "content": "张",
+            "fieldCode": "CustomField_8341"
+          },
+          "CustomField_8351": {
+            "id": 8351,
+            "contentType": "checkbox",
+            "content": [
+              "1"
+            ],
+            "fieldCode": "CustomField_8351"
+          },
+          "CustomField_8340": {
+            "id": 8340,
+            "contentType": "area_text",
+            "content": "无",
+            "fieldCode": "CustomField_8340"
+          },
+          "CustomField_8350": {
+            "id": 8350,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8350"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "recentActivityRecordTime": "2019-01-18 17:31:02",
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 21652,
+        "createUserId": 1155,
+        "createTime": "2018-12-10 17:00:54",
+        "updateUserId": 1155,
+        "updateTime": "2019-01-18 17:31:01",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1210924,
+        "masterUserId": 1179,
+        "name": "加勒比海鲜自助",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1210924,
+          "deleteFlag": 0,
+          "name": "香家餐饮",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:29:15.337",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22613,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 17:29:15",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 17:29:15",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 500,
+        "customerId": 1210919,
+        "masterUserId": 1179,
+        "name": "加勒比海鲜自助",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 511,
+        "locked": 0,
+        "winRate": 30,
+        "customer": {
+          "id": 1210919,
+          "deleteFlag": 0,
+          "name": "加勒比海鲜自助",
+          "officeId": 500,
+          "mobile": "",
+          "masterUserId": 1179,
+          "customerHighSeaId": 196,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1179,
+          "deleteFlag": 0,
+          "realname": "曹洋",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:24:59.790",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22612,
+        "createUserId": 1179,
+        "createTime": "2019-01-18 17:24:59",
+        "updateUserId": 1179,
+        "updateTime": "2019-01-18 17:24:59",
+        "deleteFlag": 0
+      },
+      {
+        "companyId": 379,
+        "officeId": 419,
+        "customerId": 1210918,
+        "masterUserId": 1160,
+        "name": "黑龙江省德丰劳务派遣有限公司",
+        "saleProcess": 1,
+        "loseFlag": 0,
+        "loseReason": 0,
+        "businessCategoryId": 510,
+        "locked": 0,
+        "winRate": 10,
+        "customer": {
+          "id": 1210918,
+          "deleteFlag": 0,
+          "name": "黑龙江省德丰劳务派遣有限公司",
+          "officeId": 419,
+          "mobile": "",
+          "masterUserId": 1160,
+          "customerHighSeaId": 110,
+          "customerHighSeaReceiveTime": null,
+          "province": 0,
+          "city": 0,
+          "district": 0,
+          "lastMasterUserId": null,
+          "showDetail": 1,
+          "fieldMap": {},
+          "tagList": [],
+          "leadsDuplicateFlag": 1,
+          "expireTime": null,
+          "focusArray": []
+        },
+        "master": {
+          "id": 1160,
+          "deleteFlag": 0,
+          "realname": "阮祥峰",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1160,
+          "deleteFlag": 0,
+          "realname": "阮祥峰",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1160,
+          "deleteFlag": 0,
+          "realname": "阮祥峰",
+          "roleList": [],
+          "admin": false
+        },
+        "businessCategory": {
+          "name": "雇主",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 17:24:53.734",
+        "customFieldJson": "[{\"id\":8335,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8335\"},{\"id\":8357,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_8357\"},{\"id\":8336,\"contentType\":\"text\",\"content\":\"张云洁\",\"fieldCode\":\"CustomField_8336\"},{\"id\":8362,\"contentType\":\"droplist\",\"content\":2,\"fieldCode\":\"CustomField_8362\"},{\"id\":8337,\"contentType\":\"text\",\"content\":\"13351111039\",\"fieldCode\":\"CustomField_8337\"}]",
+        "showDetail": 1,
+        "showCustomerDetail": 1,
+        "fieldMap": {
+          "CustomField_8357": {
+            "id": 8357,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8357"
+          },
+          "CustomField_8335": {
+            "id": 8335,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_8335"
+          },
+          "CustomField_8337": {
+            "id": 8337,
+            "contentType": "text",
+            "content": "13351111039",
+            "fieldCode": "CustomField_8337"
+          },
+          "CustomField_8336": {
+            "id": 8336,
+            "contentType": "text",
+            "content": "张云洁",
+            "fieldCode": "CustomField_8336"
+          },
+          "CustomField_8362": {
+            "id": 8362,
+            "contentType": "droplist",
+            "content": 2,
+            "fieldCode": "CustomField_8362"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "id": 22611,
+        "createUserId": 1160,
+        "createTime": "2019-01-18 17:24:22",
+        "updateUserId": 1160,
+        "updateTime": "2019-01-18 17:24:53",
+        "deleteFlag": 0
+      }
+    ],
+    "pageNum": 1,
+    "pageSize": 50,
+    "total": 923,
+    "paging": null
+  },
+  "extra": null
+}

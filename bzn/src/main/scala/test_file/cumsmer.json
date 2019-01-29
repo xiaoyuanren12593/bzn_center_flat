@@ -1,0 +1,1988 @@
+{
+  "code": 0,
+  "message": null,
+  "visible": false,
+  "exception": null,
+  "paging": null,
+  "data": {
+    "list": [
+      {
+        "id": 1210855,
+        "createUserId": 1157,
+        "createTime": "2019-01-18 15:38:33",
+        "updateUserId": 1157,
+        "updateTime": "2019-01-18 15:39:14",
+        "deleteFlag": 0,
+        "name": "山西欣晋风人力资源有限公司",
+        "companyId": 379,
+        "officeId": 419,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1157,
+        "customerHighSeaId": 110,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1157,
+          "deleteFlag": 0,
+          "realname": "王宁",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1157,
+          "deleteFlag": 0,
+          "realname": "王宁",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1157,
+          "deleteFlag": 0,
+          "realname": "王宁",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "公司获客客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 110,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:39:14.361",
+        "customFieldJson": "[{\"id\":4806,\"contentType\":\"text\",\"content\":\"15135241941\",\"fieldCode\":\"CustomField_4806\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:39:14",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_4806": {
+            "id": 4806,
+            "contentType": "text",
+            "content": "15135241941",
+            "fieldCode": "CustomField_4806"
+          },
+          "CustomField_4807": {
+            "id": 4806,
+            "contentType": "text",
+            "content": "15135241941",
+            "fieldCode": "CustomField_4806"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:39:14",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1163751,
+        "createUserId": 1637,
+        "createTime": "2019-01-11 17:14:51",
+        "updateUserId": 1637,
+        "updateTime": "2019-01-18 15:25:37",
+        "deleteFlag": 0,
+        "name": "广西中汇劳务开发有限公司",
+        "companyId": 379,
+        "officeId": 419,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1637,
+        "customerHighSeaId": 110,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "公司获客客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 110,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:25:37.915",
+        "customFieldJson": "[{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:25:38",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:25:38",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 904666,
+        "createUserId": 1637,
+        "createTime": "2018-12-11 15:57:33",
+        "updateUserId": 1637,
+        "updateTime": "2019-01-18 15:23:12",
+        "deleteFlag": 0,
+        "name": "华厦外包服务(大连)股份有限公司",
+        "companyId": 379,
+        "officeId": 419,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1637,
+        "customerHighSeaId": 110,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "公司获客客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 110,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:23:12.428",
+        "customFieldJson": "[{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:23:12",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:23:12",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 904709,
+        "createUserId": 1637,
+        "createTime": "2018-12-12 10:36:50",
+        "updateUserId": 1637,
+        "updateTime": "2019-01-18 15:22:26",
+        "deleteFlag": 0,
+        "name": "聊城天时利人力资源发展有限责任公司",
+        "companyId": 379,
+        "officeId": 419,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1637,
+        "customerHighSeaId": 110,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1637,
+          "deleteFlag": 0,
+          "realname": "余信旺",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "公司获客客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 110,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:22:26.826",
+        "customFieldJson": "[{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:22:27",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:22:27",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210839,
+        "createUserId": 1149,
+        "createTime": "2019-01-18 15:12:39",
+        "updateUserId": 1149,
+        "updateTime": "2019-01-18 15:19:09",
+        "deleteFlag": 0,
+        "name": "青岛鼎玉人力资源有限公司",
+        "companyId": 379,
+        "officeId": 379,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1163,
+        "customerHighSeaId": 133,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1163,
+          "deleteFlag": 0,
+          "realname": "唐甜",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1149,
+          "deleteFlag": 0,
+          "realname": "马玉珠",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1149,
+          "deleteFlag": 0,
+          "realname": "马玉珠",
+          "roleList": [],
+          "admin": false
+        },
+        "lastMasterUser": {
+          "deleteFlag": 0,
+          "realname": "马玉珠",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 379,
+          "name": "北京优全智汇信息技术有限公司",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "面销北区客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 133,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:19:09.463",
+        "businessCategoryId": 229,
+        "highSeaStatus": 5,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:15:29",
+        "notFollowDays": 0,
+        "lastMasterUserId": 1149,
+        "showDetail": 1,
+        "preHighSeaStatus": 4,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [
+          1149,
+          1148
+        ],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "expireTime": null,
+        "businessCoordinatorList": [
+          {
+            "companyId": 379,
+            "businessType": 2,
+            "businessId": 1210839,
+            "userId": 1149,
+            "operationType": 1,
+            "coordinatorUser": {
+              "deleteFlag": 0,
+              "realname": "马玉珠",
+              "roleList": [],
+              "admin": false
+            },
+            "id": 9160,
+            "deleteFlag": 0
+          },
+          {
+            "companyId": 379,
+            "businessType": 2,
+            "businessId": 1210839,
+            "userId": 1148,
+            "operationType": 0,
+            "coordinatorUser": {
+              "deleteFlag": 0,
+              "realname": "石超壬",
+              "roleList": [],
+              "admin": false
+            },
+            "id": 9161,
+            "deleteFlag": 0
+          }
+        ],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210832,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 15:06:06",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 15:11:54",
+        "deleteFlag": 0,
+        "name": "樱桃阵",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:11:54.309",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:11:54",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:11:54",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 771682,
+        "createUserId": 1159,
+        "createTime": "2018-09-07 15:25:38",
+        "updateUserId": 1159,
+        "updateTime": "2019-01-18 15:11:42",
+        "deleteFlag": 0,
+        "name": "厦门圆业梦人力资源有限公司",
+        "companyId": 379,
+        "officeId": 419,
+        "telephone": "",
+        "mobile": "15280582753",
+        "masterUserId": 1159,
+        "classification": 3,
+        "address": "",
+        "customerHighSeaId": 133,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 1257,
+        "city": 1258,
+        "district": 1259,
+        "master": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "name": "福建省",
+          "id": 1257
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "面销北区客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 133,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:11:42.265",
+        "customFieldJson": "[{\"id\":4807,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_4807\"},{\"id\":4793,\"contentType\":\"chained_droplist\",\"content\":[1],\"fieldCode\":\"CustomField_4793\"},{\"id\":4808,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_4808\"},{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"},{\"id\":4789,\"contentType\":\"number\",\"content\":\"18\",\"fieldCode\":\"CustomField_4789\"},{\"id\":4836,\"contentType\":\"area_text\",\"content\":\"18\",\"fieldCode\":\"CustomField_4836\"},{\"id\":4803,\"contentType\":\"text\",\"content\":\"吴可友\",\"fieldCode\":\"CustomField_4803\"},{\"id\":4805,\"contentType\":\"text\",\"content\":\"15280582753\",\"fieldCode\":\"CustomField_4805\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:11:42",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_4807": {
+            "id": 4807,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_4807"
+          },
+          "CustomField_4793": {
+            "id": 4793,
+            "contentType": "chained_droplist",
+            "content": [
+              1
+            ],
+            "fieldCode": "CustomField_4793"
+          },
+          "CustomField_4808": {
+            "id": 4808,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_4808"
+          },
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          },
+          "CustomField_4789": {
+            "id": 4789,
+            "contentType": "number",
+            "content": "18",
+            "fieldCode": "CustomField_4789"
+          },
+          "CustomField_4803": {
+            "id": 4803,
+            "contentType": "text",
+            "content": "吴可友",
+            "fieldCode": "CustomField_4803"
+          },
+          "CustomField_4836": {
+            "id": 4836,
+            "contentType": "area_text",
+            "content": "18",
+            "fieldCode": "CustomField_4836"
+          },
+          "CustomField_4805": {
+            "id": 4805,
+            "contentType": "text",
+            "content": "15280582753",
+            "fieldCode": "CustomField_4805"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:11:42",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210834,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 15:07:55",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 15:11:21",
+        "deleteFlag": 0,
+        "name": "北京国瑞兴业商业管理有限公司",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:11:21.428",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:11:21",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:11:21",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1118468,
+        "createUserId": 1064,
+        "createTime": "2019-01-04 17:27:15",
+        "updateUserId": 1159,
+        "updateTime": "2019-01-18 15:11:11",
+        "deleteFlag": 0,
+        "name": "重庆卓特建筑劳务有限公司  涂先生",
+        "companyId": 379,
+        "officeId": 419,
+        "mobile": "15023265887",
+        "email": "",
+        "masterUserId": 1159,
+        "customerHighSeaId": 110,
+        "customerHighSeaReceiveTime": "2019-01-04 17:27:15",
+        "customerHighSeaReturnCount": 0,
+        "master": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1064,
+          "deleteFlag": 0,
+          "realname": "管理员",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "lastMasterUser": {
+          "deleteFlag": 0,
+          "realname": "管理员",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "source": 3,
+        "remoteId": 306384929,
+        "customerHighSea": {
+          "name": "公司获客客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 110,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:11:11.673",
+        "customFieldJson": "[{\"id\":4792,\"contentType\":\"area_text\",\"content\":\"客户公司在重庆，员工都是高速公路养护工人，有500人左右，想投保雇主责任险，了解下具体方案及价格，烦请尽快与客户联系，谢谢。\",\"fieldCode\":\"CustomField_4792\"},{\"id\":4795,\"contentType\":\"droplist\",\"content\":12,\"fieldCode\":\"CustomField_4795\"},{\"id\":5118,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_5118\"},{\"id\":4824,\"contentType\":\"droplist\",\"content\":1,\"fieldCode\":\"CustomField_4824\"},{\"id\":4804,\"contentType\":\"text\",\"content\":\"无\",\"fieldCode\":\"CustomField_4804\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 2,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:11:12",
+        "notFollowDays": 0,
+        "lastMasterUserId": 1064,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_4792": {
+            "id": 4792,
+            "contentType": "area_text",
+            "content": "客户公司在重庆，员工都是高速公路养护工人，有500人左右，想投保雇主责任险，了解下具体方案及价格，烦请尽快与客户联系，谢谢。",
+            "fieldCode": "CustomField_4792"
+          },
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 12,
+            "fieldCode": "CustomField_4795"
+          },
+          "CustomField_5118": {
+            "id": 5118,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_5118"
+          },
+          "CustomField_4824": {
+            "id": 4824,
+            "contentType": "droplist",
+            "content": 1,
+            "fieldCode": "CustomField_4824"
+          },
+          "CustomField_4804": {
+            "id": 4804,
+            "contentType": "text",
+            "content": "无",
+            "fieldCode": "CustomField_4804"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [
+          1181,
+          1064
+        ],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:11:12",
+        "expireTime": null,
+        "businessCoordinatorList": [
+          {
+            "companyId": 379,
+            "businessType": 2,
+            "businessId": 1118468,
+            "userId": 1181,
+            "operationType": 0,
+            "coordinatorUser": {
+              "deleteFlag": 0,
+              "realname": "王晓薇",
+              "roleList": [],
+              "admin": false
+            },
+            "id": 9007,
+            "deleteFlag": 0
+          },
+          {
+            "companyId": 379,
+            "businessType": 2,
+            "businessId": 1118468,
+            "userId": 1064,
+            "operationType": 1,
+            "coordinatorUser": {
+              "deleteFlag": 0,
+              "realname": "管理员",
+              "roleList": [],
+              "admin": false
+            },
+            "id": 9008,
+            "deleteFlag": 0
+          }
+        ],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1176892,
+        "createUserId": 1159,
+        "createTime": "2019-01-17 11:57:52",
+        "updateUserId": 1159,
+        "updateTime": "2019-01-18 15:10:47",
+        "deleteFlag": 0,
+        "name": "四川银飞物流有限公司",
+        "companyId": 379,
+        "officeId": 419,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1159,
+        "customerHighSeaId": 110,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1159,
+          "deleteFlag": 0,
+          "realname": "钟宇",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 419,
+          "name": "面销部山东-重庆",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "公司获客客户公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 110,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:10:47.305",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:10:47",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {},
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:10:47",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210837,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 15:09:17",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 15:10:10",
+        "deleteFlag": 0,
+        "name": "华星影城",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:10:10.870",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:10:11",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:10:11",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210826,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 15:01:40",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 15:03:22",
+        "deleteFlag": 0,
+        "name": "奉节县保安服务公司",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:03:22.220",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:03:22",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:03:22",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210822,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:58:26",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 15:02:31",
+        "deleteFlag": 0,
+        "name": "好租",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 15:02:31.479",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 15:02:31",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 15:02:31",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210818,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:49:24",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:52:51",
+        "deleteFlag": 0,
+        "name": "运拉拉",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:52:51.924",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:52:21",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:52:21",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210817,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:44:32",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:45:16",
+        "deleteFlag": 0,
+        "name": "ETCP",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:45:16.688",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:45:17",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:45:17",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210815,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:42:44",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:43:26",
+        "deleteFlag": 0,
+        "name": "北京盛世光明软件股份有限公司",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:43:26.260",
+        "customFieldJson": "[{\"id\":4804,\"contentType\":\"text\",\"content\":\"李娜\",\"fieldCode\":\"CustomField_4804\"},{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"},{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 572,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:43:26",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          },
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          },
+          "CustomField_4804": {
+            "id": 4804,
+            "contentType": "text",
+            "content": "李娜",
+            "fieldCode": "CustomField_4804"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:43:26",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210814,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:39:52",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:40:55",
+        "deleteFlag": 0,
+        "name": "北京尚伦管理顾问有限公司",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:40:55.187",
+        "customFieldJson": "[{\"id\":4804,\"contentType\":\"text\",\"content\":\"周文平\",\"fieldCode\":\"CustomField_4804\"},{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"},{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 572,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:40:55",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          },
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          },
+          "CustomField_4804": {
+            "id": 4804,
+            "contentType": "text",
+            "content": "周文平",
+            "fieldCode": "CustomField_4804"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:40:55",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210813,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:36:16",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:37:58",
+        "deleteFlag": 0,
+        "name": "月亮盒子",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "员福",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:37:58.981",
+        "customFieldJson": "[{\"id\":4795,\"contentType\":\"droplist\",\"content\":6,\"fieldCode\":\"CustomField_4795\"},{\"id\":4804,\"contentType\":\"text\",\"content\":\"商桑\",\"fieldCode\":\"CustomField_4804\"},{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 572,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:36:46",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          },
+          "CustomField_4795": {
+            "id": 4795,
+            "contentType": "droplist",
+            "content": 6,
+            "fieldCode": "CustomField_4795"
+          },
+          "CustomField_4804": {
+            "id": 4804,
+            "contentType": "text",
+            "content": "商桑",
+            "fieldCode": "CustomField_4804"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:36:46",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210812,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:34:25",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:35:11",
+        "deleteFlag": 0,
+        "name": "搜达足球",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:35:11.159",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:35:11",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:35:11",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      },
+      {
+        "id": 1210807,
+        "createUserId": 1158,
+        "createTime": "2019-01-18 14:26:56",
+        "updateUserId": 1158,
+        "updateTime": "2019-01-18 14:31:44",
+        "deleteFlag": 0,
+        "name": "音曼（北京）科技有限公司",
+        "companyId": 379,
+        "officeId": 501,
+        "telephone": "",
+        "mobile": "",
+        "masterUserId": 1158,
+        "customerHighSeaId": 196,
+        "customerHighSeaReceiveTime": null,
+        "customerHighSeaReturnCount": 0,
+        "province": 0,
+        "city": 0,
+        "district": 0,
+        "master": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "createUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "updateUser": {
+          "id": 1158,
+          "deleteFlag": 0,
+          "realname": "刘超",
+          "roleList": [],
+          "admin": false
+        },
+        "masterOffice": {
+          "id": 501,
+          "name": "员福三部",
+          "masterUserIdArray": []
+        },
+        "provinceEntity": {
+          "id": 0
+        },
+        "source": 1,
+        "customerHighSea": {
+          "name": "员福事业部公海",
+          "masterUserIdArray": [],
+          "memberUserIdArray": [],
+          "memberOfficeIdArray": [],
+          "id": 196,
+          "deleteFlag": 0
+        },
+        "businessCategory": {
+          "name": "默认业务类型",
+          "deleteFlag": 0
+        },
+        "changeTimestamp": "2019-01-18 14:31:44.085",
+        "customFieldJson": "[{\"id\":8288,\"contentType\":\"area_text\",\"content\":\"新增获客+1.18\",\"fieldCode\":\"CustomField_8288\"}]",
+        "businessCategoryId": 229,
+        "highSeaStatus": 4,
+        "locked": 0,
+        "lastFollowTime": "2019-01-18 14:31:44",
+        "notFollowDays": 0,
+        "lastMasterUserId": null,
+        "showDetail": 1,
+        "fieldMap": {
+          "CustomField_8288": {
+            "id": 8288,
+            "contentType": "area_text",
+            "content": "新增获客+1.18",
+            "fieldCode": "CustomField_8288"
+          }
+        },
+        "tagList": [],
+        "coordinatorUserIds": [],
+        "followUserIds": [],
+        "leadsDuplicateFlag": 1,
+        "recentActivityRecordTime": "2019-01-18 14:31:44",
+        "expireTime": null,
+        "businessCoordinatorList": [],
+        "userGroupPermissionIds": [],
+        "officePermissionIds": [],
+        "businessPermissionList": [],
+        "focusArray": []
+      }
+    ],
+    "pageNum": 1,
+    "pageSize": 20,
+    "total": 18935,
+    "paging": null
+  },
+  "extra": null
+}
