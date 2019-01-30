@@ -15,7 +15,7 @@ object SparkStreamingReadKafka {
   def main(args: Array[String]): Unit = {
     val util = new Spark_Util
 
-    var sc = util.sparkConf("SparkStreamingReadKafka","local[2]")
+    var sc = util.sparkConf("SparkStreamingReadKafka","")
 
     //sparkStreaming上下文
     var ssc = new StreamingContext(sc,Seconds(2))

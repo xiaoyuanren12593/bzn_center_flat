@@ -37,7 +37,8 @@ class Spark_Util {
       .set("spark.sql.broadcastTimeout", "36000")
       .set("spark.network.timeout", "36000")
       .set("spark.executor.heartbeatInterval","20000")
-    if(local != null || !"".equals(local)){
+    if(local != null && !"".equals(local)){
+      println(local+"12313213")
       conf_s.setMaster(local)
     }
     //配置信息上下文
