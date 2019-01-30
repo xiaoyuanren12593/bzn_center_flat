@@ -66,66 +66,69 @@ object SparkStreamingReadKaf2HbaseBuss {
 
     }).foreachRDD(rdd => {
 
-      rdd.foreachPartition(partitionOfRecords  => {
-        //HBaseConf
-        val conf = HbaseConf("crm_niche")._1
-        val tableName = "crm_niche"
-        val columnFamily1 = "baseInfo"
-        val columnFamily2 = "customField"
+      if(!rdd.isEmpty()){
+        rdd.foreachPartition(partitionOfRecords  => {
 
-        var connection: Connection = ConnectionFactory.createConnection(conf)
+          //HBaseConf
+          val conf = HbaseConf("crm_niche")._1
+          val tableName = "crm_niche"
+          val columnFamily1 = "baseInfo"
+          val columnFamily2 = "customField"
 
-        var table = connection.getTable(TableName.valueOf(tableName))
+          var connection: Connection = ConnectionFactory.createConnection(conf)
 
-        println(table.getName)
+          var table = connection.getTable(TableName.valueOf(tableName))
 
-        partitionOfRecords.foreach(logData =>{
+          println(table.getName)
 
-          var list: List[(String, String)] = logData
+          partitionOfRecords.foreach(logData =>{
 
-          for(res <- list){
+            var list: List[(String, String)] = logData
 
-            println((res._1,res._2))
+            for(res <- list){
 
-            val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
+              println((res._1,res._2))
 
-            //获得全部数据
-            var mergeData: Array[String] = res._2.split("\\|")
+              val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
 
-            //获得数组长度
-            var len = mergeData.length
-            for (x <- 0 to len-2){
-              var keyValue = mergeData(x).split("=")
-              //                  println(keyValue(0))
-              if(keyValue.length == 2) {
-                if(keyValue(1) != null && !"null".equals(keyValue(1))){
-                  put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+              //获得全部数据
+              var mergeData: Array[String] = res._2.split("\\|")
+
+              //获得数组长度
+              var len = mergeData.length
+              for (x <- 0 to len-2){
+                var keyValue = mergeData(x).split("=")
+                //                  println(keyValue(0))
+                if(keyValue.length == 2) {
+                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                    put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                  }
                 }
               }
-            }
 
-            //用户自定义数据
-            val field = mergeData(len-1).split("\\^")
+              //用户自定义数据
+              val field = mergeData(len-1).split("\\^")
 
-            val fieldLen = field.length
+              val fieldLen = field.length
 
-            println(fieldLen)
+              println(fieldLen)
 
-            for(z <- 0 to fieldLen-1){
-              val keyValue = field(z).split("=")
-              if(keyValue.length == 2) {
-                if(keyValue(1) != null && !"null".equals(keyValue(1))){
-                  put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+              for(z <- 0 to fieldLen-1){
+                val keyValue = field(z).split("=")
+                if(keyValue.length == 2) {
+                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                    put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                  }
                 }
               }
+
+              table.put(put)
             }
 
-            table.put(put)
-          }
-
-          table.close()
+            table.close()
+          })
         })
-      })
+      }
     })
 
     ssc.start()

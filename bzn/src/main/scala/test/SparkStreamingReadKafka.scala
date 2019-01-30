@@ -15,7 +15,7 @@ object SparkStreamingReadKafka {
   def main(args: Array[String]): Unit = {
     val util = new Spark_Util
 
-    var sc = util.sparkConf("SparkStreamingReadKafka","")
+    var sc = util.sparkConf("SparkStreamingReadKafka","local[2]")
 
     //sparkStreaming上下文
     var ssc = new StreamingContext(sc,Seconds(2))
@@ -42,6 +42,10 @@ object SparkStreamingReadKafka {
 
     lines.map(preJson => {
 
+      if(preJson.toString.isEmpty){
+        println("我是空的")
+      }
+
       var json: String = preJson.mkString("")
 
       //获取三级目录s
@@ -66,66 +70,74 @@ object SparkStreamingReadKafka {
 
     }).foreachRDD(rdd => {
 
-      rdd.foreachPartition(partitionOfRecords  => {
-        //HBaseConf
-        val conf = HbaseConf("crm_customer")._1
-        val tableName = "crm_customer"
-        val columnFamily1 = "baseInfo"
-        val columnFamily2 = "customField"
+      if(rdd.isEmpty()){
+        println("我是空的")
+      }
 
-        var connection: Connection = ConnectionFactory.createConnection(conf)
+      if(!rdd.isEmpty()){
 
-        var table = connection.getTable(TableName.valueOf(tableName))
+        rdd.foreachPartition(partitionOfRecords  => {
+          //HBaseConf
+          val conf = HbaseConf("crm_customer")._1
+          val tableName = "crm_customer"
+          val columnFamily1 = "baseInfo"
+          val columnFamily2 = "customField"
 
-        println(table.getName)
+          var connection: Connection = ConnectionFactory.createConnection(conf)
 
-        partitionOfRecords.foreach(logData =>{
+          var table = connection.getTable(TableName.valueOf(tableName))
 
-          var list: List[(String, String)] = logData
+          println(table.getName)
 
-          for(res <- list){
+          partitionOfRecords.foreach(logData =>{
 
-            println((res._1,res._2))
+            var list: List[(String, String)] = logData
 
-            val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
+            for(res <- list){
 
-            //获得全部数据
-            var mergeData: Array[String] = res._2.split("\\|")
+              println((res._1,res._2))
 
-            //获得数组长度
-            var len = mergeData.length
-            for (x <- 0 to len-2){
-              var keyValue = mergeData(x).split("=")
-              //                  println(keyValue(0))
-              if(keyValue.length == 2) {
-                if(keyValue(1) != null && !"null".equals(keyValue(1))){
-                  put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+              val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
+
+              //获得全部数据
+              var mergeData: Array[String] = res._2.split("\\|")
+
+              //获得数组长度
+              var len = mergeData.length
+              for (x <- 0 to len-2){
+                var keyValue = mergeData(x).split("=")
+                //                  println(keyValue(0))
+                if(keyValue.length == 2) {
+                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                    put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                  }
                 }
               }
-            }
 
-            //用户自定义数据
-            val field = mergeData(len-1).split("\\^")
+              //用户自定义数据
+              val field = mergeData(len-1).split("\\^")
 
-            val fieldLen = field.length
+              val fieldLen = field.length
 
-            println(fieldLen)
+              println(fieldLen)
 
-            for(z <- 0 to fieldLen-1){
-              val keyValue = field(z).split("=")
-              if(keyValue.length == 2) {
-                if(keyValue(1) != null && !"null".equals(keyValue(1))){
-                  put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+              for(z <- 0 to fieldLen-1){
+                val keyValue = field(z).split("=")
+                if(keyValue.length == 2) {
+                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                    put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                  }
                 }
               }
+
+              table.put(put)
             }
 
-            table.put(put)
-          }
-
-          table.close()
+            table.close()
+          })
         })
-      })
+      }
+
     })
 
     ssc.start()
