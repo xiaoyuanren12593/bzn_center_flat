@@ -36,17 +36,24 @@ object SparkStreamingReadKaf2HbaseBuss {
       "zookeeper.connection.timeout.ms" -> "10000"
     )
 
+    //topic
     val topicSet: Set[String] = Set("crm_datasync_niche_test")
+
+    //direct方式连接kafka
     val directKafka: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet)
+
+    //取出消息
     val lines: DStream[String] = directKafka.map((x) =>  x._2)
 
     lines.map(preJson => {
 
+      //将json数据拉平
       var json: String = preJson.mkString("")
 
       //获取三级目录s
       var res = JSON.parseObject(JSON.parseObject(json).get("data").toString).get("list").toString
 
+      //解析json数组
       val nObject: JSONArray = JSON.parseArray(res)
 
       val value: Array[AnyRef] = nObject.toArray()
@@ -66,6 +73,7 @@ object SparkStreamingReadKaf2HbaseBuss {
 
     }).foreachRDD(rdd => {
 
+      //如果rdd不是空的情况下，执行数据处理操作，防止空的请求hbase
       if(!rdd.isEmpty()){
         rdd.foreachPartition(partitionOfRecords  => {
 
@@ -75,8 +83,10 @@ object SparkStreamingReadKaf2HbaseBuss {
           val columnFamily1 = "baseInfo"
           val columnFamily2 = "customField"
 
+          //获取连接
           var connection: Connection = ConnectionFactory.createConnection(conf)
 
+          //获取表
           var table = connection.getTable(TableName.valueOf(tableName))
 
           println(table.getName)
@@ -85,10 +95,12 @@ object SparkStreamingReadKaf2HbaseBuss {
 
             var list: List[(String, String)] = logData
 
+            //遍历每一条数据_1  key   _2是value
             for(res <- list){
 
-              println((res._1,res._2))
+              //println((res._1,res._2))
 
+              //存储key到Put
               val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
 
               //获得全部数据
@@ -98,7 +110,7 @@ object SparkStreamingReadKaf2HbaseBuss {
               var len = mergeData.length
               for (x <- 0 to len-2){
                 var keyValue = mergeData(x).split("=")
-                //                  println(keyValue(0))
+                //println(keyValue(0))
                 if(keyValue.length == 2) {
                   if(keyValue(1) != null && !"null".equals(keyValue(1))){
                     put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
