@@ -98,10 +98,12 @@ object SparkStreamingReadKaf2HbaseBuss {
             //遍历每一条数据_1  key   _2是value
             for(res <- list){
 
-              //println((res._1,res._2))
+//              println((res._1,res._2))
+
+              var keys = res._1.split("=")
 
               //存储key到Put
-              val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
+              val put = new Put(Bytes.toBytes(String.valueOf(keys(1))))
 
               //获得全部数据
               var mergeData: Array[String] = res._2.split("\\|")
@@ -123,7 +125,7 @@ object SparkStreamingReadKaf2HbaseBuss {
 
               val fieldLen = field.length
 
-              println(fieldLen)
+//              println(fieldLen)
 
               for(z <- 0 to fieldLen-1){
                 val keyValue = field(z).split("=")

@@ -95,9 +95,11 @@ object SparkStreamingReadKafka {
 
             for(res <- list){
 
-              println((res._1,res._2))
+//              println((res._1,res._2))
 
-              val put = new Put(Bytes.toBytes(String.valueOf(res._1)))
+              var keys = res._1.split("=")
+
+              val put = new Put(Bytes.toBytes(String.valueOf(keys(1))))
 
               //获得全部数据
               var mergeData: Array[String] = res._2.split("\\|")
