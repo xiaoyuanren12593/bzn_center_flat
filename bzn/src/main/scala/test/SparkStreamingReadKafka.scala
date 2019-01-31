@@ -36,7 +36,7 @@ object SparkStreamingReadKafka {
       "zookeeper.connection.timeout.ms" -> "10000"
     )
 
-    val topicSet: Set[String] = Set("crm_datasync_customer_test")
+    val topicSet: Set[String] = Set("crm_datasync_customer")
     val directKafka: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet)
     val lines: DStream[String] = directKafka.map((x) =>  x._2)
 
