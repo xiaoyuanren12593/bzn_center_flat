@@ -1,5 +1,7 @@
 package test
 
+import java.util
+
 import Util.Spark_Util
 import com.alibaba.fastjson.{JSON, JSONArray, JSONObject}
 import org.apache.hadoop.conf.Configuration
@@ -189,7 +191,7 @@ object ParseJson {
     var i = 0
     var baseInfo_CustomField =  baseInfo.map(x => {
       var builder = new StringBuilder
-      val spr = x.split("&")
+      val spr = x.split("#")
       var key: String = spr(0)
       var value: String = spr(1)+customField(i)
       i += 1
@@ -219,12 +221,25 @@ object ParseJson {
         var re: JSONObject = JSON.parseObject(res.toString)
         var keys = re.keySet()
         val itr = keys.iterator()
+
         while(itr.hasNext()){
           var key = itr.next()
-          context = JSON.parseObject(re.get(key).toString).get("content").toString
-          builder.append(key+"="+context+"^")
+
+          val sets: util.Set[String] = JSON.parseObject(re.get(key).toString).keySet()
+
+          if(sets.size()==4){
+            context = JSON.parseObject(re.get(key).toString).get("content").toString
+            builder.append(key+"="+context+"^")
+          }else{
+            println(key+"  "+sets.size())
+          }
         }
-        builder.toString().substring(0,builder.toString().length-1)
+
+        if(builder.toString().length > 0){
+          builder.toString().substring(0,builder.toString().length-1)
+        }else{
+          builder.toString()
+        }
       }else{
         builder.toString()
       }
@@ -278,7 +293,7 @@ object ParseJson {
       }
 
       var test  = "id="+id+
-        "&name=" +name+
+        "#name=" +name+
         "|officeId=" +officeId+
         "|telephone=" +telephone+
         "|mobile=" +mobile+
@@ -307,7 +322,9 @@ object ParseJson {
         "|createTime=" +createTime+
         "|updateTime=" +updateTime+"|"
 
+//      println(test)
       test
+
     })
     baseInfo
   }
@@ -345,6 +362,7 @@ object ParseJson {
     (conf, conf_fs)
   }
 }
+
 
 
 

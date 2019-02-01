@@ -241,7 +241,7 @@ object SparkStreamingReadKaf2HbaseBuss {
       }
 
       var test  = "id="+id+
-        "&name=" +name+
+        "#name=" +name+
         "|remark=" +remark+
         "|customerId=" +customerId+
         "|customer_name=" +customer_name+

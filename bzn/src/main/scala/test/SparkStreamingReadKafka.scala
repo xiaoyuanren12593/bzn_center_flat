@@ -15,10 +15,10 @@ object SparkStreamingReadKafka {
   def main(args: Array[String]): Unit = {
     val util = new Spark_Util
 
-    var sc = util.sparkConf("SparkStreamingReadKafka","")
+    var sc = util.sparkConf("SparkStreamingReadKafka","local[2]")
 
     //sparkStreaming上下文
-    var ssc = new StreamingContext(sc,Seconds(2))
+    var ssc = new StreamingContext(sc,Seconds(5))
 
     /**
       * kafka conf
@@ -29,9 +29,10 @@ object SparkStreamingReadKafka {
       "zookeeper.connect" -> "namenode2.cdh:2181,datanode3.cdh:2181,namenode1.cdh:2181",
       "metadata.broker.list" -> "namenode1.cdh:9092",
       //设置一下group id
-      "group.id" -> "spark_xing",
+      "group.id" -> "spark_xing_test",
       //----------从该topic最新的位置开始读数------------
-      //"auto.offset.reset" -> kafka.api.OffsetRequest.LargestTimeString,
+      "auto.offset.reset" -> kafka.api.OffsetRequest.LargestTimeString,
+//      "auto.offset.reset" -> "smallest",
       "client.id" -> "spark_xing",
       "zookeeper.connection.timeout.ms" -> "10000"
     )
@@ -94,6 +95,7 @@ object SparkStreamingReadKafka {
             var list: List[(String, String)] = logData
 
             for(res <- list){
+//              println(res)
 
 //              println((res._1,res._2))
 
@@ -121,7 +123,7 @@ object SparkStreamingReadKafka {
 
               val fieldLen = field.length
 
-              println(fieldLen)
+//              println(fieldLen)
 
               for(z <- 0 to fieldLen-1){
                 val keyValue = field(z).split("=")
@@ -131,7 +133,6 @@ object SparkStreamingReadKafka {
                   }
                 }
               }
-
               table.put(put)
             }
 
