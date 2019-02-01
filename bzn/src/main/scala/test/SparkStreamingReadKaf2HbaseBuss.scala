@@ -42,6 +42,7 @@ object SparkStreamingReadKaf2HbaseBuss {
     //direct方式连接kafka
     val directKafka: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet)
 
+
     //取出消息
     val lines: DStream[String] = directKafka.map((x) =>  x._2)
 
