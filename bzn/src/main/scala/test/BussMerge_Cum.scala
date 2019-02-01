@@ -9,7 +9,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import test.ParseJson._
+import test.ParseJson.{getCustomField, getMerge, _}
 
 object BussMerge_Cum {
   def main(args: Array[String]): Unit = {
@@ -37,16 +37,23 @@ object BussMerge_Cum {
     )
 
     //topic
-    val topicSet: Set[String] = Set("crm_datasync_niche_test")
+    val topicSet_buss: Set[String] = Set("crm_datasync_niche_test")
+
+    val topicSet_Cum: Set[String] = Set("crm_datasync_customer_test")
 
     //direct方式连接kafka
-    val directKafka: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet)
+    val directKafka_buss: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet_buss)
 
-    
-    //取出消息
-    val lines: DStream[String] = directKafka.map((x) =>  x._2)
+    val directKafka_cum: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet_Cum)
 
-    lines.map(preJson => {
+    //取出商机消息
+    val lines_buss: DStream[(String)] = directKafka_buss.map(x => (x._2))
+
+    //提取客户消息
+    val lines_cum: DStream[(String)] = directKafka_buss.map(x => (x._2))
+
+    //商机
+    lines_buss.map(preJson => {
 
       //将json数据拉平
       var json: String = preJson.mkString("")
@@ -144,6 +151,109 @@ object BussMerge_Cum {
           })
         })
       }
+    })
+
+    //客户
+    lines_cum.map(preJson => {
+
+      if(preJson.toString.isEmpty){
+        println("我是空的")
+      }
+
+      var json: String = preJson.mkString("")
+
+      //获取三级目录s
+      var res = JSON.parseObject(JSON.parseObject(json).get("data").toString).get("list").toString
+
+      val nObject: JSONArray = JSON.parseArray(res)
+
+      val value: Array[AnyRef] = nObject.toArray()
+
+      //获取基础字段信息baseInfo
+      val baseInfo: Array[String]= getBaseInfoCum(value)
+
+      //获取可变字段函数
+      val customField: Array[String] = getCustomField(value)
+
+      //合并baseInfo和可变字段数据
+      var baseInfo_CustomField: Map[String, String] =  getMerge(baseInfo,customField)
+
+      var baseInfo_CustomField_List: List[(String, String)] = baseInfo_CustomField.toList
+
+      baseInfo_CustomField_List
+
+    }).foreachRDD(rdd => {
+
+      if(rdd.isEmpty()){
+        println("我是空的")
+      }
+
+      if(!rdd.isEmpty()){
+
+        rdd.foreachPartition(partitionOfRecords  => {
+          //HBaseConf
+          val conf = HbaseConf("crm_customer")._1
+          val tableName = "crm_customer"
+          val columnFamily1 = "baseInfo"
+          val columnFamily2 = "customField"
+
+          var connection: Connection = ConnectionFactory.createConnection(conf)
+
+          var table = connection.getTable(TableName.valueOf(tableName))
+
+          println(table.getName)
+
+          partitionOfRecords.foreach(logData =>{
+
+            var list: List[(String, String)] = logData
+
+            for(res <- list){
+
+              //              println((res._1,res._2))
+
+              var keys = res._1.split("=")
+
+              val put = new Put(Bytes.toBytes(String.valueOf(keys(1))))
+
+              //获得全部数据
+              var mergeData: Array[String] = res._2.split("\\|")
+
+              //获得数组长度
+              var len = mergeData.length
+              for (x <- 0 to len-2){
+                var keyValue = mergeData(x).split("=")
+                //                  println(keyValue(0))
+                if(keyValue.length == 2) {
+                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                    put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                  }
+                }
+              }
+
+              //用户自定义数据
+              val field = mergeData(len-1).split("\\^")
+
+              val fieldLen = field.length
+
+              println(fieldLen)
+
+              for(z <- 0 to fieldLen-1){
+                val keyValue = field(z).split("=")
+                if(keyValue.length == 2) {
+                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                    put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                  }
+                }
+              }
+
+              table.put(put)
+            }
+
+            table.close()
+          })
+        })
+      }
+
     })
 
     ssc.start()
@@ -262,4 +372,84 @@ object BussMerge_Cum {
     })
     baseInfo
   }
+
+  /**
+    *  获取getBaseInfoCum数据
+    * @param value
+    */
+  def getBaseInfoCum(value : Array[AnyRef]): Array[String] ={
+    var baseInfo: Array[String] = value.map(x => {
+      //      println(x)
+      val id = JSON.parseObject(x.toString).get("id")//客户id
+      val name = JSON.parseObject(x.toString).get("name")//客户名称
+      val officeId = JSON.parseObject(x.toString).get("officeId")//部门id
+      val telephone = JSON.parseObject(x.toString).get("telephone")//电话
+      val mobile = JSON.parseObject(x.toString).get("mobile")//手机号
+      val email = JSON.parseObject(x.toString).get("email")//邮箱
+      val customerHighSeaId = JSON.parseObject(x.toString).get("customerHighSeaId")//所属公海id
+      val address = JSON.parseObject(x.toString).get("address")//详细地址
+      val classification = JSON.parseObject(x.toString).get("classification")//客户级别
+      val province = JSON.parseObject(x.toString).get("province")//省份
+      val city = JSON.parseObject(x.toString).get("city")//市
+      val district = JSON.parseObject(x.toString).get("district")//地区
+      val remark = JSON.parseObject(x.toString).get("remark")//备注
+      //    val officeId = JSON.parseObject(res).get("officeId")//负责组
+      val businessCategoryId = JSON.parseObject(x.toString).get("businessCategoryId")//客户类型
+      val highSeaStatus = JSON.parseObject(x.toString).get("highSeaStatus")//公海状态
+      val customerHighSeaReceiveTime = JSON.parseObject(x.toString).get("customerHighSeaReceiveTime")//领取时间
+      val customerHighSeaReturnCount = JSON.parseObject(x.toString).get("customerHighSeaReturnCount")//退回次数
+      val notFollowDays = JSON.parseObject(x.toString).get("notFollowDays")//未跟进天数
+      val lastMasterUserId = JSON.parseObject(x.toString).get("lastMasterUserId")//最后所有人
+      val transferToHighSeaReason = JSON.parseObject(x.toString).get("transferToHighSeaReason")//退回公海原因
+      val recentActivityRecordTime = JSON.parseObject(x.toString).get("recentActivityRecordTime")//最新活动记录时间
+      val expireTime = JSON.parseObject(x.toString).get("expireTime")//到期时间
+      val locked = JSON.parseObject(x.toString).get("locked")//锁定状态
+      val createUser = JSON.parseObject(JSON.parseObject(x.toString).get("createUser").toString).get("realname")//创建人
+      var updateUser  = ""
+      if(x.toString.contains("updateUser")){
+        updateUser = JSON.parseObject(JSON.parseObject(x.toString).get("updateUser").toString).get("realname").toString//最近修改人
+      }
+      val master = JSON.parseObject(JSON.parseObject(x.toString).get("master").toString).get("realname")//客户所有人
+      val masterOffice: AnyRef = JSON.parseObject(JSON.parseObject(x.toString).get("masterOffice").toString).get("name")//客户所属部门
+      val createTime = JSON.parseObject(x.toString).get("createTime")//创建时间
+      var updateTime = ""
+      if(x.toString.contains("updateTime")){
+        updateTime = JSON.parseObject(x.toString).get("updateTime").toString//最近修改时间
+      }
+
+      var test  = "id="+id+
+        "&name=" +name+
+        "|officeId=" +officeId+
+        "|telephone=" +telephone+
+        "|mobile=" +mobile+
+        "|email=" +email+
+        "|customerHighSeaId=" +customerHighSeaId+
+        "|address=" +address+
+        "|classification=" +classification+
+        "|province=" +province+
+        "|city=" +city+
+        "|district=" +district+
+        "|remark=" +remark+
+        "|businessCategoryId=" +businessCategoryId+
+        "|highSeaStatus=" +highSeaStatus+
+        "|customerHighSeaReceiveTime=" +customerHighSeaReceiveTime+
+        "|customerHighSeaReturnCount=" +customerHighSeaReturnCount+
+        "|notFollowDays=" +notFollowDays+
+        "|lastMasterUserId=" +lastMasterUserId+
+        "|transferToHighSeaReason=" +transferToHighSeaReason+
+        "|recentActivityRecordTime=" +recentActivityRecordTime+
+        "|expireTime=" +expireTime+
+        "|locked="+locked+
+        "|createUser=" +createUser+
+        "|updateUser=" +updateUser+
+        "|master=" +master+
+        "|masterOffice=" +masterOffice+
+        "|createTime=" +createTime+
+        "|updateTime=" +updateTime+"|"
+
+      test
+    })
+    baseInfo
+  }
+
 }

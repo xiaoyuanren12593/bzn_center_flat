@@ -37,7 +37,7 @@ object SparkStreamingReadKaf2HbaseBuss {
     )
 
     //topic
-    val topicSet: Set[String] = Set("crm_datasync_niche")
+    val topicSet: Set[String] = Set("crm_datasync_niche_test")
 
     //direct方式连接kafka
     val directKafka: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet)
