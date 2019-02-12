@@ -11,7 +11,6 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import test.ParseJson.{getCustomField, getMerge, _}
 
 object BussMerge_Cum {
   def main(args: Array[String]): Unit = {
