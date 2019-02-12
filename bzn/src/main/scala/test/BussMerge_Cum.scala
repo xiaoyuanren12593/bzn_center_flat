@@ -1,5 +1,7 @@
 package test
 
+import java.util
+
 import Util.Spark_Util
 import com.alibaba.fastjson.{JSON, JSONArray, JSONObject}
 import kafka.serializer.StringDecoder
@@ -50,7 +52,7 @@ object BussMerge_Cum {
     val lines_buss: DStream[(String)] = directKafka_buss.map(x => (x._2))
 
     //提取客户消息
-    val lines_cum: DStream[(String)] = directKafka_buss.map(x => (x._2))
+    val lines_cum: DStream[(String)] = directKafka_cum.map(x => (x._2))
 
     //商机
     lines_buss.map(preJson => {
@@ -209,8 +211,6 @@ object BussMerge_Cum {
 
             for(res <- list){
 
-              //              println((res._1,res._2))
-
               var keys = res._1.split("=")
 
               val put = new Put(Bytes.toBytes(String.valueOf(keys(1))))
@@ -235,7 +235,7 @@ object BussMerge_Cum {
 
               val fieldLen = field.length
 
-              println(fieldLen)
+//              println(fieldLen)
 
               for(z <- 0 to fieldLen-1){
                 val keyValue = field(z).split("=")
@@ -273,7 +273,7 @@ object BussMerge_Cum {
     var i = 0
     var baseInfo_CustomField =  baseInfo.map(x => {
       var builder = new StringBuilder
-      val spr = x.split("&")
+      val spr = x.split("#")
       var key: String = spr(0)
       var value: String = spr(1)+customField(i)
       i += 1
@@ -303,12 +303,26 @@ object BussMerge_Cum {
         var re: JSONObject = JSON.parseObject(res.toString)
         var keys = re.keySet()
         val itr = keys.iterator()
+
         while(itr.hasNext()){
+
           var key = itr.next()
-          context = JSON.parseObject(re.get(key).toString).get("content").toString
-          builder.append(key+"="+context+"^")
+
+          val sets: util.Set[String] = JSON.parseObject(re.get(key).toString).keySet()
+
+          if(sets.size()==4){
+            context = JSON.parseObject(re.get(key).toString).get("content").toString
+            builder.append(key+"="+context+"^")
+          }else{
+            println(key+"  "+sets.size())
+          }
         }
-        builder.toString().substring(0,builder.toString().length-1)
+
+        if(builder.toString().length > 0){
+          builder.toString().substring(0,builder.toString().length-1)
+        }else{
+          builder.toString()
+        }
       }else{
         builder.toString()
       }
@@ -351,7 +365,7 @@ object BussMerge_Cum {
       }
 
       var test  = "id="+id+
-        "&name=" +name+
+        "#name=" +name+
         "|remark=" +remark+
         "|customerId=" +customerId+
         "|customer_name=" +customer_name+
@@ -410,15 +424,21 @@ object BussMerge_Cum {
         updateUser = JSON.parseObject(JSON.parseObject(x.toString).get("updateUser").toString).get("realname").toString//最近修改人
       }
       val master = JSON.parseObject(JSON.parseObject(x.toString).get("master").toString).get("realname")//客户所有人
-      val masterOffice: AnyRef = JSON.parseObject(JSON.parseObject(x.toString).get("masterOffice").toString).get("name")//客户所属部门
+
+      var masterOffice = ""
+      if(x.toString.contains("masterOffice")){
+        masterOffice = JSON.parseObject(JSON.parseObject(x.toString).get("masterOffice").toString).get("name").toString//客户所属部门
+      }
+
       val createTime = JSON.parseObject(x.toString).get("createTime")//创建时间
+
       var updateTime = ""
       if(x.toString.contains("updateTime")){
         updateTime = JSON.parseObject(x.toString).get("updateTime").toString//最近修改时间
       }
 
       var test  = "id="+id+
-        "&name=" +name+
+        "#name=" +name+
         "|officeId=" +officeId+
         "|telephone=" +telephone+
         "|mobile=" +mobile+
