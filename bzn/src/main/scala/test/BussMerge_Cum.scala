@@ -31,7 +31,7 @@ object BussMerge_Cum {
       "zookeeper.connect" -> "namenode2.cdh:2181,datanode3.cdh:2181,namenode1.cdh:2181",
       "metadata.broker.list" -> "namenode1.cdh:9092",
       //设置一下group id
-      "group.id" -> "spark_xing_buss",
+      "group.id" -> "spark_xing_buss_Cum",
       //----------从该topic最新的位置开始读数------------
       //"auto.offset.reset" -> kafka.api.OffsetRequest.LargestTimeString,
       "client.id" -> "spark_xing_buss",
@@ -39,9 +39,9 @@ object BussMerge_Cum {
     )
 
     //topic
-    val topicSet_buss: Set[String] = Set("crm_datasync_niche_test")
+    val topicSet_buss: Set[String] = Set("crm_datasync_niche")
 
-    val topicSet_Cum: Set[String] = Set("crm_datasync_customer_test")
+    val topicSet_Cum: Set[String] = Set("crm_datasync_customer")
 
     //direct方式连接kafka
     val directKafka_buss: InputDStream[(String, String)] = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParam, topicSet_buss)
