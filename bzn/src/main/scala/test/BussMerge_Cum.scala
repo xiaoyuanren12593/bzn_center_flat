@@ -11,12 +11,13 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+import test.ParseJson.{_}
 
 object BussMerge_Cum {
   def main(args: Array[String]): Unit = {
     val util = new Spark_Util
 
-    var sc = util.sparkConf("SparkStreamingReadKafka","local[2]")
+    var sc = util.sparkConf("SparkStreamingReadKafka","")
 
     //sparkStreaming上下文
     var ssc = new StreamingContext(sc,Seconds(2))
@@ -107,11 +108,12 @@ object BussMerge_Cum {
             //遍历每一条数据_1  key   _2是value
             for(res <- list){
 
-//              println((res._1,res._2))
+              //println(res)
+
+              //println((res._1,res._2))
 
               var keys = res._1.split("=")
 
-              //存储key到Put
               val put = new Put(Bytes.toBytes(String.valueOf(keys(1))))
 
               //获得全部数据
@@ -119,33 +121,51 @@ object BussMerge_Cum {
 
               //获得数组长度
               var len = mergeData.length
-              for (x <- 0 to len-2){
-                var keyValue = mergeData(x).split("=")
-                //println(keyValue(0))
-                if(keyValue.length == 2) {
+
+              if(len > 1){
+                for (x <- 0 to len-2){
+                  var keyValue = mergeData(x).split("=")
+                  //println(keyValue(0))
+                  if(keyValue.length == 2) {
+                    if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                      put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                    }
+                  }
+                }
+
+                //用户自定义数据
+                val field = mergeData(len-1).split("\\^")
+
+                val fieldLen = field.length
+
+                //              println(fieldLen)
+
+                for(z <- 0 to fieldLen-1){
+                  val keyValue = field(z).split("=")
+                  if(keyValue.length == 2) {
+                    if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                      put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                    }
+                  }
+                }
+
+                table.put(put)
+              }else if(len == 1){
+
+                println((res._1,res._2))
+                //println(mergeData(0))
+                var keyValue = mergeData(0).split("=")
+
+                if(keyValue.length == 2 && keyValue(1) != null) {
                   if(keyValue(1) != null && !"null".equals(keyValue(1))){
                     put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                    table.put(put)
                   }
                 }
+
+              }else{
+                mergeData.foreach(println)
               }
-
-              //用户自定义数据
-              val field = mergeData(len-1).split("\\^")
-
-              val fieldLen = field.length
-
-//              println(fieldLen)
-
-              for(z <- 0 to fieldLen-1){
-                val keyValue = field(z).split("=")
-                if(keyValue.length == 2) {
-                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
-                    put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
-                  }
-                }
-              }
-
-              table.put(put)
             }
 
             table.close()
@@ -272,7 +292,7 @@ object BussMerge_Cum {
     var i = 0
     var baseInfo_CustomField =  baseInfo.map(x => {
       var builder = new StringBuilder
-      val spr = x.split("#")
+      val spr = x.split("\\u0001")
       var key: String = spr(0)
       var value: String = spr(1)+customField(i)
       i += 1
@@ -364,7 +384,7 @@ object BussMerge_Cum {
       }
 
       var test  = "id="+id+
-        "#name=" +name+
+        "\u0001name=" +name+
         "|remark=" +remark+
         "|customerId=" +customerId+
         "|customer_name=" +customer_name+
@@ -437,7 +457,7 @@ object BussMerge_Cum {
       }
 
       var test  = "id="+id+
-        "#name=" +name+
+        "\u0001name=" +name+
         "|officeId=" +officeId+
         "|telephone=" +telephone+
         "|mobile=" +mobile+

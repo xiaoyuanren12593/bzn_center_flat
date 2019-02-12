@@ -15,7 +15,7 @@ object SparkStreamingReadKaf2HbaseBuss {
   def main(args: Array[String]): Unit = {
     val util = new Spark_Util
 
-    var sc = util.sparkConf("SparkStreamingReadKafka","")
+    var sc = util.sparkConf("SparkStreamingReadKafka","local[2]")
 
     //sparkStreaming上下文
     var ssc = new StreamingContext(sc,Seconds(2))
@@ -163,7 +163,7 @@ object SparkStreamingReadKaf2HbaseBuss {
     var i = 0
     var baseInfo_CustomField =  baseInfo.map(x => {
       var builder = new StringBuilder
-      val spr = x.split("&")
+      val spr = x.split("\\u0001")
       var key: String = spr(0)
       var value: String = spr(1)+customField(i)
       i += 1
@@ -241,7 +241,7 @@ object SparkStreamingReadKaf2HbaseBuss {
       }
 
       var test  = "id="+id+
-        "#name=" +name+
+        "\u0001name=" +name+
         "|remark=" +remark+
         "|customerId=" +customerId+
         "|customer_name=" +customer_name+

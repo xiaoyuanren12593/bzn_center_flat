@@ -26,6 +26,13 @@ object testAll {
       println("123")
     }
 
+    var res = "name=北京图为先科技有限公司\u0001CustomField_4795=16"
+    println(res.split("\\u0001").length)
+    println("\\u0001"+"\u0001")
+    var len = 0
+    for (x <- 0 to len-2){
+
+    }
 
   }
 }

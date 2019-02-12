@@ -15,10 +15,10 @@ object SparkStreamingReadKafka {
   def main(args: Array[String]): Unit = {
     val util = new Spark_Util
 
-    var sc = util.sparkConf("SparkStreamingReadKafka","local[2]")
+    var sc = util.sparkConf("SparkStreamingReadKafka","local[4]")
 
     //sparkStreaming上下文
-    var ssc = new StreamingContext(sc,Seconds(5))
+    var ssc = new StreamingContext(sc,Seconds(3))
 
     /**
       * kafka conf
@@ -88,7 +88,7 @@ object SparkStreamingReadKafka {
 
           var table = connection.getTable(TableName.valueOf(tableName))
 
-          println(table.getName)
+//          println(table.getName)
 
           partitionOfRecords.foreach(logData =>{
 
@@ -108,32 +108,51 @@ object SparkStreamingReadKafka {
 
               //获得数组长度
               var len = mergeData.length
-              for (x <- 0 to len-2){
-                var keyValue = mergeData(x).split("=")
-                //                  println(keyValue(0))
-                if(keyValue.length == 2) {
+
+              if(len > 1){
+                for (x <- 0 to len-2){
+                  var keyValue = mergeData(x).split("=")
+                  //println(keyValue(0))
+                  if(keyValue.length == 2) {
+                    if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                      put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                    }
+                  }
+                }
+
+                //用户自定义数据
+                val field = mergeData(len-1).split("\\^")
+
+                val fieldLen = field.length
+
+                //              println(fieldLen)
+
+                for(z <- 0 to fieldLen-1){
+                  val keyValue = field(z).split("=")
+                  if(keyValue.length == 2) {
+                    if(keyValue(1) != null && !"null".equals(keyValue(1))){
+                      put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                    }
+                  }
+                }
+
+                table.put(put)
+              }else if(len == 1){
+
+                println((res._1,res._2))
+//                println(mergeData(0))
+                var keyValue = mergeData(0).split("=")
+
+                if(keyValue.length == 2 && keyValue(1) != null) {
                   if(keyValue(1) != null && !"null".equals(keyValue(1))){
                     put.addColumn(Bytes.toBytes(columnFamily1),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
+                    table.put(put)
                   }
                 }
+
+              }else{
+                mergeData.foreach(println)
               }
-
-              //用户自定义数据
-              val field = mergeData(len-1).split("\\^")
-
-              val fieldLen = field.length
-
-//              println(fieldLen)
-
-              for(z <- 0 to fieldLen-1){
-                val keyValue = field(z).split("=")
-                if(keyValue.length == 2) {
-                  if(keyValue(1) != null && !"null".equals(keyValue(1))){
-                    put.addColumn(Bytes.toBytes(columnFamily2),Bytes.toBytes(keyValue(0)),Bytes.toBytes(keyValue(1)))
-                  }
-                }
-              }
-              table.put(put)
             }
 
             table.close()

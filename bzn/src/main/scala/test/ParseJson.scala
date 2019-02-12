@@ -191,9 +191,10 @@ object ParseJson {
     var i = 0
     var baseInfo_CustomField =  baseInfo.map(x => {
       var builder = new StringBuilder
-      val spr = x.split("#")
+      val spr = x.split("\\u0001")
       var key: String = spr(0)
       var value: String = spr(1)+customField(i)
+//      println(key+"   " +value)
       i += 1
       emptyMap += (key -> value)
     })
@@ -207,6 +208,7 @@ object ParseJson {
     */
   def getCustomField(value : Array[AnyRef]): Array[String] ={
     var res1: Array[String] = value.map(x => {
+
       //解析json  list下的key-value
       var res = JSON.parseObject(JSON.parseObject(x.toString).toString).toString
       //存储可变字段key和value
@@ -256,7 +258,12 @@ object ParseJson {
     var baseInfo: Array[String] = value.map(x => {
 //      println(x)
       val id = JSON.parseObject(x.toString).get("id")//客户id
-      val name = JSON.parseObject(x.toString).get("name")//客户名称
+
+      var name = ""
+      if(x.toString.contains("name")){
+        name = JSON.parseObject(x.toString).get("name").toString//客户名称
+      }
+
       val officeId = JSON.parseObject(x.toString).get("officeId")//部门id
       val telephone = JSON.parseObject(x.toString).get("telephone")//电话
       val mobile = JSON.parseObject(x.toString).get("mobile")//手机号
@@ -293,7 +300,7 @@ object ParseJson {
       }
 
       var test  = "id="+id+
-        "#name=" +name+
+        "\u0001name=" + name +
         "|officeId=" +officeId+
         "|telephone=" +telephone+
         "|mobile=" +mobile+
