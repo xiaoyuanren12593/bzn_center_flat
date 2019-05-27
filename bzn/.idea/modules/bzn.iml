@@ -22,13 +22,13 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: com.alibaba:fastjson:1.2.24:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.6:jar" level="project" />
-    <orderEntry type="library" name="SBT: redis.clients:jedis:2.9.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.nlpcn:nlp-lang:1.7.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.apache.commons:commons-pool2:2.4.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.ansj:ansj_seg:5.1.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: mysql:mysql-connector-java:5.1.36:jar" level="project" />
     <orderEntry type="library" name="SBT: joda-time:joda-time:2.9.9:jar" level="project" />
+    <orderEntry type="library" name="SBT: mysql:mysql-connector-java:5.1.36:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.ansj:ansj_seg:5.1.1:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.apache.commons:commons-pool2:2.4.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.nlpcn:nlp-lang:1.7.2:jar" level="project" />
+    <orderEntry type="library" name="SBT: redis.clients:jedis:2.9.0:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.10.6:jar" level="project" />
     <orderEntry type="library" name="SBT: antlr:antlr:2.7.7:jar" level="project" />
     <orderEntry type="library" name="SBT: aopalliance:aopalliance:1.0:jar" level="project" />
     <orderEntry type="library" name="SBT: asm:asm:3.1:jar" level="project" />

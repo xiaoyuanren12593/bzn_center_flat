@@ -1,5 +1,8 @@
 package test
 
+import java.text.SimpleDateFormat
+import java.util.Date
+
 import Util.Spark_Util
 import org.apache.spark.sql.hive.HiveContext
 
@@ -29,10 +32,11 @@ object testAll {
     var res = "name=北京图为先科技有限公司\u0001CustomField_4795=16"
     println(res.split("\\u0001").length)
     println("\\u0001"+"\u0001")
-    var len = 0
-    for (x <- 0 to len-2){
 
-    }
+    val now: Date = new Date()
+    val dateFormatOne: SimpleDateFormat = new SimpleDateFormat("yyyyMMdd")
+    val now_Date: String = dateFormatOne.format(now)
 
+    println(now_Date)
   }
 }
