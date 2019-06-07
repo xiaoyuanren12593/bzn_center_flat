@@ -18,7 +18,7 @@ import scala.io.Source
   * Time:10:29
   * describe: 企业信息表
   **/
-object EnterpriseInfoTest extends SparkUtil with Until{
+object OdsEnterpriseDetailTest extends SparkUtil with Until{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName

@@ -1,11 +1,15 @@
 package bzn.ods.policy
 
 import java.security.MessageDigest
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.{Calendar, Date}
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
+
+import scala.math.BigDecimal.RoundingMode
+import scala.math.BigDecimal.RoundingMode.RoundingMode
 
 /**
   * author:xiaoYuanRen
@@ -23,15 +27,80 @@ object test {
 //    val md5Str1 = MD5("北京德知航创科技有限责任公司")
 //    println(md5Str)
 //    println(md5Str1)
-    var str = "1973-08-22 00:00:00"
+    var str = "1970-00-00 00:00:00"
     println(str.length)
     if(str != null && str.length == 19){
       str = str.substring(0,10)
     }
     println(str)
 
-    println(currentTimeL("2019-05-29 00:11:11"))
-    println(get_current_date(0))
+    if(str !=null && str !="null") {
+      println(currentTimeL("2019-05-29 00:11:11"))
+    }
+    println(typeChange(28.5423))
+    println(1.45645.toDouble/2.45455.toDouble)
+
+    val d1 = 1
+    val d2 = 20.2
+    val d3: Double = 300.04
+    val res = d1*d2*d3
+    println(typeChange(res))
+    println(timeSubstring("2019-05-29 00:11:1"))
+    println(dateAddOneDay("2019-05-29 00:11:11.0"))
+    var test: Timestamp = new Timestamp(0)
+    test = null
+    var preEndDateRes = println(test)
+    println("^A")
+
+    val arr = Array(1,2)
+    val arr1 = Array(1,2,3)
+    if(arr sameElements  arr1){
+      println("12313132")
+    }
+    val l1 = Seq("1","2").sorted
+    val l2 = Seq("2","1","-1").sorted
+
+    println(l1.sameElements(l2))
+    println((l2 diff l1).mkString(" "))
+
+    println("80123".substring(2,4))
+    val bigDecimal2 = BigDecimal(213131.0000000000)
+    println(bigDecimal2.setScale(2,RoundingMode(3)))
+    println(bigDecimal2.setScale(2,RoundingMode(4)))
+    println(bigDecimal2.setScale(2,RoundingMode(5)))
+
+  }
+
+  def dateAddOneDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, 1)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
+
+  def typeChange(dec:Double): BigDecimal = {
+    if(dec != null){
+      dec
+    }else{
+      dec
+    }
+  }
+
+  def timeSubstring(str :String): String ={
+    var date = ""
+    if(str != null && str.length > 19){
+      date = str.substring(0,19)
+    }else if(str.length == 19){
+      date = str
+    }else{
+      date = null
+    }
+    date
   }
 
   def get_current_date(current: Long): String = {

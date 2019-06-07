@@ -6,9 +6,9 @@ import java.util.{Date, Properties}
 
 import bzn.job.common.Until
 import bzn.ods.util.SparkUtil
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 
@@ -16,19 +16,20 @@ import scala.io.Source
   * author:xiaoYuanRen
   * Date:2019/5/27
   * Time:15:47
-  * describe: this is new class
+  * describe: ods 层保全明细表
   **/
-object OdsPreservationDetailTest extends SparkUtil with Until{
+object OdsPreservationDetail extends SparkUtil with Until{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    onePreservationDetail(hiveContext)
-    twoPreservationDetail(hiveContext)
-    //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_holder_detail")
+    val oneRes = onePreservationDetail(hiveContext)
+    val twoRes = twoPreservationDetail(hiveContext)
+    val res = oneRes.unionAll(twoRes)
+    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_preservation_detail")
     sc.stop()
   }
 
@@ -84,7 +85,7 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
       .withColumn("temp_inc_dec_order_no",bPolicyPreservationSubjectPersonMasterBzncenOne("master_inc_dec_order_no"))
 
     /**
-      * 保全与保单关联得到保单id
+      * 保全与保单关联得到保单号
       */
     val bPolicyInfo = bPolicyPreserveBznprd.join(bPolicyBzncen,bPolicyPreserveBznprd("temp_policy_no") ===bPolicyBzncen("b_policy_no"),"leftouter")
       .selectExpr("preserve_id","policy_no","insurance_policy_no","temp_policy_no","policy_id","inc_dec_order_no","temp_inc_dec_order_no","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
@@ -181,14 +182,14 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
 
     val resTemp = sqlContext.sql("select * from bPolicyInfoMasterInfoTemp")
       .selectExpr("preserve_id","insurance_policy_no as policy_code","policy_id","inc_dec_order_no" ,"add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
+
     val res = resTemp.join(tep_five,resTemp("inc_dec_order_no") ===tep_five("temp_inc_dec_order_no"),"leftouter")
       .selectExpr("preserve_id","policy_id","policy_code","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
-        "del_person_count","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
+          "del_person_count","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
       .distinct()
       .selectExpr("getUUID() as id","preserve_id","policy_id","policy_code","'1' as preserve_status","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
         "del_person_count","preserve_effect_date","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "case when pay_status = 1 then 1 when pay_status = 2 then 0 else -1 end pay_status","create_time","update_time","getNow() as dw_create_time")
-    res.printSchema()
     res
   }
 
@@ -262,12 +263,12 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
       .selectExpr("id","insurance_policy_no")
 
     val res = plcPolicyPreserveBznprdRes.join(bPolicyBzncen,plcPolicyPreserveBznprdRes("policy_code")===bPolicyBzncen("insurance_policy_no"),"leftouter")
+      .distinct()
       .selectExpr("getUUID() as id","preserve_id","case when id is null then policy_id else id end as policy_id","policy_code",
         "case when status in (4,5) then 1 when status = 6 then 0 else -1 end as preserve_status",
         "add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
-        "case when getDefault() = '' then -1 end as pay_status","create_time","update_time","getNow() as dw_create_time")
-    res.printSchema()
+        "case when getDefault() = '' then null end as pay_status","create_time","update_time","getNow() as dw_create_time")
     res
   }
 

@@ -93,8 +93,8 @@ object OdsHolderInfo extends SparkUtil with Until{
       .toDF("policy_no","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email")
 
     val bHolderRes = bPolicyBznprd.join(bpolicyHolderPersonBzncen,bPolicyBznprd("master_policy_no")===bpolicyHolderPersonBzncen("policy_no"))
-      .selectExpr("holder_name","holder_cert_type","holder_cert_no","birthday","case when gender = 2 then 0 else 1 end as gender","mobile","email")
-//      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+        "case when gender = 2 then 0 else 1 end as gender","mobile","email")
     bHolderRes
   }
 
@@ -123,10 +123,11 @@ object OdsHolderInfo extends SparkUtil with Until{
       .where("holder_type = 2 and length(name) > 0")
       .selectExpr("policy_id","name as holder_name","cert_type as holder_cert_type","cert_no as holder_cert_no","birthday","gender","mobile","email")
 
-    val odrHolderRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"))
-      .selectExpr("holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email")
+    val odsHolderRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"))
+      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+        "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
-    odrHolderRes
+    odsHolderRes
   }
 
   /**

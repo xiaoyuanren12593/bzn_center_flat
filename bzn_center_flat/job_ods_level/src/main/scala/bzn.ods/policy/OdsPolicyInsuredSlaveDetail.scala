@@ -45,7 +45,10 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
     sqlContext.udf.register("getAgeFromBirthTime", (cert_no: String, end: String) => getAgeFromBirthTime(cert_no, end))
 
     val odrPolicyInsuredChildBznprd = readMysqlTable(sqlContext,"odr_policy_insured_child_bznprd")
-      .selectExpr("getUUID() as id","id as insured_slave_id","insured_id as master_id","child_name as slave_name","child_gender as gender","child_cert_type as slave_cert_type","child_cert_no as slave_cert_no","child_birthday as birthday","child_policy_status as policy_status","start_date","end_date",
+      .selectExpr("getUUID() as id","id as insured_slave_id","insured_id as master_id","child_name as slave_name","" +
+        "case when `child_gender` = 0 then 0 when  child_gender = 1 then 1 else null  end  as gender",
+        "case when child_cert_type = '1' then '1' else '-1' end as slave_cert_type ",
+        "child_cert_no as slave_cert_no","child_birthday as birthday","case when child_policy_status = 1 then 1 else 0 end as policy_status","start_date","end_date",
         "case when child_cert_type ='1' and start_date is not null then getAgeFromBirthTime(child_cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
 
     odrPolicyInsuredChildBznprd
@@ -70,9 +73,8 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
         .registerTempTable("bPolicySubjectPersonSlaveBzncenTemp")
 
     val res = sqlContext.sql("select *,case when a.`status`='1' then '0' else '1' end as policy_status from bPolicySubjectPersonSlaveBzncenTemp a")
-      .selectExpr("id","insured_slave_id","master_id","slave_name","gender","slave_cert_type","slave_cert_no","birthday","policy_status","start_date","end_date",
-        "age","create_time","update_time","getNow() as dw_create_time")
-
+      .selectExpr("id","insured_slave_id","master_id","slave_name","case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender",
+        "slave_cert_type","slave_cert_no","birthday","policy_status","start_date","end_date","age","create_time","update_time","getNow() as dw_create_time")
     res
   }
   /**

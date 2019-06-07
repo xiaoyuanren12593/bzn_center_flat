@@ -14,6 +14,22 @@ import scala.collection.mutable.ArrayBuffer
   * Created by a2589 on 2018/4/2.
   */
 trait Until {
+  /**
+    *日期时间格式标准化
+    * @param str
+    * @return
+    */
+  def timeSubstring(str :String): String ={
+    var date = ""
+    if(str != null && str.length > 19){
+      date = str.substring(0,19)
+    }else if(str != null && str.length == 19){
+      date = str
+    }else{
+      date = null
+    }
+    date
+  }
 
   /**
     * mk5加密
@@ -317,7 +333,6 @@ trait Until {
         val selectYear = birthTime.getYear.toInt
         val selectMonth = birthTime.getMonthOfYear.toInt
         val selectDay = birthTime.getDayOfMonth.toInt
-        println(selectYear + "" + selectMonth + "" + selectDay)
 
         // 得到当前时间的年、月、日
         val localDate = formatter1.parseLocalDate(time_new)
@@ -330,7 +345,6 @@ trait Until {
         val monthMinus = monthNow - selectMonth
         val dayMinus = dayNow - selectDay
         var age = yearMinus // 先大致赋值
-        println(yearNow + "" + monthNow + "" + dayNow)
         if (yearMinus < 0) { // 选了未来的年份
           age = 0
         }

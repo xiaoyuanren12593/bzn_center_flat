@@ -3,12 +3,12 @@ package bzn.ods.policy
 import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
-import bzn.ods.util.{SparkUtil, Until}
+import bzn.job.common.Until
+import bzn.ods.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.apache.spark.storage.StorageLevel
 
 import scala.io.Source
 
@@ -18,7 +18,7 @@ import scala.io.Source
   * Time:9:14
   * describe: 人员清单明细表
   **/
-object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
+object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -26,7 +26,7 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-//    val oneDate = odsPolicyInsuredDetail(hiveContext)
+    val oneDate = odsPolicyInsuredDetail(hiveContext)
     twoOdsPolicyInsuredDetail(hiveContext)
 //    oneDate.write.format("parquet").mode("overwrite").save("/xing/data/odsPolicyInsuredDetail")
     sc.stop()
@@ -37,6 +37,7 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
     * @param sqlContext
     */
   def twoOdsPolicyInsuredDetail(sqlContext:HiveContext) ={
+    sqlContext.udf.register("getDate", (time:String) => timeSubstring(time))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
@@ -48,7 +49,7 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
     /**
       * 读取被保人表
       */
-    val bPolicySubjectPersonMasterBzncen = readMysqlTable(sqlContext,"b_policy_subject_person_master_bzncen")
+    val bPolicySubjectPersonMasterBzncen = sqlContext.sql("select * from sourcedb.b_policy_subject_person_master_bzncen")
       .selectExpr("id as master_id","policy_no as master_policy_no","name as insured_name","cert_type as insured_cert_type","cert_no","birthday","sex as gender","tel as insured_mobile","industry_name as industry","work_type","company_name","company_phone","status","start_date as insured_start_date","end_date as insured_end_date","create_time","update_time")
       .registerTempTable("bPolicySubjectPersonMasterBzncenTable")
 
@@ -56,13 +57,16 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
       .drop("work_type").drop("cert_no").drop("insured_name")
       .registerTempTable("bPolicySubjectPersonMasterBzncenTemp")
 
+    /**
+      * 2.0状态  1在职 2不在职   改成 0在职 1不在职
+      */
     val bPolicySubjectPersonMasterBzncenTemp = sqlContext.sql("select " +
       "*,CASE WHEN a.`status` = '1'" +
       "    THEN '0'" +
       "    ELSE '1'" +
       "  END as insured_status, " +
-      "case when (a.`status`='1' and insured_end_date > now() and insured_start_date< now() ) then '1' else '2' end as insure_policy_status," +
-      "case when insured_cert_type ='1' and insured_start_date is not null then getAgeFromBirthTime(insured_cert_no,insured_start_date) else null end as age from bPolicySubjectPersonMasterBzncenTemp as a")
+      "case when (a.`status`='1' and insured_end_date > now() and insured_start_date< now() ) then '1' else '2' end as insure_policy_status " +
+      "from bPolicySubjectPersonMasterBzncenTemp as a")
 
     val bPolicySubjectPersonMasterBzncenTempSchema = bPolicySubjectPersonMasterBzncenTemp.schema.map(x=> x.name):+"work_type_new" :+ "name_new"
     val bPolicySubjectPersonMasterBzncenValue = bPolicySubjectPersonMasterBzncenTemp.map(x => {
@@ -84,9 +88,14 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
       .selectExpr("id as policy_id","policy_no","insurance_policy_no")
 
     val res = InsuredData.join(bPolicyBzncen,InsuredData("master_policy_no") ===bPolicyBzncen("policy_no"),"leftouter")
-      .selectExpr("getUUID() as id","master_id as insured_id","policy_id","insurance_policy_no as policy_code","name_new as insured_name","insured_cert_type","insured_cert_no","birthday","gender","insured_mobile","industry","work_type_new as work_type","company_name","company_phone","insured_status","insure_policy_status as policy_status","insured_start_date as start_date","insured_end_date as end_date","age","create_time","update_time","getNow() as dw_create_time")
-    res
-    res.show()
+      .selectExpr("getUUID() as id","master_id as insured_id","policy_id","insurance_policy_no as policy_code","name_new as insured_name",
+        "case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ","insured_cert_no","birthday",
+        "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","industry","work_type_new as work_type",
+        "company_name","company_phone","insured_status","insure_policy_status as policy_status","getDate(insured_start_date) as start_date",
+        "getDate(insured_end_date) as end_date", "case when insured_cert_type ='1' and insured_start_date is not null then getAgeFromBirthTime(insured_cert_no,insured_start_date) else null end as age",
+        "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+    res.printSchema()
+//    res.show()
   }
 
   /**
@@ -100,12 +109,13 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
       val date = df.format(new Date())// new Date()为获取当前系统时间
       (date + "")
     })
+    sqlContext.udf.register("getDate", (time:String) => timeSubstring(time))
     sqlContext.udf.register("getAgeFromBirthTime", (cert_no: String, end: String) => getAgeFromBirthTime(cert_no, end))
 
     /**
       * 读取背包人表
       */
-    val odrPolicyInsuredBznprd = readMysqlTable(sqlContext,"odr_policy_insured_bznprd")
+    val odrPolicyInsuredBznprd = sqlContext.sql("select * from sourcedb.odr_policy_insured_bznprd")
       .selectExpr("id as master_id","policy_id","policy_code","name as insured_name","cert_type as insured_cert_type","cert_no","birthday","gender","mobile as insured_mobile","industry","work_type","company_name","company_phone","status","insure_policy_status","start_date","end_date","create_time","update_time","remark")
       .registerTempTable("odrPolicyInsuredBznprdTemp")
     //odrPolicyInsuredBznprd.show()
@@ -154,9 +164,14 @@ object OdsPilicyInsuredDetailTest extends SparkUtil with Until{
       * one 和 Two 数据合并
       */
     val resTemp = insuredDataPolicyOne.unionAll(insuredDataPolicyTwo)
-      .selectExpr("getUUID() as id","master_id as id","policy_id","policy_code","name_new as insured_name ","insured_cert_type","insured_cert_no","birthday","gender","insured_mobile","industry","work_type_new as work_type","company_name","company_phone","status as insured_status","insure_policy_status as policy_status","start_date",
-        "end_date","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
-    resTemp.show()
+      .selectExpr("getUUID() as id","master_id as insured_id","policy_id","policy_code","name_new as insured_name ",
+        "case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ",
+        "insured_cert_no","birthday","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","industry",
+        "work_type_new as work_type","company_name","company_phone","case when status = '0' then '0' else '1' end as insured_status",
+        "case when insure_policy_status = '1' then '1' else '0' end  as policy_status",
+        "getDate(start_date) as start_date", "getDate(end_date) as end_date","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
+        "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+    resTemp.printSchema()
     resTemp
   }
 

@@ -28,7 +28,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneRes: DataFrame = oneHolderInfoDetail(hiveContext)
     val twoRes: DataFrame = twoHolderInfoDetail(hiveContext)
-    val res = unionOneAndTwo(hiveContext,oneRes,twoRes).show()
+//    val res = unionOneAndTwo(hiveContext,oneRes,twoRes).show()
 //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_holder_detail")
     sc.stop()
   }
@@ -94,9 +94,10 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       .toDF("policy_no","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email")
 
     val odsHolderRes = bPolicyBznprd.join(bpolicyHolderPersonBzncen,bPolicyBznprd("master_policy_no")===bpolicyHolderPersonBzncen("policy_no"))
-      .selectExpr("holder_name","holder_cert_type","holder_cert_no","birthday","case when gender = 2 then 0 else 1 end as gender","mobile","email")
+      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+        "case when gender = 2 then 0 else 1 end as gender","mobile","email")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
-//    odsHolderRes.show()
+    odsHolderRes.printSchema()
     odsHolderRes
   }
 
@@ -126,9 +127,9 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       .selectExpr("policy_id","name as holder_name","cert_type as holder_cert_type","cert_no as holder_cert_no","birthday","gender","mobile","email")
 
     val odsHolderRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"))
-      .selectExpr("holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email")
+      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+        "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
-//    odsHolderRes.show()
     odsHolderRes
   }
 
