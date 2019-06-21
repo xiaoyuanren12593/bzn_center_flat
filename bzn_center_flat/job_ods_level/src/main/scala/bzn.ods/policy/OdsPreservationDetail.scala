@@ -197,7 +197,7 @@ object OdsPreservationDetail extends SparkUtil with Until{
     * 1.0系统保全信息
     * @param sqlContext
     */
-  def onePreservationDetail(sqlContext:HiveContext) ={
+  def onePreservationDetail(sqlContext:HiveContext) = {
     import sqlContext.implicits._
 
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -206,69 +206,164 @@ object OdsPreservationDetail extends SparkUtil with Until{
       str
     })
     sqlContext.udf.register("getNow", () => {
-      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
-      val date = df.format(new Date())// new Date()为获取当前系统时间
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
       (date + "")
     })
-
 
     /**
       * 读取保全表
       */
-    val plcPolicyPreserveBznprd = readMysqlTable(sqlContext,"plc_policy_preserve_bznprd")
-      .selectExpr("id as preserve_id","policy_id","policy_code","status","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","start_date","end_date","type as preserve_type","create_time","update_time")
-      .registerTempTable("plcPolicyPreserveBznprdTemp")
+    val plcPolicyPreserveBznprd = readMysqlTable(sqlContext, "plc_policy_preserve_bznprd")
+      .selectExpr("id as preserve_id", "policy_id", "policy_code", "status", "add_batch_code", "add_premium", "add_person_count",
+        "del_batch_code", "del_premium", "del_person_count", "type as preserve_type", "create_time", "update_time")
+
+    /**
+      * 增员人数和减员人数，确定纯减员信息
+      */
+    val plcPolicyPreserveBznprdTempOne = plcPolicyPreserveBznprd.selectExpr("preserve_id", "add_person_count", "del_person_count")
+
+    /**
+      * 读取被保人表 得到最大开始时间和最小离职时间
+      */
+    val plcPolicyPreserveInsuredBznprd = sqlContext.sql("select preserve_id,remark,join_date,left_date from sourcedb.plc_policy_preserve_insured_bznprd")
+      .where("remark != 'obsolete' or remark is null")
+      .selectExpr("preserve_id as preserve_id_insured", "join_date", "left_date")
+      .map(x => {
+        val preserveIdInsured = x.getAs[String]("preserve_id_insured")
+        var joinDate = x.getAs[Timestamp]("join_date")
+        var leftDate = x.getAs[Timestamp]("left_date")
+        var joinDateRes = "0"
+        if (joinDate != null) {
+          joinDateRes = currentTimeL(joinDate.toString.substring(0, 19)).toString
+        } else {
+          if (leftDate != null) {
+            joinDateRes = currentTimeL(leftDate.toString.substring(0, 19)).toString
+          }
+        }
+        var leftDateRes = "0"
+        if (leftDate != null) {
+          leftDateRes = currentTimeL(leftDate.toString.substring(0, 19)).toString
+        } else {
+          if (joinDate != null) {
+            leftDateRes = currentTimeL(joinDate.toString.substring(0, 19)).toString
+          }
+        }
+        (preserveIdInsured, (joinDateRes, leftDateRes))
+      })
+      .reduceByKey((x1, x2) => {
+        val joinDateRes = x1._1 + "\u0001" + x2._1
+        val leftDateRes = x1._2 + "\u0001" + x2._2
+        (joinDateRes, leftDateRes)
+      })
+      .map(x => {
+        //        get_current_date
+        val joinDate: List[String] = x._2._1.split("\u0001").distinct.toList.sorted.reverse
+        //降序
+        var joinDateRes = ""
+        if (joinDate.size > 0 && joinDate(0) != "0") {
+          joinDateRes = get_current_date(joinDate(0).toLong)
+        } else if (joinDate.size == 0) {
+          joinDateRes = null
+        } else {
+          joinDateRes = null
+        }
+
+        val leftDate: List[String] = x._2._2.split("\u0001").distinct.toList.sorted
+        //降序
+        var leftDateRes = ""
+        if (leftDate.size > 0 && leftDate(0) != "0") {
+          leftDateRes = get_current_date(leftDate(0).toLong)
+        } else if (leftDate.size == 0) {
+          leftDateRes = null
+        } else {
+          leftDateRes = null
+        }
+        (x._1, joinDateRes, leftDateRes)
+      })
+      .toDF("preserve_id_insured", "joinDateRes", "leftDateRes")
+      .distinct()
+
+    /**
+      * 将纯退保的数据加一天
+      */
+    val tempRes = plcPolicyPreserveBznprdTempOne.join(plcPolicyPreserveInsuredBznprd, plcPolicyPreserveBznprdTempOne("preserve_id") === plcPolicyPreserveInsuredBznprd("preserve_id_insured"))
+      .map(x => {
+        val preserveIdTemp = x.getAs[String]("preserve_id")
+        var joinDateRes = x.getAs[String]("joinDateRes")
+        var leftDateRes = x.getAs[String]("leftDateRes")
+        val add_person_count = x.getAs[Int]("add_person_count")
+        val del_person_count = x.getAs[Int]("del_person_count")
+        if (add_person_count == 0 && del_person_count > 0) {
+          joinDateRes = null
+          if (leftDateRes != null) {
+            leftDateRes = dateAddOneDay(leftDateRes)
+          }
+        }
+        (preserveIdTemp, joinDateRes, leftDateRes)
+      })
+      .toDF("preserve_id_insured", "joinDateRes", "leftDateRes")
+
+    /**
+      * 去掉1.0 退保的保单
+      */
+    val cancelPolicy =
+      plcPolicyPreserveBznprd.join(tempRes, plcPolicyPreserveBznprd("preserve_id") === tempRes("preserve_id_insured"))
+        .registerTempTable("plcPolicyPreserveBznprdTemp")
 
     /**
       * 创建保全表临时表
       * 使用保全表的开始时间和结束时间以及增员人数和减员人数得到保全生效日期
       */
-    val plcPolicyPreserveBznprdTemp = sqlContext.sql("select preserve_id,add_person_count,del_person_count,start_date,end_date from plcPolicyPreserveBznprdTemp")
+    val plcPolicyPreserveBznprdTemp = sqlContext.sql("select preserve_id,add_person_count,del_person_count,joinDateRes,leftDateRes " +
+      "from plcPolicyPreserveBznprdTemp")
       .map(x => {
         val preserveId = x.getAs[String]("preserve_id")
         val addPersonCount = x.getAs[Int]("add_person_count")
         val delPersonCount = x.getAs[Int]("del_person_count")
-        val startDate = x.getAs[Timestamp]("start_date")
-        val endDate = x.getAs[Timestamp]("end_date")
+        val joinDateRes = x.getAs[String]("joinDateRes")
+        val leftDateRes = x.getAs[String]("leftDateRes")
+        var endDateRes = ""
         var preserve_effect_date = ""
-        if(addPersonCount == 0 && delPersonCount >0) {
-          if(endDate != null && endDate.toString.length >0){
-            preserve_effect_date = endDate.toString.substring(0,10).replaceAll("-","")
-          }else if(startDate!=null  && startDate.toString.length>0){
-            preserve_effect_date = startDate.toString.substring(0,10).replaceAll("-","")
-          }else{
+        if (addPersonCount == 0 && delPersonCount > 0) {
+          if (leftDateRes != null && leftDateRes.length > 0) {
+            endDateRes =leftDateRes
+            preserve_effect_date = endDateRes.substring(0, 10).replaceAll("-", "")
+          } else if (joinDateRes != null && joinDateRes.length > 0) {
+            preserve_effect_date = joinDateRes.substring(0, 10).replaceAll("-", "")
+          } else {
             preserve_effect_date = null
           }
-        }else {
-          if(startDate!=null  && startDate.toString.length>0){
-            preserve_effect_date = startDate.toString.substring(0,10).replaceAll("-","")
-          }else if(endDate != null && endDate.toString.length >0){
-            preserve_effect_date = endDate.toString.substring(0,10).replaceAll("-","")
-          }else{
+        } else {
+          if (joinDateRes != null && joinDateRes.length > 0) {
+            preserve_effect_date = joinDateRes.substring(0, 10).replaceAll("-", "")
+          } else if (leftDateRes != null && leftDateRes.length > 0) {
+            preserve_effect_date = leftDateRes.substring(0, 10).replaceAll("-", "")
+          } else {
             preserve_effect_date = null
           }
         }
-        (preserveId,preserve_effect_date)
+        (preserveId, preserve_effect_date)
       })
-      .toDF("preserve_id_temp","preserve_effect_date")
+      .toDF("preserve_id_temp", "preserve_effect_date")
 
     val plcPolicyPreserveBznprdResTemp = sqlContext.sql("select * from plcPolicyPreserveBznprdTemp")
-    val plcPolicyPreserveBznprdRes = plcPolicyPreserveBznprdResTemp.join(plcPolicyPreserveBznprdTemp,plcPolicyPreserveBznprdResTemp("preserve_id") ===plcPolicyPreserveBznprdTemp("preserve_id_temp"),"leftouter")
-      .selectExpr("preserve_id","policy_id","policy_code","status ","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_effect_date","preserve_type","create_time","update_time")
+    val plcPolicyPreserveBznprdRes = plcPolicyPreserveBznprdResTemp.join(plcPolicyPreserveBznprdTemp, plcPolicyPreserveBznprdResTemp("preserve_id") === plcPolicyPreserveBznprdTemp("preserve_id_temp"), "leftouter")
+      .selectExpr("preserve_id", "policy_id", "policy_code", "status ", "add_batch_code", "add_premium", "add_person_count", "del_batch_code", "del_premium", "del_person_count", "preserve_effect_date", "preserve_type", "create_time", "update_time")
 
     /**
       * 读取2.0保单表 如果1.0保单在2.0保单表中有数据，以2.0的保单id为准
       */
-    val bPolicyBzncen = readMysqlTable(sqlContext,"b_policy_bzncen")
-      .selectExpr("id","insurance_policy_no")
+    val bPolicyBzncen = readMysqlTable(sqlContext, "b_policy_bzncen")
+      .selectExpr("id", "insurance_policy_no")
 
-    val res = plcPolicyPreserveBznprdRes.join(bPolicyBzncen,plcPolicyPreserveBznprdRes("policy_code")===bPolicyBzncen("insurance_policy_no"),"leftouter")
-      .distinct()
-      .selectExpr("getUUID() as id","preserve_id","case when id is null then policy_id else id end as policy_id","policy_code",
+    val res = plcPolicyPreserveBznprdRes.join(bPolicyBzncen, plcPolicyPreserveBznprdRes("policy_code") === bPolicyBzncen("insurance_policy_no"), "leftouter")
+      .selectExpr("getUUID() as id", "preserve_id", "case when id is null then policy_id else id end as policy_id", "policy_code",
         "case when status in (4,5) then 1 when status = 6 then 0 else -1 end as preserve_status",
-        "add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_effect_date",
+        "add_batch_code", "add_premium", "add_person_count", "del_batch_code", "del_premium", "del_person_count", "preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
-        "case when getDefault() = '' then null end as pay_status","create_time","update_time","getNow() as dw_create_time")
+        "case when getDefault() = '' then -1 end as pay_status", "create_time", "update_time", "getNow() as dw_create_time")
     res
   }
 

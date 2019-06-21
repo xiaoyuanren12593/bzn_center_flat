@@ -28,6 +28,7 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val res = updataEnterprise(hiveContext)
     res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_enterprise_detail")
+    res.repartition(20).write.mode(SaveMode.Overwrite)
     sc.stop()
   }
 
@@ -135,7 +136,7 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       })
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
 
-    val twoRes = oneAndTwoEmpData.join(res,oneAndTwoEmpData("ent_name") === res("ent_name_temp"))
+    val twoRes = oneAndTwoEmpData.join(res,oneAndTwoEmpData("ent_name") === res("ent_name_temp"),"leftouter")
       .selectExpr("getUUID() as id","ent_id","ent_name","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","getDefault() as curr_count","getDefault() as first_policy_time","create_time","update_time","getNow() as dw_create_time")
 
     twoRes
@@ -177,7 +178,8 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       .selectExpr("policy_id","company_name")
 
     val odrPolicyRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"),"leftouter")
-      .where("length(policy_code) > 0 and length(company_name) >0 and policy_code is not null and company_name is not null and (user_id not in ('10100080492') or user_id is null)")
+      .where("length(policy_code) > 0 and length(company_name) >0 and policy_code is not null and company_name is not null and " +
+        "(user_id not in ('10100080492') or user_id is null)")
       .map(x=> {
         val holderName = x.getAs[String]("company_name").trim
         val entId = MD5(holderName)

@@ -29,6 +29,7 @@ object Dependencies {
   val hbaseCommonProvided = "org.apache.hbase" % "hbase-common" % "1.2.0" % "provided"
   val hbaseServerProvided = "org.apache.hbase" % "hbase-server" % "1.2.0" % "provided"
   val hbaseHadoopCompatProvided = "org.apache.hbase" % "hbase-hadoop-compat" % "1.2.0" % "provided"
+//  val hiveHbaseHandlerProvied = "org.apache.hive" % "hive-hbase-handler" % "1.2.0" % "provided"
 
 
   //  hive
@@ -47,6 +48,7 @@ object Dependencies {
   val hbaseCommon = "org.apache.hbase" % "hbase-common" % "1.2.0"
   val hbaseServer = "org.apache.hbase" % "hbase-server" % "1.2.0"
   val hbaseHadoopCompat = "org.apache.hbase" % "hbase-hadoop-compat" % "1.2.0"
+//  val hiveHbaseHandler = "org.apache.hive" % "hive-hbase-handler" % "1.2.0"
 
 
   //--------------------------------------------全依赖-----------------------------------------------------------------
@@ -64,6 +66,13 @@ object Dependencies {
   val utilDeps = Seq(jodaTime)
 
   //--------------------------------------------ods层----------------------------------------------------------------
-  val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided)
+  val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 
+  //--------------------------------------------dw层----------------------------------------------------------------
+  val bznDwLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided)
+
+  //--------------------------------------------dm层----------------------------------------------------------------
+  val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 }

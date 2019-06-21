@@ -86,7 +86,14 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until{
       .selectExpr("policy_id","company_name","contact_name","contact_mobile","ent_telephone","contact_email","company_address")
 
     val odrPolicyHolderInfoRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"),"leftouter")
-      .where("length(policy_code) > 0 and length(company_name) >0 and policy_code is not null and company_name is not null and (user_id not in ('10100080492') or user_id is null) and contact_name is not null")
+
+    /**
+      * 天保新量创客空间管理（上海）有限公司的联系人信息为空，但是保单有效，单独拿出来得到保单企业信息,不然会影响保费
+      */
+    val resOne = odrPolicyHolderInfoRes.where("company_name = '天保新量创客空间管理（上海）有限公司'")
+    val resTwo = odrPolicyHolderInfoRes.where("length(policy_code) > 0 and length(company_name) >0 and policy_code is not null and " +
+      "company_name is not null and (user_id not in ('10100080492') or user_id is null) and contact_name is not null")
+    val resTemp = resOne.unionAll(resTwo)
       .map(x=> {
         val holderName = x.getAs[String]("company_name").trim
         val id = x.getAs[String]("id")
@@ -99,8 +106,7 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until{
         (entId,id,contactName,contactMobile,entTelephone,contactEmail,companyAddress)
       }).toDF("ent_id","policy_id","contact_name","contact_mobile","contact_tel","contact_email","contact_address")
       .distinct()
-
-    val res = odrPolicyHolderInfoRes
+    val res = resTemp
       .selectExpr("getUUID() as id","ent_id","policy_id","contact_name","contact_mobile","contact_tel","contact_email","contact_address","getNow() as dw_create_time")
 
     res

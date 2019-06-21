@@ -1,13 +1,8 @@
-package bzn.ods.util
+package bzn.dm.util
 
-import java.text.SimpleDateFormat
-import java.util.{Date, Properties}
-
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext
-
-import scala.io.Source
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -30,8 +25,6 @@ trait SparkUtil {
       .set("spark.network.timeout", "36000")
     if(exceType != ""){
       conf.setMaster(exceType)
-    }else {
-      conf.setMaster("local[*]")
     }
 
     val sc = new SparkContext(conf)

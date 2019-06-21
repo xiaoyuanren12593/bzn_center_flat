@@ -84,3 +84,35 @@ lazy val bznOdsLevel = (project in file("job_ods_level"))
     //定义jar包的名字
     assemblyJarName in assembly := "bznOdsLevel.jar"
   )
+
+// dw层模块
+lazy val bznDwLevel = (project in file("job_dw_level"))
+  .dependsOn(jobUtil)
+  .settings(
+    libraryDependencies ++= bznDwLevelDepsProvided.map(
+      _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
+  .settings(commonSettings)
+  .settings(commonAssemblySettings)
+  .settings(
+    //定义jar包的名字
+    assemblyJarName in assembly := "bznDwLevel.jar"
+  )
+
+// dm层模块
+lazy val bznDmLevel = (project in file("job_dm_level"))
+  .dependsOn(jobUtil)
+  .settings(
+    libraryDependencies ++= bznDmLevelDepsProvided.map(
+      _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
+  .settings(commonSettings)
+  .settings(commonAssemblySettings)
+  .settings(
+    //定义jar包的名字
+    assemblyJarName in assembly := "bznDmLevel.jar"
+  )

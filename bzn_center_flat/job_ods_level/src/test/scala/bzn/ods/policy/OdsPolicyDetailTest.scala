@@ -116,6 +116,14 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       .selectExpr("id as policy_id","holder_name","policy_no as master_policy_no","insurance_policy_no as policy_code","proposal_no as order_id","product_code",
         "proposal_no as order_code","user_code as user_id","first_insure_premium as first_premium","sum_premium as premium","status","sell_channel_code as channel_id",
         "sell_channel_name as channel_name","start_date","end_date","continued_policy_no","insurance_name","premium_price","first_insure_master_num","create_time","update_time")
+    .cache()
+
+    /**
+      * 首先续投保单号不能为空，如果续投保单号存在，用保险公司保单号替换续投保单号，否则为空
+      */
+    val continuedPolicyNo = bPolicyBzncen.selectExpr("master_policy_no as policy_no","policy_code as policy_code_slave")
+      .where("policy_no is not null")
+      .cache()
 //    bPolicyBzncen.show()
 
     /**
@@ -179,13 +187,15 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取产品方案表
       */
     val bPolicyProductPlanBzncen = readMysqlTable(sqlContext,"b_policy_product_plan_bzncen")
-      .selectExpr("policy_no","plan_amount","contain_trainee","payment_type","injure_percent")
+      .selectExpr("policy_no","plan_amount","contain_trainee","payment_type","injure_percent","technology_fee","brokerage_fee")
       .map(x => {
         val policyNo = x.getAs[String]("policy_no")
-        val planAmount = x.getAs[Double]("plan_amount")
-        val containTrainee = x.getAs[String]("contain_trainee")
-        val paymentType = x.getAs[Int]("payment_type")
-        var injurePercent = x.getAs[Double]("injure_percent")
+        val planAmount = x.getAs[Double]("plan_amount") //方案保额
+        val containTrainee = x.getAs[String]("contain_trainee") //2.0 1 2 3 null 特约（是否包含实习生）
+        val paymentType = x.getAs[Int]("payment_type") //类型 年缴月缴
+        var injurePercent = x.getAs[Double]("injure_percent")  //伤残比例
+        var technologyFee = x.getAs[Double]("technology_fee") //技术服务费
+        var brokerageFee = x.getAs[Double]("brokerage_fee") //经纪费
         var injurePercentres = ""
         if(injurePercent == 0.05){
           injurePercentres = "1"
@@ -194,16 +204,24 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         }else {
           injurePercentres = null
         }
-        (policyNo,(planAmount,containTrainee,injurePercentres,paymentType))
+
+        if(technologyFee != null){
+          technologyFee = technologyFee/100
+        }
+        if(brokerageFee != null){
+          brokerageFee = brokerageFee/100
+        }
+
+        (policyNo,(planAmount,containTrainee,injurePercentres,paymentType,technologyFee,brokerageFee))
       })
         .reduceByKey((x1,x2)=>{
           val res = x1
           res
         })
         .map(x => {
-          (x._1,x._2._1,x._2._2,x._2._3,x._2._4)
+          (x._1,x._2._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6)
         })
-      .toDF("policy_no_plan","sku_coverage","sku_append","sku_ratio","sku_charge_type")
+      .toDF("policy_no_plan","sku_coverage","sku_append","sku_ratio","sku_charge_type","tech_service_rate","economic_rate")
 
     /**
       * 读取被保人企业
@@ -214,10 +232,16 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
 
     val bPolicySubject = bPolicySubjectCompanyBzncen
 
+    val bPolicyBzncenTemp = bPolicyBzncen.join(continuedPolicyNo,bPolicyBzncen("continued_policy_no") ===continuedPolicyNo("policy_no"),"leftouter")
+      .selectExpr("policy_id","holder_name","master_policy_no","policy_code","order_id","product_code","order_code","user_id","first_premium","premium",
+        "status","channel_id","channel_name","start_date","end_date",
+        "case when continued_policy_no is null then continued_policy_no else policy_code_slave end as continued_policy_no",
+        "insurance_name","premium_price","first_insure_master_num","create_time","update_time")
+
     /**
       * 保单表和投保人表进行关联
       */
-    val bPolicyHolderCompany = bPolicyBzncen.join(bPolicyHolderCompanyUnion,bPolicyBzncen("master_policy_no") ===bPolicyHolderCompanyUnion("policy_no"),"leftouter")
+    val bPolicyHolderCompany = bPolicyBzncenTemp.join(bPolicyHolderCompanyUnion,bPolicyBzncenTemp("master_policy_no") ===bPolicyHolderCompanyUnion("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","name as holder_company_person_name","master_policy_no","policy_code","order_id","product_code","order_code","user_id","first_premium","premium",
         "status","channel_id","channel_name","start_date","end_date","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num","create_time","update_time")
 
@@ -233,8 +257,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val bPolicyHolderCompanyProduct = bPolicyHolderCompanyProductTemp.join(bPolicyProductPlanBzncen,bPolicyHolderCompanyProductTemp("master_policy_no")===bPolicyProductPlanBzncen("policy_no_plan"),"leftouter")
       .selectExpr("policy_id","holder_name","holder_company_person_name","master_policy_no","policy_code","order_id","product_code","product_name","order_code","user_id","first_premium","premium",
-        "status","channel_id","channel_name","start_date","end_date","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","sku_coverage","sku_append","sku_ratio","sku_charge_type",
-        "first_insure_master_num","create_time","update_time")
+        "status","channel_id","channel_name","start_date","end_date","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","sku_coverage",
+        "sku_append","sku_ratio","sku_charge_type","tech_service_rate","economic_rate","first_insure_master_num","create_time","update_time")
 
     /**
       * 与被保人信息表关联
@@ -242,7 +266,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val bPolicyHolderCompanyProductInsured = bPolicyHolderCompanyProduct.join(bPolicySubject,bPolicyHolderCompanyProduct("master_policy_no") ===bPolicySubject("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","holder_company_person_name","master_policy_no","policy_code","order_id","product_code","product_name","order_code","user_id","first_premium","premium",
         "insured_name","status","channel_id","channel_name","start_date","end_date","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","sku_coverage","sku_append",
-        "sku_ratio","sku_charge_type","first_insure_master_num","create_time","update_time")
+        "sku_ratio","sku_charge_type","tech_service_rate","economic_rate","first_insure_master_num","create_time","update_time")
 
     bPolicyHolderCompanyProductInsured.registerTempTable("bPolicyHolderCompanyProductTemp")
 
@@ -254,10 +278,27 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","order_id","order_code","user_id","product_code","product_name","policy_id","policy_code","first_premium","premium as sum_premium",
         "holder_name_new as holder_name","insured_name as insured_subject","start_date as policy_start_date","end_date as policy_end_date","policy_status","continued_policy_no as preserve_policy_no",
         "insurance_name as insure_company_name","belongArea as belongs_regional","industry_code as belongs_industry","channel_id","channel_name","product_code as sku_id","sku_coverage",
-        "sku_append","sku_ratio","premium_price as sku_price","sku_charge_type","first_insure_master_num as num_of_preson_first_policy",
+        "case when product_code = '17000001' then '3' else sku_append end as sku_append",
+        "case when product_code = '17000001' then '2' else sku_ratio end as sku_ratio","premium_price as sku_price",
+        "case when product_code = '17000001' then '2' else sku_charge_type end sku_charge_type","tech_service_rate",
+        "economic_rate","first_insure_master_num as num_of_preson_first_policy",
         "create_time as policy_create_time","update_time as policy_update_time","getNow() as dw_create_time")
 
-    bPolicyHolderCompanyProductNew.printSchema()
+    /**
+      * 读取产品明细表,将蓝领外包以外的数据进行处理，用总保费替换初投保费
+      */
+    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,one_level_pdt_cate from odsdb.ods_product_detail")
+      .where("one_level_pdt_cate <> '蓝领外包'")
+
+    val resEnd =
+      bPolicyHolderCompanyProductNew.join(odsProductDetail,bPolicyHolderCompanyProductNew("product_code")===odsProductDetail("product_code_slave"),"leftouter")
+      .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id ",
+        "policy_code","case when product_code_slave is not null then sum_premium else first_premium end first_premium","sum_premium",
+        "holder_name","insured_subject","policy_start_date","policy_end_date","policy_status","preserve_policy_no","insure_company_name",
+        "belongs_regional","belongs_industry","channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
+        "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
+
+    resEnd.printSchema()
 //    bPolicyHolderCompanyProductNew.show()
   }
 
@@ -278,7 +319,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取订单信息表
       */
       val odrOrderInfoBznprd: DataFrame = readMysqlTable(sqlContext,"odr_order_info_bznprd")
-        .selectExpr("id as master_order_id","order_code","user_id")
+        .selectExpr("id as master_order_id","order_code","user_id","pay_amount as pay_amount_master")
 //        odrOrderInfoBznprd.show()
 
     /**
@@ -357,7 +398,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         val skuId = x.getAs[String]("sku_id")
         val termOne = x.getAs[Int]("term_one")
         val termThree = x.getAs[Int]("term_three")
-        var price = x.getAs[java.math.BigDecimal]("price")
+        var price: java.math.BigDecimal = x.getAs[java.math.BigDecimal]("price")
         if(price != null){
           price = price.setScale(4,RoundingMode(3)).bigDecimal
         }
@@ -393,39 +434,53 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         }else{
           sku_ratio = null
         }
+        var tech_service_rate = ""
+        var economic_rate = ""
 
-        (policyIdSku,skuId,skuCoverage,skuAppend,sku_ratio,price,sku_charge_type)
+        if(tech_service_rate == "" && economic_rate == ""){
+          tech_service_rate = null
+          economic_rate = null
+        }
+
+        (policyIdSku,skuId,skuCoverage,skuAppend,sku_ratio,price,sku_charge_type,tech_service_rate,economic_rate)
       })
-      .toDF("policy_id_sku","sku_id","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type")
+      .toDF("policy_id_sku","sku_id","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate")
       .distinct()
 
     val orderPolicyTemp = odrOrderInfoBznprd.join(odrPolicyBznprd,odrOrderInfoBznprd("master_order_id") === odrPolicyBznprd("order_id"),"leftouter")
-      .selectExpr("master_order_id","order_code","user_id","master_policy_id","policy_code","insure_code","premium","status","channelId","channel_name","start_date","end_date","renewal_policy_code","insure_company_name","create_time","update_time")
+      .selectExpr("master_order_id","order_code","user_id","pay_amount_master","master_policy_id","policy_code","insure_code","premium","status","channelId","channel_name","start_date","end_date","renewal_policy_code","insure_company_name","create_time","update_time")
 
     val orderPolicy = orderPolicyTemp.join(policyFirstPremiumBznprd,orderPolicyTemp("master_policy_id")===policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
-      .selectExpr("master_order_id","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","premium","status","channelId","channel_name","start_date","end_date","renewal_policy_code","insure_company_name","create_time","update_time")
+      .selectExpr("master_order_id","order_code","user_id","case when policy_id_premium is not null then pay_amount else pay_amount_master end as pay_amount",
+        "master_policy_id","policy_code","insure_code","premium","status","channelId","channel_name","start_date","end_date",
+        "renewal_policy_code","insure_company_name","create_time","update_time")
 
     val orderPolicyProductTemp = orderPolicy.join(pdtProductBznprd,orderPolicy("insure_code") === pdtProductBznprd("product_code"),"leftouter")
-      .selectExpr("master_order_id","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","status","channelId","channel_name","start_date","end_date","renewal_policy_code","insure_company_name","create_time","update_time")
+      .selectExpr("master_order_id","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","status",
+        "channelId","channel_name","start_date","end_date","renewal_policy_code","insure_company_name","create_time","update_time")
 
     val orderPolicyProduct = orderPolicyProductTemp.join(policyRes,orderPolicyProductTemp("master_policy_id") === policyRes("policy_id_sku"),"leftouter")
       .selectExpr("master_order_id","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","status","channelId",
-        "channel_name","start_date","end_date","renewal_policy_code","insure_company_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","create_time","update_time")
+        "channel_name","start_date","end_date","renewal_policy_code","insure_company_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
+        "sku_charge_type","tech_service_rate","economic_rate","create_time","update_time")
 
     val orderPolicyProductHolder = orderPolicyProduct.join(odrPolicyHolderBznprd,orderPolicyProduct("master_policy_id") === odrPolicyHolderBznprd("policy_id"),"leftouter")
       .selectExpr("master_order_id","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","holder_subject","status","channelId",
-        "channel_name","start_date","end_date","renewal_policy_code","insure_company_name","belongArea","sku_id","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","create_time","update_time")
+        "channel_name","start_date","end_date","renewal_policy_code","insure_company_name","belongArea","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
+        "sku_charge_type","tech_service_rate","economic_rate","create_time","update_time")
 
     val orderPolicyProductHolderInsurant = orderPolicyProductHolder.join(odrPolicyInsurantBznprd,orderPolicyProductHolder("master_policy_id") === odrPolicyInsurantBznprd("policy_id"),"leftouter")
       .selectExpr("master_order_id","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","holder_subject","insured_subject","status","channelId",
-        "channel_name","start_date","end_date","renewal_policy_code","insure_company_name","belongArea","sku_id","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","create_time","update_time")
+        "channel_name","start_date","end_date","renewal_policy_code","insure_company_name","belongArea","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
+        "sku_charge_type","tech_service_rate","economic_rate","create_time","update_time")
 
     val orderPolicyProductHolderInsurantItemOrder = orderPolicyProductHolderInsurant.join(odrOrderItemInfoBznprd,orderPolicyProductHolderInsurant("master_order_id") === odrOrderItemInfoBznprd("order_id"),"leftouter")
       .selectExpr("getUUID() as id","master_order_id as order_id","order_code","user_id","insure_code as product_code","product_name","master_policy_id as policy_id ",
         "policy_code","pay_amount as first_premium","premium as sum_premium","holder_subject as holder_name","insured_subject","start_date as policy_start_date",
         "end_date as policy_end_date","case when `status` = 1 then 1  when `status` = 0 then 0 else 99  end  as policy_status","renewal_policy_code as preserve_policy_no" ,
         "insure_company_name","belongArea as belongs_regional","industry_code as belongs_industry","channelId","channel_name","sku_id","sku_coverage","sku_append","sku_ratio",
-        "sku_price","sku_charge_type","quantity as num_of_preson_first_policy","create_time as policy_create_time","update_time as policy_update_time","getNow() as dw_create_time")
+        "sku_price","sku_charge_type","tech_service_rate","economic_rate","quantity as num_of_preson_first_policy","create_time as policy_create_time",
+        "update_time as policy_update_time","getNow() as dw_create_time")
       .cache()
 
     val orderPolicyProductHolderInsurantItemOrderone = orderPolicyProductHolderInsurantItemOrder
@@ -435,7 +490,21 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       .where("product_code in ('15000001') and (user_id not in ('10100080492') or user_id is null)")
     val res = orderPolicyProductHolderInsurantItemOrderone.unionAll(orderPolicyProductHolderInsurantItemOrderTwo)
 //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_detail")
-    res.printSchema()
+
+    /**
+      * 读取产品明细表,将蓝领外包以外的数据进行处理，用总保费替换初投保费
+      */
+    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,one_level_pdt_cate from odsdb.ods_product_detail")
+      .where("one_level_pdt_cate <> '蓝领外包'")
+
+    val resEnd = res.join(odsProductDetail,res("product_code")===odsProductDetail("product_code_slave"),"leftouter")
+      .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id ",
+        "policy_code","case when product_code_slave is not null then sum_premium else first_premium end first_premium","sum_premium",
+        "holder_name","insured_subject","policy_start_date","policy_end_date","policy_status","preserve_policy_no","insure_company_name",
+        "belongs_regional","belongs_industry","channelId as channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
+        "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
+
+    resEnd.printSchema()
 //    res.show()
 
   }

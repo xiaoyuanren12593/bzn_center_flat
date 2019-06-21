@@ -13,7 +13,7 @@ import org.apache.spark.sql.hive.HiveContext
   * author:xiaoYuanRen
   * Date:2019/6/7
   * Time:10:40
-  * describe: dw层  出单保费明细表
+  * describe: dw层雇主出单保费明细表
   **/
 object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
   def main(args: Array[String]): Unit = {

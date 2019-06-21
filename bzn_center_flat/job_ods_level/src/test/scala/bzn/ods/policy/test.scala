@@ -2,12 +2,15 @@ package bzn.ods.policy
 
 import java.security.MessageDigest
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.text.{NumberFormat, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
+import bzn.dw.premium.DwPolicyInsuredDayIdDetailTest.getBeg_End_one_two
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.math.BigDecimal.RoundingMode
 import scala.math.BigDecimal.RoundingMode.RoundingMode
 
@@ -27,8 +30,8 @@ object test {
 //    val md5Str1 = MD5("北京德知航创科技有限责任公司")
 //    println(md5Str)
 //    println(md5Str1)
-    var str = "1970-00-00 00:00:00"
-    println(str.length)
+    var str = "1970-00-00 00:00:00.0"
+    println(str.length,"changdu"+str.substring(0,19))
     if(str != null && str.length == 19){
       str = str.substring(0,10)
     }
@@ -69,8 +72,37 @@ object test {
     println(bigDecimal2.setScale(2,RoundingMode(4)))
     println(bigDecimal2.setScale(2,RoundingMode(5)))
 
+    println(getDouble(12.45455))
+
+    val numberFormat = NumberFormat.getInstance
+    // 设置精确到小数点后4位
+    numberFormat.setMaximumFractionDigits(4)
+    val d = numberFormat.format(12.1534531)
+    println(numberFormat.format(12.1534531))
+    val ldate =  currentTimeL("2019-04-11 17:31:14")
+    println(ldate)
+    if(""<= "232"){
+      println("132131")
+    }
+    val arrayBuffer: ArrayBuffer[String] = getBeg_End_one_two("20190411","20190415")
+    arrayBuffer.foreach(println)
+    val set = Set("`","`")
+    val setRes = set.filter(x => !x.contains("`"))
+    setRes.foreach(println)
+    println("   153013021115602090480".length)
+    println("   153013021115602090480".substring("   153013021115602090480".length-11))
+    println("BZN_QJDC_1201_1231".contains("BZN_QJDC_001"))
   }
 
+  def getDouble(d:Double): Double = {
+    if (d != null) {
+      val decimal = BigDecimal.apply(d)
+      val res = decimal.setScale(4, BigDecimal.RoundingMode.HALF_UP).doubleValue()
+      res
+    } else {
+      d
+    }
+  }
   def dateAddOneDay(date_time: String): String = {
     //    val date_time = "2017-06-06 03:39:09.0"
     val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")

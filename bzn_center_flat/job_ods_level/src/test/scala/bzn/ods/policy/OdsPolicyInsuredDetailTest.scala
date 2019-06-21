@@ -168,8 +168,8 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
         "case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ",
         "insured_cert_no","birthday","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","industry",
         "work_type_new as work_type","company_name","company_phone","case when status = '0' then '0' else '1' end as insured_status",
-        "case when insure_policy_status = '1' then '1' else '0' end  as policy_status",
-        "getDate(start_date) as start_date", "getDate(end_date) as end_date","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
+        "case when insure_policy_status = '1' then '1' else '0' end  as policy_status","getDate(start_date) as start_date","getDate(end_date) as end_date",
+        "case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
         "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
     resTemp.printSchema()
     resTemp

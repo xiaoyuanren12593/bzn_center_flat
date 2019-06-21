@@ -135,9 +135,9 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
       })
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
     println(res.count())
-    val twoRes = oneAndTwoEmpData.join(res,oneAndTwoEmpData("ent_name") === res("ent_name_temp"))
+    val twoRes = oneAndTwoEmpData.join(res,oneAndTwoEmpData("ent_name") === res("ent_name_temp"),"leftouter")
       .selectExpr("getUUID() as id","ent_id","ent_name","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","getDefault() as curr_count","getDefault() as first_policy_time","create_time","update_time","getNow() as dw_create_time")
-//    twoRes.show()
+    twoRes.show(3000)
 
     twoRes
   }
