@@ -1,5 +1,5 @@
-.idea/
-target/
-metastore_db/
-project/project/
-derby.log
+**/.idea/
+**/target/
+**/metastore_db/
+**/project/project/
+**/derby.log
