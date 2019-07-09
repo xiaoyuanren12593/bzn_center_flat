@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="SBT: neo4j-contrib:neo4j-spark-connector:2.1.0-M4:jar">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/neo4j-contrib/neo4j-spark-connector/jars/neo4j-spark-connector-2.1.0-M4.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
