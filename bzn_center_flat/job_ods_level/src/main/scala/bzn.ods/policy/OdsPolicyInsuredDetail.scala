@@ -51,7 +51,9 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       * 读取被保人表
       */
     val bPolicySubjectPersonMasterBzncen = sqlContext.sql("select * from sourcedb.b_policy_subject_person_master_bzncen")
-      .selectExpr("id as master_id","policy_no as master_policy_no","name as insured_name","cert_type as insured_cert_type","cert_no","birthday","sex as gender","tel as insured_mobile","industry_name as industry","work_type","company_name","company_phone","status","start_date as insured_start_date","end_date as insured_end_date","create_time","update_time")
+      .selectExpr("id as master_id","policy_no as master_policy_no","name as insured_name","cert_type as insured_cert_type",
+        "cert_no","birthday","sex as gender","tel as insured_mobile","industry_name as industry","work_type","company_name",
+        "company_phone","status","start_date as insured_start_date","end_date as insured_end_date","create_time","update_time")
       .registerTempTable("bPolicySubjectPersonMasterBzncenTable")
 
     sqlContext.sql("select regexp_replace(insured_name,'\\n','') as insured_name_new ,regexp_replace(work_type,'\\n','') as insured_work_type ,regexp_replace(cert_no,'\\n','') as insured_cert_no,* from bPolicySubjectPersonMasterBzncenTable")

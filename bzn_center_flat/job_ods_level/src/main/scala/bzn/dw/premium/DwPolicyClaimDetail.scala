@@ -25,7 +25,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = dwPolicyClaimDetail(hiveContext)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_claim_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_claim_detail")
     sc.stop()
   }
 

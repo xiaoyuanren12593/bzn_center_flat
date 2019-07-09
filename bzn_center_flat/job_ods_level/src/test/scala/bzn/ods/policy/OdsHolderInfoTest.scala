@@ -27,7 +27,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val oneRes: DataFrame = oneHolderInfoDetail(hiveContext)
-    val twoRes: DataFrame = twoHolderInfoDetail(hiveContext)
+//    val twoRes: DataFrame = twoHolderInfoDetail(hiveContext)
 //    val res = unionOneAndTwo(hiveContext,oneRes,twoRes).show()
 //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_holder_detail")
     sc.stop()

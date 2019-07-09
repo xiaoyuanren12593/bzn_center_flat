@@ -75,4 +75,7 @@ object Dependencies {
   //--------------------------------------------dm层----------------------------------------------------------------
   val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
+
+  val bznCPersonLabelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 }

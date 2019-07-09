@@ -62,7 +62,7 @@ object OdsPreservationDetail extends SparkUtil with Until{
       .withColumn("temp_inc_dec_order_no",bPolicyPreserveBznprdOne("inc_dec_order_no"))
 
     val bPolicyPreserveBznprdTemp = bPolicyPreserveBznprd
-      .selectExpr("inc_dec_order_no as temp_inc_dec_order_no","effective_date","add_person_count","del_person_count","preserve_type")
+      .selectExpr("inc_dec_order_no as temp_inc_dec_order_no","effective_date","add_person_count","del_person_count","preserve_type","create_time")
 
     /**
       * 读取保单表
@@ -148,10 +148,10 @@ object OdsPreservationDetail extends SparkUtil with Until{
       val tempIncDecOrderNo = x.getAs[String]("temp_inc_dec_order_no")
       var preStartDate = x.getAs[String]("pre_start_date")
       var preEndDate = x.getAs[String]("pre_end_date")
-      val effectiveDate = x.getAs[Long]("effective_date").toString
       val addPersonCount = x.getAs[Int]("add_person_count")
       val delPersonCount = x.getAs[Int]("del_person_count")
       val preserveType = x.getAs[Int]("preserve_type")
+      val createTime = x.getAs[java.sql.Timestamp]("create_time")
 
       var preserveEffectDate = ""
       // 生效日期：如果是纯减员  结束时间+1 去前十位  如果是增减员就得到开始时间的前十位，如果是退保使用时effect_date得到生效日期
@@ -169,8 +169,8 @@ object OdsPreservationDetail extends SparkUtil with Until{
           preserveEffectDate = null
         }
       }else{//5 状态为退保
-        if(effectiveDate!=null && effectiveDate.length >18){
-          preserveEffectDate = effectiveDate.substring(0,10).replaceAll("-","")
+        if(createTime!=null && createTime.toString.length >18){
+          preserveEffectDate = createTime.toString.substring(0,10).replaceAll("-","")
         }else{
           preserveEffectDate = null
         }

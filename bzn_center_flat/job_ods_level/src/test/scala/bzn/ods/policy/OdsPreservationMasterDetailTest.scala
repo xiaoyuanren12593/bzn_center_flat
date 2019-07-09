@@ -43,7 +43,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     udfUtil(sqlContext)
     val bPolicyPreservationSubjectPersonMasterBzncenOne =
       sqlContext.sql("select * from sourcedb.b_policy_preservation_subject_person_master_bzncen")
-      .selectExpr("id","inc_dec_order_no","policy_no","name","sex as gender","cert_type as insured_cert_type","cert_no","birthday","industry_name as industry","work_type","company_name","company_phone","status","start_date","end_date","create_time","update_time")
+      .selectExpr("id","inc_dec_order_no","policy_no","name","sex as gender","cert_type as insured_cert_type","cert_no","birthday","industry_name as industry","work_type","company_name",
+        "company_phone","status","start_date","end_date","create_time","update_time")
       .registerTempTable("bPolicyPreservationSubjectPersonMasterBzncenTemp")
 
     /**
@@ -92,7 +93,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       * 读取保全表
       */
     val bPolicyPreservationBzncen = readMysqlTable(sqlContext,"b_policy_preservation_bzncen")
-      .selectExpr("id as preserve_id","inc_dec_order_no","policy_no","preservation_type as preserve_type","inc_revise_sum as add_person_count","dec_revise_sum as del_person_count")
+      .selectExpr("id as preserve_id","inc_dec_order_no","policy_no","preservation_type as preserve_type","inc_revise_sum as add_person_count","dec_revise_sum as del_person_count",
+        "create_time as create_time_master")
 
     /**
       * 将保单表和保全表进行关联
@@ -100,7 +102,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     bPolicyPreservationSubjectPersonMasterBzncen.join(bPolicyPreservationBzncen,Seq("inc_dec_order_no","policy_no"),"leftouter")
       .selectExpr("inc_dec_order_no","preserve_id","id as master_id","name as insured_name","gender","insured_cert_type","insured_cert_no","birthday",
         "industry","work_type_new as work_type","company_name","company_phone","preserve_type",
-        "start_date","end_date","insured_status","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age","create_time","update_time")
+        "start_date","end_date","insured_status","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
+        "create_time","update_time")
         .registerTempTable("res_temp")
 
     /**
@@ -152,7 +155,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       })
       .toDF("temp_inc_dec_order_no", "pre_start_date", "pre_end_date")
 
-    val bPolicyPreserveTemp = bPolicyPreservationBzncen.selectExpr("inc_dec_order_no","add_person_count","del_person_count")
+    val bPolicyPreserveTemp = bPolicyPreservationBzncen.selectExpr("inc_dec_order_no","preserve_type","add_person_count","del_person_count","create_time_master")
     val bPolicyPreserveTempRes = resTemp.join(bPolicyPreserveTemp,resTemp("temp_inc_dec_order_no")===bPolicyPreserveTemp("inc_dec_order_no"))
       .map(x => {
         val tempIncDecOrderNo = x.getAs[String]("temp_inc_dec_order_no")
@@ -162,6 +165,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         var preEndDateRes =  ""
         val addPersonCount = x.getAs[Int]("add_person_count")
         val delPersonCount = x.getAs[Int]("del_person_count")
+        val createTimeMaster = x.getAs[java.sql.Timestamp]("create_time_master")
+        val preserveType = x.getAs[Int]("preserve_type")
 
         if(preStartDate != null && preStartDate.length >18){
           preStartDateRes =  preStartDate
@@ -169,13 +174,23 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         }else{
           preStartDateRes = null
         }
-
-        // 生效日期：如果是纯减员  结束时间+1 去前十位  如果是增减员就得到开始时间的前十位，如果是退保使用时effect_date得到生效日期
+        // 生效日期：如果是纯减员  结束时间+1 去前十位  如果是增减员就得到开始时间的前十位，如果是退保使用时 创建时间 得到生效日期
         if(addPersonCount == 0 && delPersonCount > 0){
+          preStartDateRes = null
           if(preEndDate!=null && preEndDate.length >18){
             preEndDateRes = dateAddOneDay(preEndDate)
             preEndDateRes
           }else{
+            preEndDateRes = null
+          }
+        }
+        //退保情况
+        if(preserveType == 5){
+          if(createTimeMaster != null){
+            preStartDateRes = createTimeMaster.toString
+            preEndDateRes = createTimeMaster.toString
+          }else{
+            preStartDateRes = null
             preEndDateRes = null
           }
         }

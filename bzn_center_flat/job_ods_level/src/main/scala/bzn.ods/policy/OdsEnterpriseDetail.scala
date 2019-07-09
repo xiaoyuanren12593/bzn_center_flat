@@ -56,7 +56,8 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       */
     val entEnterpriseInfoBznprd = readMysqlTable(sqlContext,"ent_enterprise_info_bznprd")
       .where("ent_name is not null")
-      .selectExpr("ent_name","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+      .selectExpr("ent_name","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
+        "office_street","create_time","update_time")
       .map(x => {
         val entName = x.getAs[String]("ent_name").trim
         val licenseCode = x.getAs[String]("license_code")
@@ -78,14 +79,17 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       .map(x => {
         (x._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._1)
       })
-      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
+        "office_street","create_time","update_time")
 
      /**
       * 读取2.0投保企业信息
       */
     val bPolicyHolderCompanyBzncen = readMysqlTable(sqlContext,"b_policy_holder_company_bzncen")
       .where("name is not null")
-      .selectExpr("name as ent_name","license_code","unite_credit_code as org_code","tax_code","license_address as office_address","province_code as office_province","city_code as office_city","county_code as office_district","address as office_street","create_time","update_time")
+      .selectExpr("name as ent_name","license_code","unite_credit_code as org_code","tax_code","license_address as office_address",
+        "province_code as office_province","city_code as office_city","county_code as office_district","address as office_street",
+        "create_time","update_time")
       .map(x => {
         val entName = x.getAs[String]("ent_name").trim
         val licenseCode = x.getAs[String]("license_code")
@@ -107,7 +111,8 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       .map(x => {
         (x._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._1)
       })
-      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
+        "office_street","create_time","update_time")
 
     /**
       * 1.0和2.0的企业信息进行合并如果有相同企业的话就用2.0的信息

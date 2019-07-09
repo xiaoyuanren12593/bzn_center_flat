@@ -116,3 +116,19 @@ lazy val bznDmLevel = (project in file("job_dm_level"))
     //定义jar包的名字
     assemblyJarName in assembly := "bznDmLevel.jar"
   )
+
+// c端标签模块
+lazy val bznCPersonLabel = (project in file("job_c_Person_label"))
+  .dependsOn(jobUtil)
+  .settings(
+    libraryDependencies ++= bznCPersonLabelDepsProvided.map(
+      _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
+  .settings(commonSettings)
+  .settings(commonAssemblySettings)
+  .settings(
+    //定义jar包的名字
+    assemblyJarName in assembly := "bznDmLevel.jar"
+  )

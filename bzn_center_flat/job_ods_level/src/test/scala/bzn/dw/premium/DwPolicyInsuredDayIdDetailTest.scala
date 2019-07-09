@@ -10,6 +10,8 @@ import org.apache.spark.sql.{SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
   * author:xiaoYuanRen
   * Date:2019/6/12
@@ -108,7 +110,7 @@ object DwPolicyInsuredDayIdDetailTest extends SparkUtil with Until{
           val insuredStartDate = x.getAs[String]("start_date").split(" ")(0).replaceAll("-", "").replaceAll("/", "")
           val insuredEndDate = x.getAs[String]("end_date").split(" ")(0).replaceAll("-", "").replaceAll("/", "")
           val insuredCertNo = x.getAs[String]("insured_cert_no")
-          val res = getBeg_End_one_two(insuredStartDate, insuredEndDate).map(day_id => {
+          val res: ArrayBuffer[(String, String, String)] = getBeg_End_one_two(insuredStartDate, insuredEndDate).map(day_id => {
             (policyId,day_id,insuredCertNo)
           })
           res
