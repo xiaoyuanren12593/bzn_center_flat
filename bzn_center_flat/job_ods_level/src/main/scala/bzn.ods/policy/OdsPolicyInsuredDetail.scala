@@ -52,8 +52,9 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       */
     val bPolicySubjectPersonMasterBzncen = sqlContext.sql("select * from sourcedb.b_policy_subject_person_master_bzncen")
       .selectExpr("id as master_id","policy_no as master_policy_no","name as insured_name","cert_type as insured_cert_type",
-        "cert_no","birthday","sex as gender","tel as insured_mobile","industry_name as industry","work_type","company_name",
-        "company_phone","status","start_date as insured_start_date","end_date as insured_end_date","create_time","update_time")
+        "cert_no","birthday","is_married","sex as gender","tel as insured_mobile","email",
+        "industry_name as industry","work_type","company_name","company_phone","status","start_date as insured_start_date",
+        "end_date as insured_end_date","create_time","update_time")
       .registerTempTable("bPolicySubjectPersonMasterBzncenTable")
 
     sqlContext.sql("select regexp_replace(insured_name,'\\n','') as insured_name_new ,regexp_replace(work_type,'\\n','') as insured_work_type ,regexp_replace(cert_no,'\\n','') as insured_cert_no,* from bPolicySubjectPersonMasterBzncenTable")
@@ -76,7 +77,7 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       val insuredWorkType = to_null(x.getAs[String]("insured_work_type"))
       val insuredNameNew = to_null(x.getAs[String]("insured_name_new"))
       val temp = x.toSeq:+insuredWorkType :+insuredNameNew
-      temp.map(x => if(x == null) null else x.toString)
+      temp.map(x => if(x == null || x == "") null else x.toString)
     })
     val value = bPolicySubjectPersonMasterBzncenValue.map(r=> Row(r:_*))
     val schema = StructType(bPolicySubjectPersonMasterBzncenTempSchema.map(fieldName => StructField(fieldName, StringType, nullable = true)))
@@ -92,8 +93,8 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
 
     val res = InsuredData.join(bPolicyBzncen,InsuredData("master_policy_no") ===bPolicyBzncen("policy_no"),"leftouter")
       .selectExpr("getUUID() as id","master_id as insured_id","policy_id","insurance_policy_no as policy_code","name_new as insured_name",
-        "case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ","insured_cert_no","birthday",
-        "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","industry","work_type_new as work_type",
+        "case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ","insured_cert_no","birthday","is_married",
+        "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","email","industry","work_type_new as work_type",
         "company_name","company_phone","insured_status","insure_policy_status as policy_status","getDate(insured_start_date) as start_date",
         "getDate(insured_end_date) as end_date", "case when insured_cert_type ='1' and insured_start_date is not null then getAgeFromBirthTime(insured_cert_no,insured_start_date) else null end as age",
         "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
@@ -118,8 +119,9 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       * 读取被保人表
       */
     val odrPolicyInsuredBznprd = sqlContext.sql("select * from sourcedb.odr_policy_insured_bznprd")
-      .selectExpr("id as master_id","policy_id","policy_code","name as insured_name","cert_type as insured_cert_type","cert_no","birthday","gender","mobile as insured_mobile",
-        "industry","work_type","company_name","company_phone","status","insure_policy_status","start_date","end_date","create_time","update_time","remark")
+      .selectExpr("id as master_id","policy_id","policy_code","name as insured_name","cert_type as insured_cert_type","cert_no","birthday",
+        "gender","is_married","email","mobile as insured_mobile","industry","work_type","company_name","company_phone","status",
+        "insure_policy_status","start_date","end_date","create_time","update_time","remark")
       .registerTempTable("odrPolicyInsuredBznprdTemp")
     //odrPolicyInsuredBznprd.show()
 
@@ -168,7 +170,7 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       */
     val resTemp = insuredDataPolicyOne.unionAll(insuredDataPolicyTwo)
       .selectExpr("getUUID() as id","master_id as insured_id","policy_id","policy_code","name_new as insured_name ","case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ",
-        "insured_cert_no","birthday","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","industry",
+        "insured_cert_no","birthday","is_married","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","email","industry",
         "work_type_new as work_type","company_name","company_phone","case when status = '0' then '0' else '1' end as insured_status",
         "case when insure_policy_status = '1' then '1' else '0' end  as policy_status",
         "getDate(start_date) as start_date", "getDate(end_date) as end_date","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
