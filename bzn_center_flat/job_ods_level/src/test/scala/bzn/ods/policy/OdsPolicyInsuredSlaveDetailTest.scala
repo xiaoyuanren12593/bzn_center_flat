@@ -4,9 +4,9 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
 import bzn.ods.util.{SparkUtil, Until}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 
@@ -24,8 +24,9 @@ object OdsPolicyInsuredSlaveDetailTest extends SparkUtil with Until{
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    oneOdsPolicyInsuredSlaveDetail(hiveContext)
-    twoOdsPolicyInsuredSlaveDetail(hiveContext)
+    val oneData = oneOdsPolicyInsuredSlaveDetail(hiveContext)
+    val twoData = twoOdsPolicyInsuredSlaveDetail(hiveContext)
+    oneData.unionAll(twoData).printSchema()
     sc.stop()
   }
 
@@ -41,15 +42,18 @@ object OdsPolicyInsuredSlaveDetailTest extends SparkUtil with Until{
       (date + "")
     })
     sqlContext.udf.register("getAgeFromBirthTime", (cert_no: String, end: String) => getAgeFromBirthTime(cert_no, end))
+    sqlContext.udf.register("getEmptyString", () => "")
 
     val odrPolicyInsuredChildBznprd = readMysqlTable(sqlContext,"odr_policy_insured_child_bznprd")
       .selectExpr("getUUID() as id","id as insured_slave_id","insured_id as master_id","child_name as slave_name","" +
         "case when `child_gender` = 0 then 0 when  child_gender = 1 then 1 else null  end  as gender",
         "case when child_cert_type = '1' then '1' else '-1' end as slave_cert_type ",
-        "child_cert_no as slave_cert_no","child_birthday as birthday","case when child_policy_status = 1 then 1 else 0 end as policy_status","start_date","end_date",
+        "child_cert_no as slave_cert_no","child_birthday as birthday","getEmptyString() as is_married","getEmptyString() as email",
+        "case when child_policy_status = 1 then 1 else 0 end as policy_status","start_date","end_date",
         "case when child_cert_type ='1' and start_date is not null then getAgeFromBirthTime(child_cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
 
     odrPolicyInsuredChildBznprd.printSchema()
+    odrPolicyInsuredChildBznprd
   }
 
   /**
@@ -66,14 +70,16 @@ object OdsPolicyInsuredSlaveDetailTest extends SparkUtil with Until{
     sqlContext.udf.register("getAgeFromBirthTime", (cert_no: String, end: String) => getAgeFromBirthTime(cert_no, end))
 
     val bPolicySubjectPersonSlaveBzncen = readMysqlTable(sqlContext,"b_policy_subject_person_slave_bzncen")
-      .selectExpr("getUUID() as id","id as insured_slave_id","master_id","name as slave_name","sex as gender","cert_type as slave_cert_type","cert_no as slave_cert_no","birthday","status","start_date","end_date",
+      .selectExpr("getUUID() as id","id as insured_slave_id","master_id","name as slave_name","sex as gender","cert_type as slave_cert_type",
+        "cert_no as slave_cert_no","birthday","is_married","email","status","start_date","end_date",
         "case when cert_type ='1' and start_date is not null then getAgeFromBirthTime(cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
         .registerTempTable("bPolicySubjectPersonSlaveBzncenTemp")
 
     val res = sqlContext.sql("select *,case when a.`status`='1' then '0' else '1' end as policy_status from bPolicySubjectPersonSlaveBzncenTemp a")
       .selectExpr("id","insured_slave_id","master_id","slave_name","case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender",
-        "slave_cert_type","slave_cert_no","birthday","policy_status","start_date","end_date","age","create_time","update_time","getNow() as dw_create_time")
+        "slave_cert_type","slave_cert_no","birthday","is_married","email","policy_status","start_date","end_date","age","create_time","update_time","getNow() as dw_create_time")
     res.printSchema()
+    res
   }
   /**
     * 获取 Mysql 表的数据
