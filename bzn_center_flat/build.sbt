@@ -15,7 +15,7 @@ resolvers ++= Seq(
 
 // 公共配置
 val commonSettings = Seq(
-  version := "0.1",
+  version :=  "0.1",
   scalaVersion := "2.10.4",
   //挡在java项目中写中文时，编译会报错，加上该行就行了
   javacOptions ++= Seq("-encoding", "UTF-8"),
