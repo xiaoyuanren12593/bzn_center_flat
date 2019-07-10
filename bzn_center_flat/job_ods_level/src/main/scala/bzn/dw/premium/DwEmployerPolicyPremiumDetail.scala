@@ -4,7 +4,8 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import bzn.ods.util.{SparkUtil, Until}
+import bzn.job.common.Until
+import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.{SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}

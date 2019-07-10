@@ -17,7 +17,7 @@ import scala.io.Source
   * Time:17:33
   * describe: this is new class
   **/
-object OdsEnterpriseContactorDetail extends SparkUtil with Until{
+object OdsEnterpriseContactorDetail extends SparkUtil with Until {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName

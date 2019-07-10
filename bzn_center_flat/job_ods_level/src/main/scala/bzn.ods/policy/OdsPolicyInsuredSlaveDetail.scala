@@ -3,7 +3,8 @@ package bzn.ods.policy
 import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
-import bzn.ods.util.{SparkUtil, Until}
+import bzn.job.common.Until
+import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
