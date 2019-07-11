@@ -1,5 +1,6 @@
 package c_person.baseinfo
 
+import bzn.job.common.Until
 import c_person.util.SparkUtil
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext

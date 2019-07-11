@@ -3,6 +3,7 @@ package bzn.c_person.baseinfo
 import java.util.regex.Pattern
 
 import bzn.c_person.util.SparkUtil
+import bzn.job.common.Until
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
