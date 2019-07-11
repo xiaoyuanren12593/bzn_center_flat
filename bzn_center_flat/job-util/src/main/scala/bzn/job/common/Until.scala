@@ -83,6 +83,30 @@ trait Until {
     sim.format(newDate)
   }
 
+  //当前日期+90天
+  def dateAddNintyDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, 90)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
+  //当前日期-90天
+  def dateDelNintyDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, -90)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
 
   //将日期+8小时(24小时制)只有时间
   def eight_date_only_hour(date_time: String): String = {
@@ -105,7 +129,7 @@ trait Until {
   //得到当前的时间
   def getNowTime(): String = {
     //得到当前的日期
-    val now: Date = new Date()
+    val now: Date = new Date
     val dateFormatOne: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd 00:00:00")
     val now_Date: String = dateFormatOne.format(now)
     now_Date
