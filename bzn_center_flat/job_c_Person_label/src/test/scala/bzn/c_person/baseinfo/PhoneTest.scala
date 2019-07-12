@@ -45,7 +45,7 @@ object PhoneTest extends SparkUtil with Until {
          val phone = x.getAs[String]("mobile")
          phone
        })
-      .filter(x => {
+      .filter((x: String) => {
         val pattern = Pattern.compile("^1\\d{10}$")
         pattern.matcher(x).matches()
       })
