@@ -47,7 +47,8 @@ object OdsHolderInfo extends SparkUtil with Until{
     })
     val res = one.unionAll(two)
       .distinct()
-      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","bank_card_no","bank_name","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","policy_id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email",
+        "bank_card_no","bank_name","getNow() as dw_create_time")
     res
   }
   /**
@@ -67,7 +68,7 @@ object OdsHolderInfo extends SparkUtil with Until{
       * 读取保单表
       */
     val bPolicyBznprd = readMysqlTable(sqlContext,"b_policy_bzncen")
-      .selectExpr("policy_no as master_policy_no")
+      .selectExpr("id as policy_id","policy_no as master_policy_no")
 
     /**
       * 读取投保人
@@ -96,7 +97,7 @@ object OdsHolderInfo extends SparkUtil with Until{
       .toDF("policy_no","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","bank_card_no","bank_name")
 
     val bHolderRes = bPolicyBznprd.join(bpolicyHolderPersonBzncen,bPolicyBznprd("master_policy_no")===bpolicyHolderPersonBzncen("policy_no"))
-      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+      .selectExpr("policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
         "case when gender = 2 then 0 else 1 end as gender","mobile","email","bank_card_no","bank_name")
     bHolderRes
   }
@@ -128,7 +129,7 @@ object OdsHolderInfo extends SparkUtil with Until{
         "gender","mobile","email","ent_bank_account as bank_card_no","ent_bank_name as bank_name")
 
     val odsHolderRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"))
-      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+      .selectExpr("id as policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
         "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email","bank_card_no","bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
     odsHolderRes

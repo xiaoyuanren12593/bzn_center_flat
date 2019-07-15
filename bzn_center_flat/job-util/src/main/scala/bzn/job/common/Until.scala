@@ -83,6 +83,30 @@ trait Until {
     sim.format(newDate)
   }
 
+  //当前日期+90天
+  def dateAddNintyDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, 90)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
+  //当前日期-90天
+  def dateDelNintyDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, -90)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
 
   //将日期+8小时(24小时制)只有时间
   def eight_date_only_hour(date_time: String): String = {
@@ -105,7 +129,7 @@ trait Until {
   //得到当前的时间
   def getNowTime(): String = {
     //得到当前的日期
-    val now: Date = new Date()
+    val now: Date = new Date
     val dateFormatOne: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd 00:00:00")
     val now_Date: String = dateFormatOne.format(now)
     now_Date
@@ -257,6 +281,18 @@ trait Until {
       date = cd.getTime
     }
     arr
+  }
+
+  //得到2个日期之间的所有天数
+  def getBeg_End_one_two_new(mon3: String, day_time: String): Long = {
+
+    val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd")
+    //跨年不会出现问题
+    //如果时间为：2016-03-18 11:59:59 和 2016-03-19 00:00:01的话差值为 0
+    val fDate = sdf.parse(mon3)
+    val oDate = sdf.parse(day_time)
+    val days: Long = (oDate.getTime - fDate.getTime) / (1000 * 3600 * 24)
+    days
   }
 
   //得到2个日期之间的所有天数

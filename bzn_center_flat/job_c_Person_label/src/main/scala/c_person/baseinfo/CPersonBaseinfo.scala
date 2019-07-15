@@ -1,8 +1,11 @@
 package c_person.baseinfo
 
+<<<<<<< HEAD
 import java.text.SimpleDateFormat
 import java.util.Date
 
+=======
+>>>>>>> aaa4183d4f0e91940f36c0398a15fe7b4a98e896
 import bzn.job.common.Until
 import c_person.util.SparkUtil
 import com.alibaba.fastjson.JSONObject

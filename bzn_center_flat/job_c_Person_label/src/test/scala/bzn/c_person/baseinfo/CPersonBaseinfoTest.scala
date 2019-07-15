@@ -6,8 +6,12 @@ import java.util.regex.Pattern
 
 import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
+<<<<<<< HEAD
 import com.alibaba.fastjson.JSONObject
 import org.apache.spark.sql.{DataFrame, SaveMode}
+=======
+import org.apache.spark.sql.DataFrame
+>>>>>>> aaa4183d4f0e91940f36c0398a15fe7b4a98e896
 import org.apache.spark.sql.hive.HiveContext
 
 /**
