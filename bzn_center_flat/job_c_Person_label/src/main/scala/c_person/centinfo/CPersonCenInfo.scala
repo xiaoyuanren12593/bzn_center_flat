@@ -1,12 +1,12 @@
-package bzn.c_person.centinfo
+package c_person.centinfo
 
 import java.sql.Timestamp
 
-import bzn.c_person.util.SparkUtil
 import bzn.job.common.{HbaseUtil, Until}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import c_person.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.math.BigDecimal.RoundingMode
 
@@ -16,18 +16,17 @@ import scala.math.BigDecimal.RoundingMode
   * Time:13:39
   * describe: c端核心标签清洗
   **/
-object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
+object CPersonCenInfo extends SparkUtil with Until with HbaseUtil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    getCPersonCenInfoDetail(hiveContext)
+    val res = getCPersonCenInfoDetail(hiveContext)
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("label.label_cent_person")
 
-//    val confinfo: (Configuration, Configuration) = HbaseConf("label_person")
-//    saveToHbase(test, "", "", confinfo._2, "", confinfo._1)
     sc.stop()
   }
 
@@ -36,7 +35,6 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
     * @param sqlContext 上下文对象
     */
   def getCPersonCenInfoDetail(sqlContext:HiveContext): DataFrame = {
-
     sqlContext.udf.register("notXing",(str:String) => {
       if(str != null && str.contains("*")){
         0
@@ -45,15 +43,14 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
       }
     })
 
-     /**
+    /**
       * 读取投保人
       */
     val odsHolderDetail =
       sqlContext.sql("select policy_id,holder_name,holder_cert_type,holder_cert_no from odsdb.ods_holder_detail")
-      .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
-      .filter("notXing(holder_cert_no) = 1")
-      .distinct()
-//      .limit(1)
+        .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
+        .filter("notXing(holder_cert_no) = 1")
+        .distinct()
 
     /**
       * 读取被保人表
@@ -61,19 +58,17 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
     val odsPolicyInsuredDetail =
       sqlContext.sql("select insured_id,insured_name,policy_id,insured_cert_type,insured_cert_no,start_date,end_date,company_name,work_type " +
         ",update_time from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
-      .distinct()
-//      .limit(1)
+        .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
+        .distinct()
 
     /**
       * 读取从属被保人
       */
     val odsPolicyInsuredSlaveDetail =
       sqlContext.sql("select slave_name, master_id,slave_cert_type,slave_cert_no,start_date as start_date_slave,end_date as end_date_slave" +
-        " from odsdb.ods_policy_insured_slave_detail")
-      .where("slave_cert_type = '1' and length(slave_cert_no) = 18")
-      .distinct()
-//      .limit(1)
+        ",update_time from odsdb.ods_policy_insured_slave_detail")
+        .where("slave_cert_type = '1' and length(slave_cert_no) = 18")
+        .distinct()
 
     /**
       * 所有人员证件号union
@@ -83,12 +78,12 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
       .unionAll(odsPolicyInsuredSlaveDetail.selectExpr("slave_cert_no as cert_no"))
       .distinct()
 
-//    odsHolderDetail.join(odsPolicyInsuredDetail)
+    //    odsHolderDetail.join(odsPolicyInsuredDetail)
 
     /**
       * 读取产品表
       */
-//    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,product_name,one_level_pdt_cate from odsdb.ods_product_detail")
+    //    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,product_name,one_level_pdt_cate from odsdb.ods_product_detail")
 
     /**
       * 读取保单数据
@@ -102,6 +97,7 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
       .selectExpr("policy_id","policy_code","holder_name","holder_cert_no","policy_status","product_code","product_name","first_premium","sum_premium",
         "sku_coverage","policy_start_date","policy_end_date","channel_id","channel_name","policy_create_time","pay_way","belongs_regional",
         "insure_company_name")
+      .cache()
 
     /**
       * 读取职业码表
@@ -140,8 +136,8 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
         "first_policy_time_90_days","first_policy_days","last_policy_date","last_policy_product_code","last_policy_product_name","now_province","now_city",
         "last_policy_days","ninety_policy_premium","ninety_policy_cun","ninety_premium_avg","policy_premium","policy_cun","premium_avg","last_policy_end_date")
 
-    res.printSchema()
     res
+
   }
 
   /**
@@ -154,19 +150,19 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
     * @param odsWorktypeDimension  工种码表
     */
   def InsuredInfoDetail(sqlContext:HiveContext,holderPolicy:DataFrame,odsPolicyDetail:DataFrame,odsPolicyInsuredDetail:DataFrame,
-                       odsPolicyInsuredSlaveDetail:DataFrame,odsWorktypeDimension:DataFrame,certNos:DataFrame,odsClaimsDetail:DataFrame): DataFrame = {
+                        odsPolicyInsuredSlaveDetail:DataFrame,odsWorktypeDimension:DataFrame,certNos:DataFrame,odsClaimsDetail:DataFrame): DataFrame = {
     import sqlContext.implicits._
 
     //被保人详细信息 与 工种进行关联信息
     val odsPolicyInsuredDetailOne =
       odsPolicyInsuredDetail.join(odsWorktypeDimension,odsPolicyInsuredDetail("work_type")===odsWorktypeDimension("work_type_slave"),"leftouter")
-      .selectExpr("insured_id","insured_cert_no","start_date","end_date","update_time","company_name","work_type","level")
+        .selectExpr("insured_id","insured_cert_no","start_date","end_date","update_time","company_name","work_type","level")
 
     //从属被保人信息 没有在被保人信息表中出现的数据
     val odsPolicyInsuredSlaveDetailOne =
       odsPolicyInsuredSlaveDetail.join(odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail("slave_cert_no")===odsPolicyInsuredDetail("insured_cert_no"),"leftouter")
-      .where("insured_cert_no is null")
-      .selectExpr("master_id","slave_cert_no","start_date_slave","end_date_slave","'是' as is_join_policy","'0' as cus_type")
+        .where("insured_cert_no is null")
+        .selectExpr("master_id","slave_cert_no","start_date_slave","end_date_slave","'是' as is_join_policy","'0' as cus_type")
 
     /**
       * 客户类型  投保人和被保人做全关联  如果投保人和被保人同事存在  为新客  如果投保人存在被保人不存在  也是新客  只有被保人存在就是潜在
@@ -203,7 +199,7 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
       (insuredCertNo,(startDate,endDate,companyName,workType,level))
     })
       .reduceByKey((x1,x2) => {
-         val res = if(x1._1.compareTo(x2._1) >= 0) x1 else x2
+        val res = if(x1._1.compareTo(x2._1) >= 0) x1 else x2
         res
       })
       .map( x => {
@@ -211,7 +207,7 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
         (x._1,x._2._3,x._2._4,x._2._5,"是")
       })
       .toDF("insured_cert_no","now_profession_name","now_company_name","now_profession_risk_level","is_join_policy")
-//    odsPolicyInsuredDetailOneRes.show()
+    //    odsPolicyInsuredDetailOneRes.show()
     /**
       * 累计参保次数
       * 是否在保
@@ -252,7 +248,7 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
         }
       })
       .toDF("insured_cert_no","is_insured","policy_insured_cun")
-//    odsPolicyInsuredDetailTwoRes.show()
+    //    odsPolicyInsuredDetailTwoRes.show()
 
     val odsPolicyInsuredSlaveDetailOneRes = odsPolicyInsuredSlaveDetailOne.map(x => {
       val insuredCertNo = x.getAs[String]("slave_cert_no")
@@ -309,30 +305,30 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
       */
     val claimOne =
       odsClaimsDetail.selectExpr("risk_cert_no","pre_com","final_payment")
-      .map(x => {
-        val riskCertNo = x.getAs[String]("risk_cert_no")
-        val preCom = x.getAs[String]("pre_com")
-        var preComRes = 0.0
-        if(preCom!=null){
-          preComRes = preCom.toDouble
-        }
-        val finalPayment = x.getAs[String]("final_payment")
-        var finalPaymentRes = 0.0
+        .map(x => {
+          val riskCertNo = x.getAs[String]("risk_cert_no")
+          val preCom = x.getAs[String]("pre_com")
+          var preComRes = 0.0
+          if(preCom!=null){
+            preComRes = preCom.toDouble
+          }
+          val finalPayment = x.getAs[String]("final_payment")
+          var finalPaymentRes = 0.0
 
-        if(finalPayment != null && finalPayment != ""){
-          finalPaymentRes = finalPayment.toDouble
-        }else{
-          finalPaymentRes = preComRes
-        }
-        (riskCertNo,(finalPaymentRes,1))
-      })
-      .reduceByKey((x1,x2)=> {
-        val prePremium = BigDecimal.valueOf(x1._1).setScale(4,RoundingMode.HALF_UP).+(BigDecimal.valueOf(x2._1).setScale(4,RoundingMode.HALF_UP))
-        val riskCount = x1._2+x2._2
-        (prePremium.doubleValue(),riskCount)
-      })
-      .map(x=> (x._1,x._2._1,x._2._2))
-      .toDF("risk_cert_no","pre_premium_sum","risk_cun")
+          if(finalPayment != null && finalPayment != ""){
+            finalPaymentRes = finalPayment.toDouble
+          }else{
+            finalPaymentRes = preComRes
+          }
+          (riskCertNo,(finalPaymentRes,1))
+        })
+        .reduceByKey((x1,x2)=> {
+          val prePremium = BigDecimal.valueOf(x1._1).setScale(4,RoundingMode.HALF_UP).+(BigDecimal.valueOf(x2._1).setScale(4,RoundingMode.HALF_UP))
+          val riskCount = x1._2+x2._2
+          (prePremium.doubleValue(),riskCount)
+        })
+        .map(x=> (x._1,x._2._1,x._2._2))
+        .toDF("risk_cert_no","pre_premium_sum","risk_cun")
 
     /**
       * 拒赔案件数
@@ -568,35 +564,35 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
     })
       //对证件号进行分组，得到首次投保的保单信息
       .reduceByKey((x1,x2)=> {
-        val res = if(x1._10.compareTo(x2._10) < 0) x1 else x2
-        res
-      })
+      val res = if(x1._10.compareTo(x2._10) < 0) x1 else x2
+      res
+    })
       //如果开始时间是空  就用创建时间 作为首次投保时间
       .map(x => {
-        val cert_no = x._1
-        val policyStartDate = x._2._10
-        var firstPolicyTime = policyStartDate
-        //首次投保+90d
-        val first_policy_time_90_days =
-          if(firstPolicyTime != null){
-            Timestamp.valueOf(dateAddNintyDay(firstPolicyTime.toString))
-          }else{
-            null
-          }
-        //首次投保距今天的天数
-        val firstPolicyDays = if(firstPolicyTime!= null){
-          getBeg_End_one_two_new(firstPolicyTime.toString,get_current_date(System.currentTimeMillis()).toString.substring(0,19))
-        }else {
-          -1
-        }
-        //年龄
-        var age: Int = 0
+      val cert_no = x._1
+      val policyStartDate = x._2._10
+      var firstPolicyTime = policyStartDate
+      //首次投保+90d
+      val first_policy_time_90_days =
         if(firstPolicyTime != null){
-          age = getAgeFromBirthTime(cert_no,firstPolicyTime.toString)
+          Timestamp.valueOf(dateAddNintyDay(firstPolicyTime.toString))
+        }else{
+          null
         }
-        (x._1,x._2._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._11,x._2._12,x._2._13,x._2._14,x._2._15,
-          x._2._16,x._2._17,x._2._18,first_policy_time_90_days,age,firstPolicyDays)
-      })
+      //首次投保距今天的天数
+      val firstPolicyDays = if(firstPolicyTime!= null){
+        getBeg_End_one_two_new(firstPolicyTime.toString,get_current_date(System.currentTimeMillis()).toString.substring(0,19))
+      }else {
+        -1
+      }
+      //年龄
+      var age: Int = 0
+      if(firstPolicyTime != null){
+        age = getAgeFromBirthTime(cert_no,firstPolicyTime.toString)
+      }
+      (x._1,x._2._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._11,x._2._12,x._2._13,x._2._14,x._2._15,
+        x._2._16,x._2._17,x._2._18,first_policy_time_90_days,age,firstPolicyDays)
+    })
       .toDF("holder_cert_no","policy_id","policy_code","holder_name","policy_status","product_code","product_name","first_premium","sum_premium",
         "sku_coverage","policy_start_date","policy_end_date","channel_id","channel_name","policy_create_time","pay_way","province","city",
         "insure_company_name","first_policy_time_90_days","age","first_policy_days")

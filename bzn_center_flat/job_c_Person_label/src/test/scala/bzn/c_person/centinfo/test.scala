@@ -26,5 +26,8 @@ object test extends Until{
     println(first_policy_time_90_days)
     println(getBeg_End_one_two_new("2018-09-18 00:00:00.0".substring(0,19),get_current_date(System.currentTimeMillis()).toString.substring(0,19)))
     println(dateDelNintyDay(get_current_date(System.currentTimeMillis()).toString.substring(0,19)))
+
   }
+
+
 }

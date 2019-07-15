@@ -130,5 +130,5 @@ lazy val bznCPersonLabel = (project in file("job_c_Person_label"))
   .settings(commonAssemblySettings)
   .settings(
     //定义jar包的名字
-    assemblyJarName in assembly := "bznDmLevel.jar"
+    assemblyJarName in assembly := "bznCPerson.jar"
   )
