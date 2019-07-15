@@ -87,6 +87,7 @@ object CPersonBaseinfo extends SparkUtil with Until {
       .unionAll(holderInfo)
       .dropDuplicates(Array("base_cert_no"))
       .filter(!$"base_cert_no".contains("*"))
+//      .where("base_cert_no <> '11**************15'")
 
     val peopleInfoTemp = peopleInfo
       .map(line => {
@@ -480,9 +481,9 @@ object CPersonBaseinfo extends SparkUtil with Until {
 
     //    多表关联
     val result: DataFrame = certInfo
-      .join(telInfos, certInfo("base_cert_no") === telInfos("tel_cert_no"))
-      .join(habitInfos, certInfo("base_cert_no") === habitInfos("habit_cert_no"))
-      .join(childInfos, certInfo("base_cert_no") === childInfos("child_cert_no"))
+      .join(telInfos, certInfo("base_cert_no") === telInfos("tel_cert_no"), "leftouter")
+      .join(habitInfos, certInfo("base_cert_no") === habitInfos("habit_cert_no"), "leftouter")
+      .join(childInfos, certInfo("base_cert_no") === childInfos("child_cert_no"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
         "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_name as base_bank_deposit", "base_province", "base_city",
         "base_area", "base_coastal", "base_city_type", "base_weather_feature", "base_city_weather", "base_city_deit",

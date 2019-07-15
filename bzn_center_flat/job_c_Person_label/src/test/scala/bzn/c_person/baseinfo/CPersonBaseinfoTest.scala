@@ -34,6 +34,11 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val habitInfo: DataFrame = getHabitInfo(hiveContext)
     val childInfo: DataFrame = getChildInfo(hiveContext)
 
+    certInfo.show()
+    telInfo.show()
+    habitInfo.show()
+    childInfo.show()
+
     //    标签信息合并
     val result: DataFrame = unionAllTable(certInfo, telInfo, habitInfo, childInfo)
 //    result.write.mode(SaveMode.Overwrite).saveAsTable("label.base_label")
@@ -64,7 +69,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
       .selectExpr("insured_cert_no as base_cert_no", "insured_name as base_name", "is_married as base_married", "email as base_email",
         "bank_cert_no as base_bank_code", "bank_name as base_bank_name")
-      .limit(100)
+      .limit(10)
 
     /**
       * 读取被保人Slave的hive表
@@ -74,7 +79,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .where("slave_cert_type = '1' and length(slave_cert_no) > 0")
       .selectExpr("slave_cert_no as base_cert_no", "slave_name as base_name", "is_married as base_married", "email as base_email",
         "bank_cert_no as base_bank_code", "bank_name as base_bank_name")
-      .limit(100)
+      .limit(10)
 
     /**
       * 读取投保人的hive表
@@ -84,7 +89,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .where("holder_cert_type = 1 and length(holder_cert_no) > 0")
       .selectExpr("holder_cert_no as base_cert_no", "holder_name as base_name", "base_married", "email as base_email",
         "bank_card_no as base_bank_code", "bank_name as base_bank_name")
-      .limit(100)
+      .limit(10)
 
     //    获得全部身份信息
     val peopleInfo: DataFrame = insuredInfo
@@ -92,6 +97,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .unionAll(holderInfo)
       .dropDuplicates(Array("base_cert_no"))
       .filter(!$"base_cert_no".contains("*"))
+//      .where("base_cert_no <> '11**************15'")
 
     val peopleInfoTemp = peopleInfo
       .map(line => {
@@ -237,7 +243,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val insuredTel: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, insured_mobile from odsdb.ods_policy_insured_detail")
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
       .selectExpr("insured_cert_no as base_cert_no", "insured_mobile as base_mobile")
-      .limit(100)
+      .limit(10)
 
     /**
       * 从投保人读取hive表
@@ -245,7 +251,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val holderTel: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type, mobile from odsdb.ods_holder_detail")
       .where("holder_cert_type = 1 and length(holder_cert_no) > 0")
       .selectExpr("holder_cert_no as base_cert_no", "mobile as base_mobile")
-      .limit(100)
+      .limit(10)
 
     //    获得全部手机号信息
     val TelInfoTemp: DataFrame = insuredTel
@@ -270,7 +276,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
       .selectExpr("insured_cert_type as base_cert_no", "policy_id")
-      .limit(100)
+      .limit(10)
 
     /**
       * 从保单表获取保单号与产品信息
@@ -278,13 +284,13 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val productInfo: DataFrame = hiveContext.sql("select policy_id, product_name from odsdb.ods_policy_detail")
       .where("length(policy_id) > 0")
       .selectExpr("policy_id as policy_id_temp", "product_name")
-      .limit(100)
+      .limit(10)
 
     //    将产品表与被保险人表关联
     val habitJoin: DataFrame = productInfo
       .join(insuredInfo, productInfo("policy_id_temp") === insuredInfo("policy_id"), "leftouter")
       .selectExpr("base_cert_no", "product_name")
-      .limit(100)
+      .limit(10)
 
     //    计算每个被保险人的爱好
     val habitRes: DataFrame = habitJoin
@@ -342,7 +348,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, insured_id from odsdb.ods_policy_insured_detail")
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
       .selectExpr("insured_cert_no", "insured_id")
-      .limit(100)
+      .limit(10)
 
     /**
       * 读取从被保险人hive表
@@ -350,7 +356,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val slaveInfo: DataFrame = hiveContext.sql("select slave_cert_no, slave_cert_type, master_id from odsdb.ods_policy_insured_slave_detail")
       .where("slave_cert_type = '1' and length(slave_cert_no) > 0")
       .selectExpr("slave_cert_no", "master_id")
-      .limit(100)
+      .limit(10)
 
     //    通过从属关系获取子女信息
     val childrenInfoOne: DataFrame = insuredInfo
@@ -394,7 +400,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val holderInfos: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type, policy_id from odsdb.ods_holder_detail")
       .where("holder_cert_type = 1 and length(holder_cert_no) > 0")
       .selectExpr("holder_cert_no", "policy_id as holder_policy_id")
-      .limit(100)
+      .limit(10)
 
     /**
       * 读取保单明细hive表
@@ -402,7 +408,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val policyDetail: DataFrame = hiveContext.sql("select policy_id, product_name from odsdb.ods_policy_detail")
       .where("product_name = '学幼险' or product_name = '信美相互爱我宝贝少儿白血病保险'")
       .selectExpr("policy_id as policy_detail_id")
-      .limit(100)
+      .limit(10)
 
     /**
       * 读取被保险人hive表
@@ -410,7 +416,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val insuredInfos: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
       .selectExpr("insured_cert_no", "policy_id as insured_policy_id")
-      .limit(100)
+      .limit(10)
 
     //    通过投被保人关系确定子女关系
     val childrenInfoTemp: DataFrame = insuredInfos
@@ -495,9 +501,9 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
 
     //    多表关联
     val result: DataFrame = certInfo
-      .join(telInfos, certInfo("base_cert_no") === telInfos("tel_cert_no"))
-      .join(habitInfos, certInfo("base_cert_no") === habitInfos("habit_cert_no"))
-      .join(childInfos, certInfo("base_cert_no") === childInfos("child_cert_no"))
+      .join(telInfos, certInfo("base_cert_no") === telInfos("tel_cert_no"), "leftouter")
+      .join(habitInfos, certInfo("base_cert_no") === habitInfos("habit_cert_no"), "leftouter")
+      .join(childInfos, certInfo("base_cert_no") === childInfos("child_cert_no"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
         "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_name as base_bank_deposit", "base_province", "base_city",
         "base_area", "base_coastal", "base_city_type", "base_weather_feature", "base_city_weather", "base_city_deit",
