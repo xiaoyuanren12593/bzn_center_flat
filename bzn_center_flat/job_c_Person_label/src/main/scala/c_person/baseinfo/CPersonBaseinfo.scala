@@ -227,6 +227,7 @@ object CPersonBaseinfo extends SparkUtil with Until {
     */
   def getAllTelInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
+    hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
 
     /**
       * 从被保险人读取hive表
@@ -245,9 +246,33 @@ object CPersonBaseinfo extends SparkUtil with Until {
     //    获得全部手机号信息
     val TelInfoTemp: DataFrame = insuredTel
       .unionAll(holderTel)
+      .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
-    TelInfoTemp
+    //    手机号结果
+    val TelInfo: DataFrame = TelInfoTemp
+      .map(line => {
+        val baseCertNo: String = line.getAs[String]("base_cert_no")
+        val baseMobile: String = line.getAs[String]("base_mobile")
+        (baseCertNo, baseMobile)
+      })
+      .groupByKey()
+      .map(line => {
+        val baseCertNo: String = line._1
+        val value: Iterator[String] = line._2.iterator
+        //        创建手机号Json
+        val mobileJson: JSONObject = new JSONObject()
+        //        获得手机号Json
+        while (value.hasNext) {
+          val data: String = value.next()
+          if (data != null) mobileJson.put("mobile", data)
+        }
+        //        结果
+        (baseCertNo, mobileJson.toString)
+      })
+      .toDF("base_cert_no", "base_mobile")
+
+    TelInfo
 
   }
 
@@ -264,7 +289,7 @@ object CPersonBaseinfo extends SparkUtil with Until {
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
-      .selectExpr("insured_cert_type as base_cert_no", "policy_id")
+      .selectExpr("insured_cert_no as base_cert_no", "policy_id")
 
     /**
       * 从保单表获取保单号与产品信息

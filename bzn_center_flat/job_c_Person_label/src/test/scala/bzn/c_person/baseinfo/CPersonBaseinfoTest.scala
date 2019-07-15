@@ -2,16 +2,11 @@ package bzn.c_person.baseinfo
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.regex.Pattern
 
 import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
-<<<<<<< HEAD
 import com.alibaba.fastjson.JSONObject
-import org.apache.spark.sql.{DataFrame, SaveMode}
-=======
 import org.apache.spark.sql.DataFrame
->>>>>>> aaa4183d4f0e91940f36c0398a15fe7b4a98e896
 import org.apache.spark.sql.hive.HiveContext
 
 /**
@@ -38,15 +33,15 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val habitInfo: DataFrame = getHabitInfo(hiveContext)
     val childInfo: DataFrame = getChildInfo(hiveContext)
 
-    certInfo.show()
-    telInfo.show()
+//    certInfo.show()
+//    telInfo.show()
     habitInfo.show()
-    childInfo.show()
+//    childInfo.show()
 
     //    标签信息合并
     val result: DataFrame = unionAllTable(certInfo, telInfo, habitInfo, childInfo)
 //    result.write.mode(SaveMode.Overwrite).saveAsTable("label.base_label")
-    result.show()
+//    result.show()
     sc.stop()
 
   }
@@ -101,7 +96,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .unionAll(holderInfo)
       .dropDuplicates(Array("base_cert_no"))
       .filter(!$"base_cert_no".contains("*"))
-//      .where("base_cert_no <> '11**************15'")
+    //      .where("base_cert_no <> '11**************15'")
 
     val peopleInfoTemp = peopleInfo
       .map(line => {
@@ -240,6 +235,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     */
   def getAllTelInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
+    hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
 
     /**
       * 从被保险人读取hive表
@@ -260,9 +256,39 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     //    获得全部手机号信息
     val TelInfoTemp: DataFrame = insuredTel
       .unionAll(holderTel)
+      .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
-    TelInfoTemp
+    //    读取手机信息表
+    val mobileInfo: DataFrame = hiveContext.sql("select * from t_mobile")
+
+    //    与手机信息表连接
+    val TelInfoAll: DataFrame = TelInfoTemp
+      .join(mobileInfo, TelInfoTemp("base_mobile") === mobileInfo("mobile"))
+      .selectExpr("base_cert_no", "base_mobile as base_tel_name", "province as base_tel_province", "city as base_tel_city",
+        "operator as base_tel_operator")
+
+    //    手机号结果
+    val TelInfoRes: DataFrame = TelInfoAll
+      .map(line => {
+        val baseCertNo: String = line.getAs[String]("base_cert_no")
+        val baseTelMobile: String = line.getAs[String]("base_tel_mobile")
+        val baseTelProvince: String = line.getAs[String]("base_tel_province")
+        val baseTelCity: String = line.getAs[String]("base_tel_city")
+        val baseTelOperator: String = line.getAs[String]("base_tel_operator")
+        (baseCertNo, (baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator))
+      })
+      .groupByKey()
+      .map(line => {
+        val baseCertNo: String = line._1
+        val value: Iterator[(String, String, String, String)] = line._2.iterator
+        val baseTel: String = udfJson(value)
+//        结果
+        (baseCertNo, baseTel)
+      })
+      .toDF("base_cert_no", "base_tel")
+
+    TelInfoRes
 
   }
 
@@ -279,7 +305,8 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
       .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
-      .selectExpr("insured_cert_type as base_cert_no", "policy_id")
+      .where("insured_cert_no= '370112201108100317'")
+      .selectExpr("insured_cert_no as base_cert_no", "policy_id")
       .limit(10)
 
     /**
@@ -288,13 +315,12 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val productInfo: DataFrame = hiveContext.sql("select policy_id, product_name from odsdb.ods_policy_detail")
       .where("length(policy_id) > 0")
       .selectExpr("policy_id as policy_id_temp", "product_name")
-      .limit(10)
+
 
     //    将产品表与被保险人表关联
     val habitJoin: DataFrame = productInfo
-      .join(insuredInfo, productInfo("policy_id_temp") === insuredInfo("policy_id"), "leftouter")
+      .join(insuredInfo, productInfo("policy_id_temp") === insuredInfo("policy_id"))
       .selectExpr("base_cert_no", "product_name")
-      .limit(10)
 
     //    计算每个被保险人的爱好
     val habitRes: DataFrame = habitJoin
@@ -318,7 +344,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
         ((baseCertNo, habitName), 1)
       })
       .reduceByKey(_ + _) //计算购买特定产品次数
-      .filter(x => x._1._2 != "无" && x._2 >= 3)  //获取特定产品购买三次以上的
+      .filter(x => x._1._2 != "无" && x._2 >= 1)  //获取特定产品购买三次以上的
       .map(x => (x._1._1, x._1._2))
       .groupByKey()   //获取购买三次的作为爱好
       .map(line => {
@@ -332,6 +358,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       (baseCertNo, json_value.toString)
     })
       .toDF("base_cert_no", "base_habit")
+
 
     //    返回身份证与爱好Json
     habitRes
@@ -544,6 +571,11 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     }
   }
 
+  /**
+    * 自定义函数是否上学
+    * @param age
+    * @return
+    */
   def isAttendSchool(age: String): String = {
     val ageInt: Int = age.toInt
     var isAttendSch: String = null
@@ -553,6 +585,27 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       isAttendSch =  "未上学"
     }
     isAttendSch
+  }
+
+  /**
+    * 自定义拼接Json
+    * @param tuples
+    * @return
+    */
+  def udfJson(tuples: Iterator[(String, String, String, String)]): String = {
+//    创建手机号Json
+    val allJson: JSONObject = new JSONObject()
+    if (tuples.hasNext) {
+//      创建Json用于存放每个手机号
+      val smartJson: JSONObject = new JSONObject()
+      smartJson.put("base_tel_name", tuples.next()._1)
+      smartJson.put("base_tel_province", tuples.next()._2)
+      smartJson.put("base_tel_city", tuples.next()._3)
+      smartJson.put("base_tel_operator", tuples.next()._4)
+//      将每个手机号Json放入手机号Json
+      allJson.put("tel", smartJson.toString)
+    }
+    allJson.toString
   }
 
 }

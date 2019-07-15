@@ -94,6 +94,11 @@ object test {
     println("BZN_QJDC_1201_1231".contains("BZN_QJDC_001"))
   }
 
+  def getNull(line: String): Int = {
+    val res: Int = if (line == "" || line == null || line == "NULL") 9 else line.toInt
+    res
+  }
+
   def getDouble(d:Double): Double = {
     if (d != null) {
       val decimal = BigDecimal.apply(d)
