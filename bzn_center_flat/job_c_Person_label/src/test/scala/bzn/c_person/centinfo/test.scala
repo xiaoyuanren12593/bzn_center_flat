@@ -1,9 +1,11 @@
 package bzn.c_person.centinfo
 
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.util
 
 import bzn.job.common.Until
+import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.serializer.SerializerFeature
 
 
 /**
@@ -27,6 +29,32 @@ object test extends Until{
     println(getBeg_End_one_two_new("2018-09-18 00:00:00.0".substring(0,19),get_current_date(System.currentTimeMillis()).toString.substring(0,19)))
     println(dateDelNintyDay(get_current_date(System.currentTimeMillis()).toString.substring(0,19)))
 
+    var list:util.List[Any] = new util.ArrayList[Any]()
+    var map1 = new util.HashMap[String,Any]()
+    map1.put("name","Johnson")
+    map1.put("age",18)
+    map1.put("hobby","basketball")
+    var map2 = new util.HashMap[String,Any]()
+    map2.put("name","Jack")
+    map2.put("age",20)
+    map2.put("hobby","football")
+    var map3 = new util.HashMap[String,Any]()
+    map3.put("name","Johnson")
+    map3.put("age",22)
+    map3.put("hobby","swimming")
+    list.add(map1)
+    list.add(map2)
+    list.add(map3)
+    val jsonString = JSON.toJSONString(list, SerializerFeature.BeanToArray)
+    println(jsonString)
+
+    var ss = new util.ArrayList[(String,String)]
+    ss.add(("0011","雇主"))
+    ss.add(("0022","骑士"))
+    ss.add(("0033","大货车"))
+    ss.add(("0033","大货车"))
+    val jsonStringNew = JSON.toJSONString(ss, SerializerFeature.BeanToArray)
+    println(jsonStringNew)
   }
 
 
