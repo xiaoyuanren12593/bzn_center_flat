@@ -1,11 +1,13 @@
 package bzn.c_person.baseinfo
 
 import java.text.SimpleDateFormat
+import java.util
 import java.util.Date
 
 import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
-import com.alibaba.fastjson.JSONObject
+import com.alibaba.fastjson.serializer.SerializerFeature
+import com.alibaba.fastjson.{JSON, JSONObject}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.hive.HiveContext
 
@@ -33,15 +35,16 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val habitInfo: DataFrame = getHabitInfo(hiveContext)
     val childInfo: DataFrame = getChildInfo(hiveContext)
 
-//    certInfo.show()
-//    telInfo.show()
+    certInfo.show()
+    telInfo.show()
+    telInfo.foreach(println)
     habitInfo.show()
-//    childInfo.show()
+    childInfo.show()
 
     //    标签信息合并
     val result: DataFrame = unionAllTable(certInfo, telInfo, habitInfo, childInfo)
 //    result.write.mode(SaveMode.Overwrite).saveAsTable("label.base_label")
-//    result.show()
+    result.show()
     sc.stop()
 
   }
@@ -65,7 +68,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, insured_name, is_married, email, " +
       " getEmptyString() as bank_cert_no, getEmptyString() as bank_name from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_name as base_name", "is_married as base_married", "email as base_email",
         "bank_cert_no as base_bank_code", "bank_name as base_bank_name")
       .limit(10)
@@ -75,7 +78,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       */
     val slaveInfo: DataFrame = hiveContext.sql("select slave_cert_no, slave_cert_type, slave_name, is_married, email, " +
       " getEmptyString() as bank_cert_no, getEmptyString() as bank_name from odsdb.ods_policy_insured_slave_detail")
-      .where("slave_cert_type = '1' and length(slave_cert_no) > 0")
+      .where("slave_cert_type = '1' and length(slave_cert_no) = 18")
       .selectExpr("slave_cert_no as base_cert_no", "slave_name as base_name", "is_married as base_married", "email as base_email",
         "bank_cert_no as base_bank_code", "bank_name as base_bank_name")
       .limit(10)
@@ -85,7 +88,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       */
     val holderInfo: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type, holder_name, getEmptyString() as base_married," +
       "email, bank_card_no, bank_name from odsdb.ods_holder_detail")
-      .where("holder_cert_type = 1 and length(holder_cert_no) > 0")
+      .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
       .selectExpr("holder_cert_no as base_cert_no", "holder_name as base_name", "base_married", "email as base_email",
         "bank_card_no as base_bank_code", "bank_name as base_bank_name")
       .limit(10)
@@ -119,9 +122,12 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
           getAgeFromBirthTime(baseCertNo, sdf.format(time)).toString
         } else null
         //        年龄所处年代
-        val baseAgeTime: String = if (baseCertNo == 18) {
+        val baseAgeTime: String = if (baseCertNo.length == 18) {
           val ageTime: Int = baseCertNo.substring(8, 10).toInt
           ageTime match {
+            case _ if (ageTime >= 0 && ageTime < 10) => "00后"
+            case _ if (ageTime >= 10 && ageTime < 20) => "10后"
+            case _ if (ageTime >= 20 && ageTime < 30) => "20后"
             case _ if (ageTime >= 30 && ageTime < 40) => "30后"
             case _ if (ageTime >= 40 && ageTime < 50) => "40后"
             case _ if (ageTime >= 50 && ageTime < 60) => "50后"
@@ -129,8 +135,6 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
             case _ if (ageTime >= 70 && ageTime < 80) => "70后"
             case _ if (ageTime >= 80 && ageTime < 90) => "80后"
             case _ if (ageTime >= 90 && ageTime < 100) => "90后"
-            case _ if (ageTime >= 0 && ageTime < 10) => "00后"
-            case _ if (ageTime >= 10 && ageTime < 20) => "10后"
             case _  => null
           }
         } else null
@@ -150,7 +154,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
         //        是否退休
         val baseIsRetire: String = if (baseAge != null) {
           val baseAgeTemp = baseAge.toString.toInt
-          if (baseAgeTemp <= 60) "退休" else if (baseAgeTemp > 60) "未退休" else null
+          if (baseAgeTemp <= 60) "未退休" else if (baseAgeTemp > 60) "退休" else null
         } else null
         //        邮箱
         val baseEmailTemp: String = line.getAs[String]("base_email")
@@ -166,7 +170,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
         val baseBankName: String = dropEmpty(baseBankNameTemp)
         //        籍贯码表id
         val nativePlaceId: String = if (baseCertNo.length == 18) {
-          baseCertNo.substring(0, 6)
+          baseCertNo.substring(0, 4) + "00"
         } else null
         //        星座码表id
         val constellatoryId: String = if (baseCertNo.length == 18) {
@@ -185,6 +189,8 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 读取地区码表
       */
     val areaInfoDimension: DataFrame = hiveContext.sql("select * from odsdb.ods_area_info_dimension")
+      .selectExpr("code", "province", "short_name", "city_region", "case when is_coastal = '' then null else is_coastal end as is_coastal",
+        "case when city_type = '' then null else city_type end as city_type", "weather_feature", "weather_type", "city_deit")
 
     //    个人信息关联区域码表
     val peopleInfoJoin: DataFrame = peopleInfoTemp
@@ -241,7 +247,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 从被保险人读取hive表
       */
     val insuredTel: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, insured_mobile from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_mobile as base_mobile")
       .limit(10)
 
@@ -249,7 +255,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 从投保人读取hive表
       */
     val holderTel: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type, mobile from odsdb.ods_holder_detail")
-      .where("holder_cert_type = 1 and length(holder_cert_no) > 0")
+      .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
       .selectExpr("holder_cert_no as base_cert_no", "mobile as base_mobile")
       .limit(10)
 
@@ -260,11 +266,11 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
     //    读取手机信息表
-    val mobileInfo: DataFrame = hiveContext.sql("select * from t_mobile")
+    val mobileInfo: DataFrame = hiveContext.sql("select mobile, province, city, operator from odsdb.ods_mobile_dimension")
 
     //    与手机信息表连接
     val TelInfoAll: DataFrame = TelInfoTemp
-      .join(mobileInfo, TelInfoTemp("base_mobile") === mobileInfo("mobile"))
+      .join(mobileInfo, TelInfoTemp("base_mobile") === mobileInfo("mobile"), "leftouter")
       .selectExpr("base_cert_no", "base_mobile as base_tel_name", "province as base_tel_province", "city as base_tel_city",
         "operator as base_tel_operator")
 
@@ -272,7 +278,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val TelInfoRes: DataFrame = TelInfoAll
       .map(line => {
         val baseCertNo: String = line.getAs[String]("base_cert_no")
-        val baseTelMobile: String = line.getAs[String]("base_tel_mobile")
+        val baseTelMobile: String = line.getAs[String]("base_tel_name")
         val baseTelProvince: String = line.getAs[String]("base_tel_province")
         val baseTelCity: String = line.getAs[String]("base_tel_city")
         val baseTelOperator: String = line.getAs[String]("base_tel_operator")
@@ -304,8 +310,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 从被保人主表获取身份证件号与保单号
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
-      .where("insured_cert_no= '370112201108100317'")
+      .where("insured_cert_no = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "policy_id")
       .limit(10)
 
@@ -315,6 +320,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     val productInfo: DataFrame = hiveContext.sql("select policy_id, product_name from odsdb.ods_policy_detail")
       .where("length(policy_id) > 0")
       .selectExpr("policy_id as policy_id_temp", "product_name")
+      .limit(10)
 
 
     //    将产品表与被保险人表关联
@@ -344,7 +350,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
         ((baseCertNo, habitName), 1)
       })
       .reduceByKey(_ + _) //计算购买特定产品次数
-      .filter(x => x._1._2 != "无" && x._2 >= 1)  //获取特定产品购买三次以上的
+      .filter(x => x._1._2 != "无" && x._2 >= 3)  //获取特定产品购买三次以上的
       .map(x => (x._1._1, x._1._2))
       .groupByKey()   //获取购买三次的作为爱好
       .map(line => {
@@ -377,7 +383,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 读取主被保险人hive表
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, insured_id from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no", "insured_id")
       .limit(10)
 
@@ -385,7 +391,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 读取从被保险人hive表
       */
     val slaveInfo: DataFrame = hiveContext.sql("select slave_cert_no, slave_cert_type, master_id from odsdb.ods_policy_insured_slave_detail")
-      .where("slave_cert_type = '1' and length(slave_cert_no) > 0")
+      .where("slave_cert_type = '1' and length(slave_cert_no) = 18")
       .selectExpr("slave_cert_no", "master_id")
       .limit(10)
 
@@ -429,7 +435,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 读取投保人hive表
       */
     val holderInfos: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type, policy_id from odsdb.ods_holder_detail")
-      .where("holder_cert_type = 1 and length(holder_cert_no) > 0")
+      .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
       .selectExpr("holder_cert_no", "policy_id as holder_policy_id")
       .limit(10)
 
@@ -445,7 +451,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 读取被保险人hive表
       */
     val insuredInfos: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) > 0")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no", "policy_id as insured_policy_id")
       .limit(10)
 
@@ -538,7 +544,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
         "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_name as base_bank_deposit", "base_province", "base_city",
         "base_area", "base_coastal", "base_city_type", "base_weather_feature", "base_city_weather", "base_city_deit",
-        "base_cons_name", "base_cons_type", "base_cons_character", "base_mobile", "base_habit", "base_child_cun",
+        "base_cons_name", "base_cons_type", "base_cons_character", "base_tel", "base_habit", "base_child_cun",
         "base_child_age", "base_child_attend_sch")
 
     //    结果
@@ -552,7 +558,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     * @return
     */
   def dropEmpty(Temp: String): String = {
-    if (Temp == "" && Temp == "NULL" && Temp == null) null else Temp
+    if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
   }
 
   /**
@@ -593,19 +599,52 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
     * @return
     */
   def udfJson(tuples: Iterator[(String, String, String, String)]): String = {
-//    创建手机号Json
-    val allJson: JSONObject = new JSONObject()
-    if (tuples.hasNext) {
-//      创建Json用于存放每个手机号
-      val smartJson: JSONObject = new JSONObject()
-      smartJson.put("base_tel_name", tuples.next()._1)
-      smartJson.put("base_tel_province", tuples.next()._2)
-      smartJson.put("base_tel_city", tuples.next()._3)
-      smartJson.put("base_tel_operator", tuples.next()._4)
-//      将每个手机号Json放入手机号Json
-      allJson.put("tel", smartJson.toString)
+//    创建手机号信息List
+    val list: util.List[util.HashMap[String, String]] = new util.ArrayList[util.HashMap[String, String]]()
+//    遍历迭代器
+    while (tuples.hasNext) {
+      val tuple: (String, String, String, String) = tuples.next()
+//      当手机信息都不为空时全部塞进去，只手机号不为空时就把手机号塞进去，都为空时什么都不塞进去
+      if (tuple._1 != null && tuple._2 != null && tuple._3 != null && tuple._4 != null) {
+        val map: util.HashMap[String, String] = new util.HashMap[String, String]()
+        map.put("base_tel_name", tuple._1)
+        map.put("base_tel_province", tuple._2)
+        map.put("base_tel_city", tuple._3)
+        map.put("base_tel_operator", tuple._4)
+        list.add(map)
+      } else if (tuple._1 != null && tuple._2 == null && tuple._3 == null && tuple._4 == null) {
+        val map: util.HashMap[String, String] = new util.HashMap[String, String]()
+        map.put("base_tel_name", tuple._1)
+        list.add(map)
+      }
     }
-    allJson.toString
+//    将嵌套数组改为Json格式字符串
+    val jsonString: String = JSON.toJSONString(list, SerializerFeature.BeanToArray)
+//    如果Json格式字符串为[]，则转为null
+    if (jsonString == "[]") null else jsonString
+
   }
 
 }
+/**
+ *                             _ooOoo_
+ *                            o8888888o
+ *                            88" . "88
+ *                            (| -_- |)
+ *                            O\  =  /O
+ *                         ____/`---'\____
+ *                       .'  \\|     |//  `.
+ *                      /  \\|||  :  |||//  \
+ *                     /  _||||| -:- |||||-  \
+ *                     |   | \\\  -  /// |   |
+ *                     | \_|  ''\---/''  |   |
+ *                     \  .-\__  `-`  ___/-. /
+ *                   ___`. .'  /--.--\  `. . __
+ *                ."" '<  `.___\_<|>_/___.'  >'"".
+ *               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+ *               \  \ `-.   \_ __\ /__ _/   .-` /  /
+ *          ======`-.____`-.___\_____/___.-`____.-'======
+ *                             `=---='
+ *          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *                     佛祖保佑        永无BUG
+ */
