@@ -13,6 +13,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.DataFrame
 
 /**
   * author:xiaoYuanRen
@@ -55,7 +56,7 @@ trait HbaseUtil {
     conf.set("hbase.client.scanner.timeout.period", "600000")
     conf.set("hbase.rpc.timeout", "600000")
     conf.set(TableOutputFormat.OUTPUT_TABLE, tableName)
-    conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 3000)
+    conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily",6000)
     //设置配置文件，为了操作hdfs文件
     val conf_fs: Configuration = new Configuration()
     conf_fs.set("fs.default.name", "hdfs://namenode1.cdh:8020")
@@ -77,9 +78,9 @@ trait HbaseUtil {
   }
 
   //将hfile存到Hbase中
-  def saveToHbase(result: RDD[(String, String, String)], columnFamily1: String, column: String,
+  def saveToHbase(result: RDD[(String, String, String)], columnFamily1: String,
                   conf_fs: Configuration, tableName: String, conf: Configuration): Unit = {
-    val stagingFolder = s"/hbasehfile/$columnFamily1/$column"
+    val stagingFolder = s"/hbasehfile/$columnFamily1"
     //创建hbase的链接,利用默认的配置文件,实际上读取的hbase的master地址
     val hdfs = FileSystem.get(conf_fs)
     val path = new Path(stagingFolder)
@@ -130,9 +131,6 @@ trait HbaseUtil {
     //得到表数据
     val table = conn.getTable(TableName.valueOf(tableName))
 
-    println(table.getName)
-    println(table.getTableDescriptor)
-
     try {
       //创建一个job
       lazy val job = Job.getInstance(conf)
@@ -162,5 +160,34 @@ trait HbaseUtil {
       table.close()
       conn.close()
     }
+  }
+
+  /**
+    * 将DataFrame写入HBase
+    * @param dataFrame
+    * @param tableName
+    * @param columnFamily
+    */
+  def toHBase(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
+    //    获取conf
+    val con: (Configuration, Configuration) = HbaseConf(tableName)
+    val conf_fs: Configuration = con._2
+    val conf: Configuration = con._1
+    //    获取列
+    val cols: Array[String] = dataFrame.columns
+    //    取不等于key的列循环
+
+    cols.filter(x => x != "cert_no").map(x => {
+      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
+        val certNo = rdd.getAs[String]("cert_no")
+        val clo: Any = rdd.getAs[Any](x)
+        //证件号，列值 列名
+        (certNo,clo,x)
+      })
+      .filter(x => x._2 != null && x._2 != "")
+      .map(x => (x._1,x._2.toString,x._3))
+
+      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+    })
   }
 }
