@@ -45,8 +45,13 @@ object CPersonBaseinfo extends SparkUtil with Until with HbaseUtil {
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.base_label")
 
 //    写入hbase中
-    toHBase(result, "base_cert_no", "label_person", "base_info")
-//    toHBase2(result, "base_cert_no", "label_person", "base_info")
+//    toHBase(result, "base_cert_no", "label_person", "base_info")
+//    toHBase2(result, "label_person", "base_info")
+
+    toHBase2(certInfo, "label_person", "base_info")
+    toHBase2(telInfo, "label_person", "base_info")
+    toHBase2(habitInfo, "label_person", "base_info")
+    toHBase2(childInfo, "label_person", "base_info")
 
     sc.stop()
 
@@ -225,7 +230,7 @@ object CPersonBaseinfo extends SparkUtil with Until with HbaseUtil {
     val peopleInfoRes: DataFrame = peopleInfoJoin
       .join(constellationDimension, peopleInfoJoin("constellatory_id") === constellationDimension("id"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
-        "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_name", "base_province", "base_city",
+        "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_name as base_bank_deposit", "base_province", "base_city",
         "base_area", "base_coastal", "base_city_type", "base_weather_feature", "base_city_weather", "base_city_deit",
         "base_cons_name", "base_cons_type", "base_cons_character")
 
@@ -532,7 +537,7 @@ object CPersonBaseinfo extends SparkUtil with Until with HbaseUtil {
       .join(habitInfos, certInfo("base_cert_no") === habitInfos("habit_cert_no"), "leftouter")
       .join(childInfos, certInfo("base_cert_no") === childInfos("child_cert_no"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
-        "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_name as base_bank_deposit", "base_province", "base_city",
+        "base_is_retire", "base_email", "base_married", "base_bank_code", "base_bank_deposit", "base_province", "base_city",
         "base_area", "base_coastal", "base_city_type", "base_weather_feature", "base_city_weather", "base_city_deit",
         "base_cons_name", "base_cons_type", "base_cons_character", "base_tel", "base_habit", "base_child_cun",
         "base_child_age", "base_child_attend_sch")
@@ -663,21 +668,19 @@ object CPersonBaseinfo extends SparkUtil with Until with HbaseUtil {
     //    获取列
     val cols: Array[String] = dataFrame.columns
     //    取不等于key的列循环
-    val res: RDD[(String,String, String)] = dataFrame.mapPartitions(rdd => {
-      rdd.flatMap(t => {
-        val certNo = t.getAs[String]("cert_no")
-        val res = cols.filter(x => x != "cert_no").map(z => {
-          val clo: Any = t.getAs[Any](z)
-          (certNo,clo,z)
-        })
-        res
-      })
-    })
-      .filter(x => x._2 != null && x._2 != "")
-      .map(x => (x._1,x._2.toString,x._3))
-      .sortBy(_._1)
 
-    saveToHbase(res, columnFamily, conf_fs, tableName, conf)
+    cols.filter(x => x != "base_cert_no").map(x => {
+      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
+        val certNo = rdd.getAs[String]("base_cert_no")
+        val clo: Any = rdd.getAs[Any](x)
+        //证件号，列值 列名
+        (certNo,clo,x)
+      })
+        .filter(x => x._2 != null && x._2 != "")
+        .map(x => (x._1,x._2.toString,x._3))
+
+      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+    })
   }
 
 }
