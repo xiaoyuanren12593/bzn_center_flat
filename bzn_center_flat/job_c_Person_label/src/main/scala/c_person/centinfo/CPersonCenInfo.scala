@@ -147,13 +147,13 @@ object CPersonCenInfo extends SparkUtil with Until with HbaseUtil {
 
     val InsuredInfoDetailRes = InsuredInfoDetail(sqlContext, holderPolicy, odsPolicyDetail, odsPolicyInsuredDetail, odsPolicyInsuredSlaveDetail,
       odsWorktypeDimension, certNos, odsClaimsDetail)
-//    toHBase(InsuredInfoDetailRes,tableName,columnFamily,rowKeyName)
+    toHBase(InsuredInfoDetailRes,tableName,columnFamily,rowKeyName)
 
 //    putByList(sc,InsuredInfoDetailRes,"label_person_test","cent_info",rowKeyName)
 
     val tatentInsuredInfoDetailRes = tatentInsuredInfoDetail(sqlContext, holderPolicy, odsPolicyDetail, odsPolicyInsuredDetail,
       odsPolicyInsuredSlaveDetail, certNos)
-    toHBase(tatentInsuredInfoDetailRes,tableName,columnFamily,rowKeyName)
+//    toHBase(tatentInsuredInfoDetailRes,tableName,columnFamily,rowKeyName)
 //    putByList(sc,tatentInsuredInfoDetailRes,"label_person_test","cent_info",rowKeyName)
 
   }
@@ -802,7 +802,7 @@ object CPersonCenInfo extends SparkUtil with Until with HbaseUtil {
     val res = resTwo.join(odsAreaInfoDimension,resTwo("city")===odsAreaInfoDimension("code"),"leftouter")
       .selectExpr("holder_cert_no as cert_no","first_policy_pdt_code","first_policy_pdt_name","first_policy_premium","first_policy_plan", "first_policy_time","first_policy_source",
         "first_policy_pay_channel","short_name as first_policy_city","province as first_policy_province","city_type as first_policy_city_level","first_policy_insurant_name",
-        "first_policy_time_90_days", "first_policy_age", "new_cus_buy_cun","new_cus_sum_premium","first_policy_days","first_policy_section","new_cus_insured_cun")
+        "first_policy_time_90_days as become_old_time", "first_policy_age", "new_cus_buy_cun","new_cus_sum_premium","first_policy_days","first_policy_section","new_cus_insured_cun")
 
     res
   }

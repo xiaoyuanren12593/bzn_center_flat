@@ -8,7 +8,7 @@ object test {
 
   def main(args: Array[String]): Unit = {
 
-    println(getNintyDaysAgo())
+    println(Long.MinValue)
 
   }
 
