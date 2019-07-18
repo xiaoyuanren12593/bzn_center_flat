@@ -4,12 +4,14 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
-import bzn.job.common.Until
+import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
+import org.apache.hadoop.conf.Configuration
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
-object CPersonHighInfo extends SparkUtil with Until{
+object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
 
   def main(args: Array[String]): Unit = {
 
@@ -32,6 +34,9 @@ object CPersonHighInfo extends SparkUtil with Until{
 
     //    写到hive中
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.high_label")
+
+//    写到hbase里
+    toHBase2(result, "label_person", "high_info")
 
     sc.stop()
 
@@ -91,7 +96,7 @@ object CPersonHighInfo extends SparkUtil with Until{
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id, start_date, " +
       "update_time from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_no = '1' and length(insured_cert_no) = 18")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as high_cert_no", "policy_id", "start_date", "update_time")
 
     /**
@@ -150,7 +155,7 @@ object CPersonHighInfo extends SparkUtil with Until{
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id, start_date, " +
       "update_time from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_no = '1' and length(insured_cert_no) = 18")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as high_cert_no", "policy_id", "start_date", "update_time")
 
     /**
@@ -184,7 +189,7 @@ object CPersonHighInfo extends SparkUtil with Until{
       .groupByKey()
       .map(line => {
         val highCertNo: String = line._1
-        val value: String = if (line._2.toArray.length >= 3) "是" else "否"
+        val value: String = if (line._2.toArray.length >= 2) "是" else "否"
         //        返回结果
         (highCertNo, value)
       })
@@ -303,6 +308,35 @@ object CPersonHighInfo extends SparkUtil with Until{
     */
   def dropEmpty(Temp: String): String = {
     if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
+  }
+
+  /**
+    * 将DataFrame写入HBase
+    * @param dataFrame
+    * @param tableName
+    * @param columnFamily
+    */
+  def toHBase2(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
+    //    获取conf
+    val con: (Configuration, Configuration) = HbaseConf(tableName)
+    val conf_fs: Configuration = con._2
+    val conf: Configuration = con._1
+    //    获取列
+    val cols: Array[String] = dataFrame.columns
+    //    取不等于key的列循环
+
+    cols.filter(x => x != "high_cert_no").map(x => {
+      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
+        val certNo = rdd.getAs[String]("high_cert_no")
+        val clo: Any = rdd.getAs[Any](x)
+        //证件号，列值 列名
+        (certNo,clo,x)
+      })
+        .filter(x => x._2 != null && x._2 != "")
+        .map(x => (x._1,x._2.toString,x._3))
+
+      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+    })
   }
 
 }

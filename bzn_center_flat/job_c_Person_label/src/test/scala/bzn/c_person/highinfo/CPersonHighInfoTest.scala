@@ -94,9 +94,8 @@ object CPersonHighInfoTest extends SparkUtil with Until{
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id, start_date, " +
       "update_time from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_no = '1' and length(insured_cert_no) = 18")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as high_cert_no", "policy_id", "start_date", "update_time")
-      .limit(10)
 
     /**
       * 从保单表获取保单号与产品信息
@@ -155,7 +154,7 @@ object CPersonHighInfoTest extends SparkUtil with Until{
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id, start_date, " +
       "update_time from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_no = '1' and length(insured_cert_no) = 18")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as high_cert_no", "policy_id", "start_date", "update_time")
       .limit(10)
 

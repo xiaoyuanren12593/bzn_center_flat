@@ -310,7 +310,7 @@ object CPersonBaseinfoTest extends SparkUtil with Until {
       * 从被保人主表获取身份证件号与保单号
       */
     val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type, policy_id from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_no = '1' and length(insured_cert_no) = 18")
+      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "policy_id")
       .limit(10)
 
