@@ -2,6 +2,7 @@ package c_person.highinfo
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 
 import bzn.job.common.Until
@@ -16,6 +17,11 @@ object test {
       print("1234567")
     }
 
+    println(dropSpecial("110105199711248912"))
+    println(dropSpecial("11010519971124891X"))
+    println(dropSpecial("11010519971124891x"))
+    println(dropSpecial("110105**********12"))
+
 
   }
 
@@ -28,6 +34,11 @@ object test {
     c.add(Calendar.DATE, -90)
     val newDate: Date = c.getTime
     Timestamp.valueOf(sdf.format(newDate))
+  }
+
+  def dropSpecial(Temp: String): Boolean = {
+    val pattern = Pattern.compile("^[\\dxX]*$")
+    pattern.matcher(Temp).matches()
   }
 
 }

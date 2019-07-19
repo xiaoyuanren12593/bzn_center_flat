@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
-import bzn.c_person.util.SparkUtil
+import c_person.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.hive.HiveContext

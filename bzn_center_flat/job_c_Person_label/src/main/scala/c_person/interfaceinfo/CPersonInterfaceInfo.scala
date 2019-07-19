@@ -2,11 +2,10 @@ package c_person.interfaceinfo
 
 import java.text.SimpleDateFormat
 import java.util
+import java.util.regex.Pattern
 import java.util.{Date, Properties}
 
 import bzn.job.common.{HbaseUtil, Until}
-import c_person.baseinfo.CPersonBaseinfo.{HbaseConf, saveToHbase}
-import c_person.highinfo.CPersonHighInfo.sparkConfInfo
 import c_person.util.SparkUtil
 import com.alibaba.fastjson.{JSON, JSONObject}
 import com.alibaba.fastjson.serializer.SerializerFeature
@@ -54,6 +53,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
   def getCertInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     /**
       * 读取ofo接口的hive表
@@ -72,6 +72,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     //    合并数据
     val certInfo: DataFrame = ofoInfo
       .unionAll(suyunInfo)
+      .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no"))
 
     //    清洗身份证标签
@@ -202,6 +203,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
   def getTelInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     /**
       * 读取ofo接口的手机号信息
@@ -220,11 +222,17 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     //    合并数据
     val telInfo: DataFrame = ofoTelInfo
       .unionAll(suyunTelInfo)
+      .filter("dropSpecial(base_cert_no) as base_cert_no")
       .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
     //    读取手机信息表
-    val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
+//    val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
+//      .selectExpr("mobile", "province", "city", "operator")
+//      .limit(100000)
+//      .repartition()
+
+    val mobileInfo: DataFrame = hiveContext.sql("select * from odsdb.ods_mobile_dimension")
       .selectExpr("mobile", "province", "city", "operator")
 
     //    与手机信息表连接
@@ -241,15 +249,17 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
         val baseTelProvince: String = line.getAs[String]("base_tel_province")
         val baseTelCity: String = line.getAs[String]("base_tel_city")
         val baseTelOperator: String = line.getAs[String]("base_tel_operator")
-        (baseCertNo, (baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator))
+        (baseCertNo, scala.collection.mutable.LinkedList[(String, String, String, String)]((baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator)))
       })
-      .groupByKey()
+      .reduceByKey((x, y) => {
+      x.append(y)
+    })
       .map(line => {
         val baseCertNo: String = line._1
-        val value: Iterator[(String, String, String, String)] = line._2.iterator
-        val baseTel: String = udfJson(value)
-        //        结果
-        (baseCertNo, baseTel)
+          val value: Iterator[(String, String, String, String)] = line._2.iterator
+          val baseTel: String = udfJson(value)
+          //        结果
+          (baseCertNo, baseTel)
       })
       .toDF("base_cert_no", "base_tel")
 
@@ -287,6 +297,16 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     */
   def dropEmpty(Temp: String): String = {
     if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
+  }
+
+  /**
+    * 身份证匹配
+    * @param Temp
+    * @return
+    */
+  def dropSpecial(Temp: String): Boolean = {
+    val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
+    pattern.matcher(Temp).matches
   }
 
   /**

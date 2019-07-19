@@ -5,13 +5,14 @@ import java.util.Date
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, FsShell, Path}
 import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue, TableName}
-import org.apache.hadoop.hbase.client.{ConnectionFactory, HTable, Result}
+import org.apache.hadoop.hbase.client.{ConnectionFactory, HTable, Put, Result}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles, TableInputFormat}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.SparkContext
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 
@@ -21,10 +22,63 @@ import org.apache.spark.sql.DataFrame
   * Time:15:55
   * describe: hbase工具类
   **/
+
 trait HbaseUtil {
 
+  /**
+    * hhbase api方式写入
+    * @param sc 上下文
+    * @param rdd 数据集
+    * @param tableName 表名
+    * @param columnFamily 列簇
+    * @param rowKeyName rowkey名称
+    */
+  def putByList(sc:SparkContext,rdd:DataFrame,tableName:String,columnFamily:String,rowKeyName:String): Unit = {
+    try {
+      val columns: Array[String] = rdd.columns.filter(x => x != rowKeyName)
+      val broadcastColimns: Broadcast[Array[String]] = sc.broadcast(columns)
+
+      rdd.foreachPartition(list => {
+
+        //定义HBase的配置
+        val conf: Configuration = HBaseConfiguration.create()
+        conf.set("hbase.zookeeper.property.clientPort", "2181")
+        conf.set("hbase.zookeeper.quorum", "172.16.11.106,172.16.11.104,172.16.11.105,172.16.11.103,172.16.11.102")
+        conf.set("mapreduce.task.timeout", "1200000")
+        conf.set("hbase.client.scanner.timeout.period", "600000")
+        conf.set("hbase.rpc.timeout", "600000")
+        conf.set(TableOutputFormat.OUTPUT_TABLE, tableName)
+        conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily",6000)
+
+        val conn = ConnectionFactory.createConnection(conf)
+
+        val table = conn.getTable(TableName.valueOf(tableName))
+
+        val putList = new java.util.LinkedList[Put]()
+
+        list.foreach(value => {
+          val rowKey = value.getAs[String](rowKeyName)
+          val put = new Put(Bytes.toBytes(rowKey))
+
+          val columns = broadcastColimns.value
+          columns.foreach(println)
+          columns.foreach(x => {
+            val columnsValue = value.getAs[Any](x)
+            if(columnsValue != null && columnsValue != ""){
+              put.addImmutable(Bytes.toBytes(columnFamily), Bytes.toBytes(x), Bytes.toBytes(columnsValue.toString))
+            }
+          })
+          putList.add(put)
+        })
+
+        table.put(putList)
+        table.close()
+      })
+    }
+  }
+
   //得到个人标签数据
-  def getHbaseBussValue(sc: SparkContext): RDD[(ImmutableBytesWritable, Result)] = {
+  def getHbaseBussValue(sc: SparkContext,tableName: String): RDD[(ImmutableBytesWritable, Result)] = {
     //定义HBase的配置
     val conf: Configuration = HBaseConfiguration.create()
     conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -35,7 +89,7 @@ trait HbaseUtil {
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 3000)
 
     //设置查询的表名
-    conf.set(TableInputFormat.INPUT_TABLE, "label_person")
+    conf.set(TableInputFormat.INPUT_TABLE, tableName)
 
     val usersRDD: RDD[(ImmutableBytesWritable, Result)] = sc.newAPIHadoopRDD(
       conf,
@@ -104,7 +158,7 @@ trait HbaseUtil {
     * @param conf hbase
     * @param stagingFolder  文件存储路径
     */
-  def deToHbase(result: RDD[(String, String, String)],columnFamily1: String, conf_fs: Configuration,conf: Configuration,tableName:String,stagingFolder:String) {
+  def deToHbase(result: RDD[(String, String, String)],columnFamily1: String, conf_fs: Configuration,conf: Configuration,tableName:String,stagingFolder:String): Unit = {
     val sourceRDD: RDD[(ImmutableBytesWritable, KeyValue)] = result
       .sortBy(_._1)
       .map(x => {
@@ -168,7 +222,7 @@ trait HbaseUtil {
     * @param tableName
     * @param columnFamily
     */
-  def toHBase(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
+  def toHBase(dataFrame: DataFrame, tableName: String, columnFamily: String,rowKeyName:String)  = {
     //    获取conf
     val con: (Configuration, Configuration) = HbaseConf(tableName)
     val conf_fs: Configuration = con._2
@@ -176,10 +230,9 @@ trait HbaseUtil {
     //    获取列
     val cols: Array[String] = dataFrame.columns
     //    取不等于key的列循环
-
-    cols.filter(x => x != "cert_no").map(x => {
+    cols.filter(x => x != rowKeyName).map(x => {
       val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
-        val certNo = rdd.getAs[String]("cert_no")
+        val certNo = rdd.getAs[String](rowKeyName)
         val clo: Any = rdd.getAs[Any](x)
         //证件号，列值 列名
         (certNo,clo,x)

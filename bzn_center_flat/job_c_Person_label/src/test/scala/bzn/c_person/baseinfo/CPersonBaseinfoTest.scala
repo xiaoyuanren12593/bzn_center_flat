@@ -4,8 +4,8 @@ import java.text.SimpleDateFormat
 import java.util
 import java.util.Date
 
-import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
+import c_person.util.SparkUtil
 import com.alibaba.fastjson.serializer.SerializerFeature
 import com.alibaba.fastjson.{JSON, JSONObject}
 import org.apache.spark.sql.DataFrame

@@ -1,0 +1,99 @@
+package bzn.c_person.highinfo
+
+import java.sql.Timestamp
+
+import bzn.job.common.{HbaseUtil, Until}
+import c_person.util.SparkUtil
+import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.serializer.SerializerFeature
+import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
+
+/**
+  * author:xiaoYuanRen
+  * Date:2019/7/17
+  * Time:16:53
+  * describe: 高级标签
+  **/
+object CPersonHighInfoLossTest extends SparkUtil with Until with HbaseUtil  {
+  def main(args: Array[String]): Unit = {
+    System.setProperty("HADOOP_USER_NAME", "hdfs")
+    val appName = this.getClass.getName
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+
+    val sc = sparkConf._2
+    val hiveContext = sparkConf._4
+
+     highInfoDetail(sc,hiveContext)
+    sc.stop()
+  }
+
+  /**
+    * 高级标签清洗
+    * @param sc 上下文
+    * @param sqlContext sql上下文
+    */
+  def highInfoDetail(sc:SparkContext,sqlContext:HiveContext): DataFrame ={
+    import sqlContext.implicits._
+    sqlContext.udf.register("notXing", (str: String) => {
+      if (str != null && str.contains("*")) {
+        0
+      } else {
+        1
+      }
+    })
+
+    /**
+      * 读取hbase上的数据
+      */
+    val hbaseData = getHbaseBussValue(sc,"label_person")
+        .map(x => {
+          val key = Bytes.toString(x._2.getRow)
+          val cusType = Bytes.toString(x._2.getValue("cent_info".getBytes, "cus_type".getBytes))
+          val lastCusType = Bytes.toString(x._2.getValue("high_info".getBytes, "last_cus_type".getBytes)) //前一次投保类型
+          val becomeCurrCusTime = Bytes.toString(x._2.getValue("cent_info".getBytes, "become_curr_cus_time".getBytes))
+          val lastPolicyEndDate = Bytes.toString(x._2.getValue("cent_info".getBytes, "last_policy_end_date".getBytes))
+          (key,cusType,lastCusType,becomeCurrCusTime)
+        })
+      .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time","last_policy_end_date")
+      .where("cus_type in ('1','2','3','4','5')")
+
+    /**
+      *  客户标签为新客或易流失&保单到期&60内无复购
+      */
+    val currTime = getNowTime()
+    hbaseData.rdd.map(x => {
+      val certNo = x.getAs[String]("cert_no")
+      var cusType = x.getAs[String]("cus_type")
+      val lastCusType = x.getAs[String]("last_cus_type")
+      var becomeCurrCusTime = x.getAs[String]("become_curr_cus_time")
+      var lastPolicyEndDate = x.getAs[String]("last_policy_end_date")
+      val lastCusTypeRes = JSON.parseArray(lastCusType)
+      var days = Long.MinValue
+      if(lastPolicyEndDate != null){
+        days = getBeg_End_one_two_new(lastPolicyEndDate,currTime)//保险止期和当前日期所差天数
+      }
+      if((cusType == "1" || cusType == "3") && days > 60){
+        cusType = "4"
+        becomeCurrCusTime = timeSubstring(currTime)
+        lastCusTypeRes.add(("3",timeSubstring(becomeCurrCusTime)))
+      }
+      val jsonString = JSON.toJSONString(lastCusTypeRes, SerializerFeature.BeanToArray)
+      (certNo,cusType,becomeCurrCusTime,jsonString)
+    })
+
+
+    hbaseData
+//    val res1 = res.selectExpr("cert_no","last_cus_type_test","easy_to_loss_time")
+//    val  rowKeyName = "cert_no"
+//    val  tableName = "label_person"
+//    val  columnFamily1 = "cent_info"
+//    val  columnFamily2 = "high_info"
+//    toHBase(res1,tableName,columnFamily1,rowKeyName)
+//    val res2 = res.selectExpr("cert_no","last_cus_type_test","become_curr_cus_time")
+//    toHBase(res2,tableName,columnFamily2,rowKeyName)
+//    res2
+  }
+}

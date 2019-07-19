@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import java.util
 
 import bzn.job.common.Until
-import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.{JSON, JSONArray}
 import com.alibaba.fastjson.serializer.SerializerFeature
 
 
@@ -55,6 +55,36 @@ object test extends Until{
     ss.add(("0033","大货车"))
     val jsonStringNew = JSON.toJSONString(ss, SerializerFeature.BeanToArray)
     println(jsonStringNew)
+
+    println(currTimeFuction("2019-7-18 09:54:55.0",-180))
+    println(getNowTime)
+    println(getBeg_End_one_two_new("2017-08-21 11:38:10.0","2015-08-21 11:39:09.0"))
+
+    //[["12000002","亚洲旅游保"]]
+
+    val res2= JSON.parseArray("[[\"12000002\",\"亚洲旅游保\"],[\"12000003\",\"世界旅游保\"]]")
+    println(res2)
+    res2.add(("12000005","zz旅游保"))
+    res2.add(("12000006","旅游保"))
+    res2.add(("0","2019-4-7"))
+    val zzz = JSON.toJSONString(res2,SerializerFeature.BeanToArray)
+    val value: AnyRef = JSON.parseArray(zzz).getJSONArray(JSON.parseArray(zzz).size()-1).get(0)
+    println()
+    println(zzz)
+
+
+    val zz = new util.ArrayList[(String, String)]
+    zz.add(("1","201977879"))
+    zz.add(("2","201977879"))
+    println(JSON.toJSONString(zz, SerializerFeature.BeanToArray))
+    println("2019-07-18 09:54:55".length)
+    println("2019-7-18 09:54:55.0".compareTo("2019-12-10 09:54:55"))
+    val currTime = getNowTime()
+    val cuurTimeNew = Timestamp.valueOf(currTime)
+    if(cuurTimeNew.compareTo(Timestamp.valueOf("2017-07-18 11:10:11")) < 0){
+      println("21231")
+    }
+    println(Long.MaxValue)
   }
 
 

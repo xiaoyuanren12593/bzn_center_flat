@@ -2,6 +2,7 @@ package bzn.c_person.interfaceinfo
 
 import java.text.SimpleDateFormat
 import java.util
+import java.util.regex.Pattern
 import java.util.{Date, Properties}
 
 import bzn.job.common.{HbaseUtil, Until}
@@ -26,15 +27,15 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     val hiveContext = sparkConf._4
 
     //    清洗标签
-    val certInfo: DataFrame = getCertInfo(hiveContext)
+//    val certInfo: DataFrame = getCertInfo(hiveContext)
     val telInfo: DataFrame = getTelInfo(hiveContext)
 
-    certInfo.show()
+//    certInfo.show()
     telInfo.show()
 
 //    合并
-    val result: DataFrame = unionTable(certInfo, telInfo)
-    result.show()
+//    val result: DataFrame = unionTable(certInfo, telInfo)
+//    result.show()
 
     sc.stop()
 
@@ -48,14 +49,14 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
   def getCertInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     /**
       * 读取ofo接口的hive表
       */
-    val ofoInfo: DataFrame = hiveContext.sql("select product_code, insured_name, insured_cert_no from odsdb_prd.open_ofo_policy_parquet")
+    val ofoInfo: DataFrame = hiveContext.sql("select product_code, insured_name, insured_cert_no from odsdb_prd.open_ofo_policy_parquet_temp")
       .where("product_code = 'OFO00002' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_name as base_name")
-      .limit(10)
 
     /**
       * 读取58速运接口的hive表
@@ -63,11 +64,12 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     val suyunInfo: DataFrame = hiveContext.sql("select courier_card_no, courier_name from odsdb_prd.open_express_policy")
       .where("length(courier_card_no) = 18")
       .selectExpr("courier_card_no as base_cert_no", "courier_name as base_name")
-      .limit(10)
+      .limit(10000)
 
 //    合并数据
     val certInfo: DataFrame = ofoInfo
       .unionAll(suyunInfo)
+      .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no"))
 
 //    清洗身份证标签
@@ -198,14 +200,16 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
   def getTelInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     /**
       * 读取ofo接口的手机号信息
       */
-    val ofoTelInfo: DataFrame = hiveContext.sql("select product_code, insured_cert_no, insured_mobile from odsdb_prd.open_ofo_policy_parquet")
+    val ofoTelInfo: DataFrame = hiveContext.sql("select product_code, insured_cert_no, insured_mobile from odsdb_prd.open_ofo_policy_parquet_temp")
       .where("product_code = 'OFO00002' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_mobile as base_mobile")
-      .where("base_mobile = '13811614760'")
+
+    println(ofoTelInfo.rdd.getNumPartitions)
 
     /**
       * 读取58速运接口的手机号信息
@@ -213,18 +217,23 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     val suyunTelInfo: DataFrame = hiveContext.sql("select courier_card_no, courier_mobile from odsdb_prd.open_express_policy")
       .where("length(courier_card_no) = 18")
       .selectExpr("courier_card_no as base_cert_no", "courier_mobile as base_mobile")
-      .limit(10)
+      .limit(100000)
+
+    println(suyunTelInfo.rdd.getNumPartitions)
 
 //    合并数据
     val telInfo: DataFrame = ofoTelInfo
       .unionAll(suyunTelInfo)
       .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
+      .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
     //    读取手机信息表
     val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
       .selectExpr("mobile", "province", "city", "operator")
-      .where("mobile = '13811614760'")
+      .limit(100000)
+
+    println(mobileInfo.rdd.getNumPartitions)
 
     //    与手机信息表连接
     val telInfoAll: DataFrame = telInfo
@@ -286,6 +295,18 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     */
   def dropEmpty(Temp: String): String = {
     if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
+  }
+
+  /**
+    * 身份证匹配
+    * @param Temp
+    * @return
+    */
+  def dropSpecial(Temp: String): Boolean = {
+    if (Temp != null) {
+      val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
+      pattern.matcher(Temp).matches()
+    } else false
   }
 
   /**
