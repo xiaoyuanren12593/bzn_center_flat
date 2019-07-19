@@ -1,6 +1,4 @@
-package bzn.c_person.highinfo
-
-import java.sql.Timestamp
+package c_person.highinfo
 
 import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
@@ -17,11 +15,11 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:53
   * describe: 高级标签
   **/
-object CPersonHighInfoLossTest extends SparkUtil with Until with HbaseUtil  {
+object CPersonHighInfoLoss extends SparkUtil with Until with HbaseUtil  {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4

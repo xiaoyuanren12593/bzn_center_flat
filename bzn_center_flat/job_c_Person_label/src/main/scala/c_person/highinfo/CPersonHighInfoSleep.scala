@@ -1,7 +1,6 @@
 package c_person.highinfo
 
 import java.sql.Timestamp
-import java.util
 
 import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
@@ -18,7 +17,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:53
   * describe: 高级标签
   **/
-object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
+object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -27,7 +26,7 @@ object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
 
-    highInfoDetail(sc,hiveContext)
+     highInfoDetail(sc,hiveContext)
     sc.stop()
   }
 
@@ -117,66 +116,48 @@ object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
         .map(x => {
           val key = Bytes.toString(x._2.getRow)
           val cusType = Bytes.toString(x._2.getValue("cent_info".getBytes, "cus_type".getBytes))
-          val becomeOldTime = Bytes.toString(x._2.getValue("cent_info".getBytes, "become_old_time".getBytes))
           val lastCusType = Bytes.toString(x._2.getValue("high_info".getBytes, "last_cus_type".getBytes)) //前一次投保类型
-          val firstPolicyTime = Bytes.toString(x._2.getValue("cent_info".getBytes, "first_policy_time".getBytes))
-          (key,cusType,becomeOldTime,lastCusType,firstPolicyTime)
+          val becomeCurrCusTime = Bytes.toString(x._2.getValue("high_info".getBytes, "become_curr_cus_time".getBytes))
+          (key,cusType,lastCusType,becomeCurrCusTime)
         })
-      .toDF("cert_no","cus_type","become_old_time","last_cus_type","first_policy_time")
+      .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time")
       .where("cus_type in ('1','2','3','4','5')")
-
 
     /**
       * 标签数据和投保人数据进行关联
       */
     val currTime = getNowTime()
     val res = hbaseData.join(holdInfo,hbaseData("cert_no")===holdInfo("holder_cert_no"),"leftouter")
-      .selectExpr("cert_no","cus_type","become_old_time","policy_start_date","policy_end_date","last_cus_type","first_policy_time")
+      .selectExpr("cert_no","cus_type","policy_new_start_date","policy_start_date","policy_end_date","last_cus_type","become_curr_cus_time")
       .map(x => {
         val certNo = x.getAs[String]("cert_no")
         var cusType = x.getAs[String]("cus_type")
         var lastCusType = x.getAs[String]("last_cus_type")
-        val becomeOldTime = x.getAs[String]("become_old_time")
+        val policyNewStartDate = x.getAs[java.sql.Timestamp]("policy_new_start_date")
         val policyStartDate = x.getAs[java.sql.Timestamp]("policy_start_date")
         val policyEndDate = x.getAs[java.sql.Timestamp]("policy_end_date")
-        val firstPolicyTime = x.getAs[String]("first_policy_time")
-        val ss = new util.ArrayList[(String, String)]
-        //成为当前客户类型的时间
-        var becomeCurrCusTime = timeSubstring(firstPolicyTime)
-
+        var becomeCurrCusTime = x.getAs[String]("become_curr_cus_time")
+        val cuurTimeNew = Timestamp.valueOf(currTime)
         /**
-          * 老客
+          * 上一个客户类型
           */
-        if(cusType == "1" && (Timestamp.valueOf(becomeOldTime).compareTo(Timestamp.valueOf(currTime)) <= 0)){
-          cusType = "2"
-          becomeCurrCusTime = timeSubstring(becomeOldTime)
-          ss.add(("1",timeSubstring(firstPolicyTime)))
-        }else{
-          ss.add(("1",timeSubstring(firstPolicyTime)))
+        val lastCusTypeRes = JSON.parseArray(lastCusType)
+//        val lastType = lastCusTypeRes.getJSONArray(JSON.parseArray(lastCusType).size()-1).get(0)
+        /**
+          * 沉睡
+          * 客户标签为流失，且近180天未在保&未投保的客户
+          */
+        if(cusType == "4"){
+          if(policyEndDate != null){
+            val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数--未投保天数 复购天数
+            if(days2 > 180){//在保
+              cusType = "5"
+              lastCusTypeRes.add(("4",timeSubstring(becomeCurrCusTime)))
+              becomeCurrCusTime = currTimeFuction(policyEndDate.toString,180)
+            }
+          }
         }
-
-
-        val jsonString = JSON.toJSONString(ss, SerializerFeature.BeanToArray)
-        //        /**
-        //          * 易流失
-        //          * 如果不是在保保单 30天内无复购 - 易流失
-        //          * 如果在保保单保障期间大于30 天  而且还与30天到期的 易流失
-        //          * 如果保障期间小30 30天内无复购
-        //          */
-        //        val cuurTimeNew = Timestamp.valueOf(currTime)
-        //        if(cusType == "2"){
-        //          if(policyEndDate != null && (cuurTimeNew.compareTo(policyEndDate) <= 0)){//在保
-        //            if(policyStartDate != null){
-        //              val days1 = getBeg_End_one_two_new(policyStartDate.toString,policyEndDate.toString)//保障期间
-        //              val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止时间
-        //              if(days1 >= 30 && days2 <= 60){
-        //                cusType = "3"
-        //                lastCusType = "2"
-        //              }
-        //            }
-        //          }
-        //        }
-
+        val jsonString = JSON.toJSONString(lastCusTypeRes, SerializerFeature.BeanToArray)
         (certNo,cusType,becomeCurrCusTime,jsonString)
       })
       .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")

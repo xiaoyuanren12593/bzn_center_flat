@@ -117,7 +117,7 @@ object CPersonHighInfoEasyToLoss extends SparkUtil with Until with HbaseUtil  {
           val key = Bytes.toString(x._2.getRow)
           val cusType = Bytes.toString(x._2.getValue("cent_info".getBytes, "cus_type".getBytes))
           val lastCusType = Bytes.toString(x._2.getValue("high_info".getBytes, "last_cus_type".getBytes)) //前一次投保类型
-          val becomeCurrCusTime = Bytes.toString(x._2.getValue("cent_info".getBytes, "become_curr_cus_time".getBytes))
+          val becomeCurrCusTime = Bytes.toString(x._2.getValue("high_info".getBytes, "become_curr_cus_time".getBytes))
           (key,cusType,lastCusType,becomeCurrCusTime)
         })
       .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time")
@@ -150,31 +150,40 @@ object CPersonHighInfoEasyToLoss extends SparkUtil with Until with HbaseUtil  {
           */
         if(cusType == "2"){
           if(policyEndDate != null && policyStartDate != null ){
-            if(cuurTimeNew.compareTo(policyEndDate) <= 0){//在保
-              val days1 = getBeg_End_one_two_new(policyStartDate.toString,policyEndDate.toString)//保障期间
-              val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数
-              var days3 = Long.MaxValue
+            if(cuurTimeNew.compareTo(policyEndDate) <= 0 && cuurTimeNew.compareTo(policyStartDate) >= 0){//在保
+            val days1 = getBeg_End_one_two_new(policyStartDate.toString,policyEndDate.toString)//保障期间
+            val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数
+            var days3 = Long.MaxValue
               if(policyNewStartDate != null){
-                days3 = getBeg_End_one_two_new(cuurTimeNew.toString,policyNewStartDate.toString) //复购天数
+                days3 = getBeg_End_one_two_new(policyNewStartDate.toString,cuurTimeNew.toString) //复购天数
               }
-              if(days1 >= 30 && days2 <= 60){
+              if(days1 >= 30 && days2 <= 60){//长期险
                 cusType = "3"
-                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
                 lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-              }else if(days1 < 30 && days3 < 30){
+                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
+              }else if(days1 < 30 && days3 < 30){ //短期险
                 cusType = "3"
-                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
                 lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
+                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
               }
             }else{//不在保
               var days3 = Long.MaxValue
-              if(policyEndDate != null){
+              var easyToLossTime = ""
+              if(policyEndDate != null){ //不在保情况
                 days3 = getBeg_End_one_two_new(policyEndDate.toString,cuurTimeNew.toString) //复购天数
+                if(policyEndDate.compareTo(Timestamp.valueOf(becomeCurrCusTime)) >= 0)
+                easyToLossTime = currTimeFuction(policyEndDate.toString,30)
               }
               if(days3 < 30){
                 cusType = "3"
-                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
                 lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
+                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
+              }else{  //超过30天时候
+                if(easyToLossTime != ""){
+                  cusType = "3"
+                  lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
+                  becomeCurrCusTime = timeSubstring(easyToLossTime)
+                }
               }
             }
           }
