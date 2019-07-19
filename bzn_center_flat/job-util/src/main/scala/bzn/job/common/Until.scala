@@ -297,7 +297,7 @@ trait Until {
   //得到2个日期之间的所有天数
   def getBeg_End_one_two_new(mon3: String, day_time: String): Long = {
 
-    val sdf: SimpleDateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss")
+    val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd")
     //跨年不会出现问题
     //如果时间为：2016-03-18 11:59:59 和 2016-03-19 00:00:01的话差值为 0
     val fDate = sdf.parse(mon3)
@@ -376,9 +376,9 @@ trait Until {
       if (time == null || "".equals(time) || "null".equals(time)) {
         0
       } else {
-        val formatter = DateTimeFormat.forPattern("YYYYMMdd")
+        val formatter = DateTimeFormat.forPattern("yyyyMMdd")
         var time_new = time.substring(0, 19)
-        val formatter1 = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
+        val formatter1 = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
         val birthTime = formatter.parseLocalDate(cert_no.substring(6, 14))
         val selectYear = birthTime.getYear.toInt
         val selectMonth = birthTime.getMonthOfYear.toInt
