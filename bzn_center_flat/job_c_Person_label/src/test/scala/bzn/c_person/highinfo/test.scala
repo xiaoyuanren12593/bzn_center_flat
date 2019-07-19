@@ -11,6 +11,7 @@ object test extends SparkUtil {
 
   def main(args: Array[String]): Unit = {
 
+<<<<<<< HEAD
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -28,6 +29,9 @@ object test extends SparkUtil {
 
 
   }
+=======
+    println(Long.MinValue)
+>>>>>>> 88a4117ffa8d85d2199a4c72612ba185fdac0012
 
   def dropSpecial(Temp: String): Boolean = {
     val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
