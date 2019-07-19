@@ -48,6 +48,8 @@ object Dependencies {
   val hbaseCommon = "org.apache.hbase" % "hbase-common" % "1.2.0"
   val hbaseServer = "org.apache.hbase" % "hbase-server" % "1.2.0"
   val hbaseHadoopCompat = "org.apache.hbase" % "hbase-hadoop-compat" % "1.2.0"
+  //  graphx
+  val sparkGraphX = "org.apache.spark" % "spark-graphx_2.10" % "1.6.0"
 //  val hiveHbaseHandler = "org.apache.hive" % "hive-hbase-handler" % "1.2.0"
 
 
@@ -77,6 +79,10 @@ object Dependencies {
   val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
 
+  //--------------------------------------------c端标签层----------------------------------------------------------------
   val bznCPersonLabelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
+
+  //--------------------------------------------机器学习+图计算----------------------------------------------------------------
+  val bznMLLibGraphXDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided, sparkMllib, sparkGraphX)
 }
