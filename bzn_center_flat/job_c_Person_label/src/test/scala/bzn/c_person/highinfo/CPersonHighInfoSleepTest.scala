@@ -149,7 +149,7 @@ object CPersonHighInfoSleepTest extends SparkUtil with Until with HbaseUtil  {
           */
         if(cusType == "4"){
           if(policyEndDate != null){
-            val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数--未投保天数 复购天数
+            val days2 = getBeg_End_one_two_new(policyEndDate.toString,cuurTimeNew.toString) //终止天数--未投保天数 复购天数
             if(days2 > 180){//在保
               cusType = "5"
               lastCusTypeRes.add(("4",timeSubstring(becomeCurrCusTime)))

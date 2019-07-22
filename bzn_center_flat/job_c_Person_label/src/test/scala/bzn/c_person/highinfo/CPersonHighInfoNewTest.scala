@@ -173,13 +173,13 @@ object CPersonHighInfoNewTest extends SparkUtil with Until with HbaseUtil  {
               var easyToLossTime = ""
               if(policyEndDate != null){ //不在保情况
                 days3 = getBeg_End_one_two_new(policyEndDate.toString,cuurTimeNew.toString) //复购天数
-                easyToLossTime = currTimeFuction(policyEndDate.toString,30)
+                if(policyEndDate.compareTo(Timestamp.valueOf(becomeCurrCusTime)) >= 0){
+                  easyToLossTime = currTimeFuction(policyEndDate.toString,30)
+                }else{
+                  easyToLossTime = currTimeFuction(becomeCurrCusTime.toString,1)
+                }
               }
-              if(days3 < 30){
-                cusType = "3"
-                lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
-              }else{  //超过30天时候
+              if(days3 > 30){
                 if(easyToLossTime != ""){
                   cusType = "3"
                   lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
