@@ -147,14 +147,18 @@ object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
         /**
           * 老客
           */
+        //两个成为老客时间小于当前时间兵器《最大止期时间+60d
         if(cusType == "1" && (Timestamp.valueOf(becomeOldTime).compareTo(Timestamp.valueOf(currTime)) <= 0)){
-          cusType = "2"
-          becomeCurrCusTime = timeSubstring(becomeOldTime)
-          ss.add(("1",timeSubstring(firstPolicyTime)))
+          if(policyEndDate != null && getBeg_End_one_two_new(policyEndDate.toString,becomeOldTime) <= 60){
+            cusType = "2"
+            becomeCurrCusTime = timeSubstring(becomeOldTime)
+            ss.add(("1",timeSubstring(firstPolicyTime)))
+          }else{
+            ss.add(("1",timeSubstring(firstPolicyTime)))
+          }
         }else{
           ss.add(("1",timeSubstring(firstPolicyTime)))
         }
-
 
         val jsonString = JSON.toJSONString(ss, SerializerFeature.BeanToArray)
         //        /**

@@ -150,12 +150,12 @@ object CPersonHighInfoEasyToLoss extends SparkUtil with Until with HbaseUtil  {
           */
         if(cusType == "2"){
           if(policyEndDate != null && policyStartDate != null ){
-            if(cuurTimeNew.compareTo(policyEndDate) <= 0 && cuurTimeNew.compareTo(policyStartDate) >= 0){//在保
+            if(cuurTimeNew.compareTo(policyEndDate) <= 0){//在保
             val days1 = getBeg_End_one_two_new(policyStartDate.toString,policyEndDate.toString)//保障期间
             val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数
             var days3 = Long.MaxValue
               if(policyNewStartDate != null){
-                days3 = getBeg_End_one_two_new(policyNewStartDate.toString,cuurTimeNew.toString) //复购天数
+                days3 = getBeg_End_one_two_new(cuurTimeNew.toString,policyNewStartDate.toString) //复购天数
               }
               if(days1 >= 30 && days2 <= 60){//长期险
                 cusType = "3"
@@ -167,18 +167,17 @@ object CPersonHighInfoEasyToLoss extends SparkUtil with Until with HbaseUtil  {
                 becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
               }
             }else{//不在保
-              var days3 = Long.MaxValue
+            var days3 = Long.MaxValue
               var easyToLossTime = ""
               if(policyEndDate != null){ //不在保情况
                 days3 = getBeg_End_one_two_new(policyEndDate.toString,cuurTimeNew.toString) //复购天数
-                if(policyEndDate.compareTo(Timestamp.valueOf(becomeCurrCusTime)) >= 0)
-                easyToLossTime = currTimeFuction(policyEndDate.toString,30)
+                if(policyEndDate.compareTo(Timestamp.valueOf(becomeCurrCusTime)) >= 0){
+                  easyToLossTime = currTimeFuction(policyEndDate.toString,30)
+                }else{
+                  easyToLossTime = currTimeFuction(becomeCurrCusTime.toString,1)
+                }
               }
-              if(days3 < 30){
-                cusType = "3"
-                lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-                becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
-              }else{  //超过30天时候
+              if(days3 > 30){
                 if(easyToLossTime != ""){
                   cusType = "3"
                   lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
