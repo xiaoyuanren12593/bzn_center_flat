@@ -15,6 +15,7 @@ import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 
 import scala.io.Source
+import scala.collection.mutable.LinkedList
 
 object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
 
@@ -36,12 +37,16 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     val result: DataFrame = unionTable(certInfo, telInfo)
 
     //    写到hive中
-    result.write.mode(SaveMode.Overwrite).saveAsTable("label.interface_info")
+    result.write.mode(SaveMode.Overwrite).saveAsTable("label.interface_label")
 
     //    写入hbase中
-    //    toHBase2(result, "label_person", "base_info")
-
-    sc.stop()
+    try {
+      toHBase2(result, "label_person", "base_info")
+    } catch {
+      case _ => {toHBase2(certInfo, "label_person", "base_info"); toHBase2(telInfo, "label_person", "base_info")}
+    } finally {
+      sc.stop()
+    }
 
   }
 
@@ -136,7 +141,12 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
           baseCertNo.substring(0, 4) + "00"
         } else null
         //        星座码表id
-        val constellatoryId: String = if (baseCertNo.length == 18) {
+        val constellatoryId: String = if (
+          baseCertNo.length == 18 &&
+            (baseCertNo.substring(6, 10).toInt >= 1919) &&
+            (baseCertNo.substring(10, 12).toInt >= 1 && baseCertNo.substring(10, 12).toInt <= 12) &&
+            (baseCertNo.substring(12, 14).toInt >= 1 && baseCertNo.substring(12, 14).toInt <= 31)
+        ) {
           getConstellation(baseCertNo.substring(10, 12), baseCertNo.substring(12, 14))
         } else null
 
@@ -227,12 +237,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
     //    读取手机信息表
-//    val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
-//      .selectExpr("mobile", "province", "city", "operator")
-//      .limit(100000)
-//      .repartition()
-
-    val mobileInfo: DataFrame = hiveContext.sql("select * from odsdb.ods_mobile_dimension")
+    val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
       .selectExpr("mobile", "province", "city", "operator")
 
     //    与手机信息表连接
@@ -249,7 +254,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
         val baseTelProvince: String = line.getAs[String]("base_tel_province")
         val baseTelCity: String = line.getAs[String]("base_tel_city")
         val baseTelOperator: String = line.getAs[String]("base_tel_operator")
-        (baseCertNo, scala.collection.mutable.LinkedList[(String, String, String, String)]((baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator)))
+        (baseCertNo, LinkedList[(String, String, String, String)]((baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator)))
       })
       .reduceByKey((x, y) => {
       x.append(y)
@@ -305,8 +310,10 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     * @return
     */
   def dropSpecial(Temp: String): Boolean = {
-    val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
-    pattern.matcher(Temp).matches
+    if (Temp != null) {
+      val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
+      pattern.matcher(Temp).matches
+    } else false
   }
 
   /**
@@ -372,10 +379,10 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
       .option("driver", properties.getProperty("mysql.driver"))
       .option("user", properties.getProperty("mysql.username"))
       .option("password", properties.getProperty("mysql.password"))
-      .option("numPartitions","10")
+      .option("numPartitions","20")
       .option("partitionColumn","id")
-      .option("lowerBound", "0")
-      .option("upperBound","200")
+      .option("lowerBound", "126787")
+      .option("upperBound","64944871")
       .option("dbtable", tableName)
       .load()
 
@@ -428,3 +435,26 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
   }
 
 }
+
+/**
+ *                             _ooOoo_
+ *                            o8888888o
+ *                            88" . "88
+ *                            (| -_- |)
+ *                            O\  =  /O
+ *                         ____/`---'\____
+ *                       .'  \\|     |//  `.
+ *                      /  \\|||  :  |||//  \
+ *                     /  _||||| -:- |||||-  \
+ *                     |   | \\\  -  /// |   |
+ *                     | \_|  ''\---/''  |   |
+ *                     \  .-\__  `-`  ___/-. /
+ *                   ___`. .'  /--.--\  `. . __
+ *                ."" '<  `.___\_<|>_/___.'  >'"".
+ *               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+ *               \  \ `-.   \_ __\ /__ _/   .-` /  /
+ *          ======`-.____`-.___\_____/___.-`____.-'======
+ *                             `=---='
+ *          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *                     佛祖保佑        永无BUG
+ */

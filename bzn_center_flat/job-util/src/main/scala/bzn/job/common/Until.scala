@@ -372,7 +372,12 @@ trait Until {
 
   //精准的获取年龄
   def getAgeFromBirthTime(cert_no: String, time: String): Int = {
-    if (cert_no.length == 18) {
+    if (
+      cert_no.length == 18 &&
+        (cert_no.substring(6, 10).toInt >= 1919) &&
+        (cert_no.substring(10, 12).toInt >= 1 && cert_no.substring(10, 12).toInt <= 12) &&
+        (cert_no.substring(12, 14).toInt >= 1 && cert_no.substring(12, 14).toInt <= 31)
+    ) {
       if (time == null || "".equals(time) || "null".equals(time)) {
         0
       } else {

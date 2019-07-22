@@ -5,21 +5,13 @@ import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 
-<<<<<<< HEAD
 import c_person.util.SparkUtil
 
 object test extends SparkUtil {
-=======
-import bzn.job.common.Until
-import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.serializer.SerializerFeature
 
-object test extends Until{
->>>>>>> fea-xwc-add-user-label
 
   def main(args: Array[String]): Unit = {
 
-<<<<<<< HEAD
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -36,72 +28,6 @@ object test extends Until{
     df.filter("dropSpecial(id) as id").show()
 
 
-  }
-=======
-    println(Long.MinValue)
-<<<<<<< HEAD
->>>>>>> 88a4117ffa8d85d2199a4c72612ba185fdac0012
-
-  def dropSpecial(Temp: String): Boolean = {
-    val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
-    pattern.matcher(Temp).matches()
-=======
-    println("2018-06-06 00:00:00.0".substring(0,19).length)
-    if(getNowTime().compareTo(("2019-03-07 23:59:59")) <= 0) {
-      //在保
-      println("135213")
-    }
-    val currTime = getNowTime()
-    val cuurTimeNew = Timestamp.valueOf(currTime)
-    var cusType = "2"
-    val policyEndDate = Timestamp.valueOf("2019-03-07 23:59:59")
-    val policyStartDate = Timestamp.valueOf("2018-03-08 00:00:00")
-    val policyNewStartDate = Timestamp.valueOf("2018-03-08 00:00:00")
-    val lastCusTypeRes = JSON.parseArray("[[\"1\",\"2018-03-08 00:00:00\"]]")
-    var becomeCurrCusTime = "2018-06-06 00:00:00.0"
-    if(cusType == "2"){
-      if(policyEndDate != null && policyStartDate != null ){
-        if(cuurTimeNew.compareTo(policyEndDate) <= 0 && cuurTimeNew.compareTo(policyStartDate) >= 0){//在保
-        val days1 = getBeg_End_one_two_new(policyStartDate.toString,policyEndDate.toString)//保障期间
-        val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数
-        var days3 = Long.MaxValue
-          if(policyNewStartDate != null){
-            days3 = getBeg_End_one_two_new(policyNewStartDate.toString,cuurTimeNew.toString) //复购天数
-          }
-          if(days1 >= 30 && days2 <= 60){//长期险
-            cusType = "3"
-            lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-            becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
-          }else if(days1 < 30 && days3 < 30){ //短期险
-            cusType = "3"
-            lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-            becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
-          }
-        }else{//不在保
-          var days3 = Long.MaxValue
-          var easyToLossTime = ""
-          if(policyEndDate != null){ //不在保情况
-            days3 = getBeg_End_one_two_new(policyEndDate.toString,cuurTimeNew.toString) //复购天数
-            println(policyEndDate,cuurTimeNew)
-            easyToLossTime = currTimeFuction(policyEndDate.toString,30)
-          }
-          if(days3 < 30){
-            cusType = "3"
-            lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-            becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
-          }else{  //超过30天时候
-            if(easyToLossTime != ""){
-              cusType = "3"
-              lastCusTypeRes.add(("2",timeSubstring(becomeCurrCusTime)))
-              becomeCurrCusTime = timeSubstring(easyToLossTime)
-            }
-          }
-        }
-      }
-    }
-    val jsonString = JSON.toJSONString(lastCusTypeRes, SerializerFeature.BeanToArray)
-    println(cusType,jsonString,becomeCurrCusTime)
->>>>>>> fea-xwc-add-user-label
   }
 
   /**

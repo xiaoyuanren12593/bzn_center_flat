@@ -9,13 +9,16 @@ import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
 import com.alibaba.fastjson.{JSON, JSONObject}
 import com.alibaba.fastjson.serializer.SerializerFeature
+import org.apache.hadoop.conf.Configuration
 import org.apache.spark.HashPartitioner
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 
 import scala.io.Source
+import scala.collection.mutable.LinkedList
 
-object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
+object CPersonInterfaceInfoOptimizeTest extends SparkUtil with Until with HbaseUtil{
 
   def main(args: Array[String]): Unit = {
 
@@ -28,17 +31,14 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     val hiveContext = sparkConf._4
 
     //    清洗标签
-//    val certInfo: DataFrame = getCertInfo(hiveContext)
+    val certInfo: DataFrame = getCertInfo(hiveContext)
     val telInfo: DataFrame = getTelInfo(hiveContext)
 
-//    certInfo.show()
-    telInfo.show()
+    //    合并
+    val result: DataFrame = unionTable(certInfo, telInfo)
 
-//    合并
-//    val result: DataFrame = unionTable(certInfo, telInfo)
-//    result.show()
-
-    sc.stop()
+    //    show
+    result.show()
 
   }
 
@@ -55,7 +55,7 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     /**
       * 读取ofo接口的hive表
       */
-    val ofoInfo: DataFrame = hiveContext.sql("select product_code, insured_name, insured_cert_no from odsdb_prd.open_ofo_policy_parquet_temp")
+    val ofoInfo: DataFrame = hiveContext.sql("select product_code, insured_name, insured_cert_no from odsdb_prd.open_ofo_policy_parquet")
       .where("product_code = 'OFO00002' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_name as base_name")
 
@@ -65,15 +65,14 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     val suyunInfo: DataFrame = hiveContext.sql("select courier_card_no, courier_name from odsdb_prd.open_express_policy")
       .where("length(courier_card_no) = 18")
       .selectExpr("courier_card_no as base_cert_no", "courier_name as base_name")
-      .limit(10000)
 
-//    合并数据
+    //    合并数据
     val certInfo: DataFrame = ofoInfo
       .unionAll(suyunInfo)
       .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no"))
 
-//    清洗身份证标签
+    //    清洗身份证标签
     val certInfoTemp: DataFrame = certInfo
       .map(line => {
         //        身份证号
@@ -143,7 +142,7 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
           getConstellation(baseCertNo.substring(10, 12), baseCertNo.substring(12, 14))
         } else null
 
-//        结果
+        //        结果
         (baseCertNo, baseName, baseGender, baseBirthday, baseAge, baseAgeTime, baseAgeSection, baseIsRetire,
           nativePlaceId, constellatoryId)
       })
@@ -211,11 +210,9 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     /**
       * 读取ofo接口的手机号信息
       */
-    val ofoTelInfo: DataFrame = hiveContext.sql("select product_code, insured_cert_no, insured_mobile from odsdb_prd.open_ofo_policy_parquet_temp")
+    val ofoTelInfo: DataFrame = hiveContext.sql("select product_code, insured_cert_no, insured_mobile from odsdb_prd.open_ofo_policy_parquet")
       .where("product_code = 'OFO00002' and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_mobile as base_mobile")
-
-    println(ofoTelInfo.rdd.getNumPartitions)
 
     /**
       * 读取58速运接口的手机号信息
@@ -223,43 +220,54 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     val suyunTelInfo: DataFrame = hiveContext.sql("select courier_card_no, courier_mobile from odsdb_prd.open_express_policy")
       .where("length(courier_card_no) = 18")
       .selectExpr("courier_card_no as base_cert_no", "courier_mobile as base_mobile")
-      .limit(100000)
 
-    println(suyunTelInfo.rdd.getNumPartitions)
-
-//    合并数据
+    //    合并数据
     val telInfo: DataFrame = ofoTelInfo
       .unionAll(suyunTelInfo)
-      .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
       .filter("dropSpecial(base_cert_no) as base_cert_no")
+      .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
 
     //    读取手机信息表
     val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
       .selectExpr("mobile", "province", "city", "operator")
-      .limit(100000)
 
-    println(mobileInfo.rdd.getNumPartitions)
+    //    获得信息RDD
+    val telRdd: RDD[(String, String)] = telInfo
+      .map(line => (line.getAs[String]("base_mobile"), line.getAs[String]("base_cert_no")))
+      .partitionBy(new HashPartitioner((20)))
 
-    //    与手机信息表连接
-    val telInfoAll: DataFrame = telInfo
-      .join(mobileInfo, telInfo("base_mobile") === mobileInfo("mobile"), "leftouter")
-      .selectExpr("base_cert_no", "base_mobile as base_tel_name", "province as base_tel_province", "city as base_tel_city",
-        "operator as base_tel_operator")
+    //    获得手机信息RDD
+    val mobileRdd: RDD[(String, (String, String, String))] = mobileInfo
+      .map(line => (line.getAs[String]("mobile"), (line.getAs[String]("province"), line.getAs[String]("city"), line.getAs[String]("operator"))))
+      .partitionBy(new HashPartitioner(20))
 
-    //    手机号结果
-    val telInfoRes: DataFrame = telInfoAll
+    //    两表连接
+    val telInfoRes: DataFrame = telRdd
+      .leftOuterJoin(mobileRdd)
       .map(line => {
-        val baseCertNo: String = line.getAs[String]("base_cert_no")
-        val baseTelMobile: String = line.getAs[String]("base_tel_name")
-        val baseTelProvince: String = line.getAs[String]("base_tel_province")
-        val baseTelCity: String = line.getAs[String]("base_tel_city")
-        val baseTelOperator: String = line.getAs[String]("base_tel_operator")
-        (baseCertNo, scala.collection.mutable.LinkedList[(String, String, String, String)]((baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator)))
+        //        取出字段
+        val baseCertNo: String = line._2._1
+        val baseTelMobile: String = line._1
+        val baseTelProvince: String = line._2._2 match {
+          case Some(value) => value._1
+          case None => null
+        }
+        val baseTelCity: String = line._2._2 match {
+          case Some(value) => value._2
+          case None => null
+        }
+        val baseTelOperator: String = line._2._2 match {
+          case Some(value) => value._3
+          case None => null
+        }
+        //        结果
+        (baseCertNo, (baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator))
       })
-      .reduceByKey((x, y) => {
-        x.append(y)
-      })
+      .aggregateByKey(List[(String, String, String, String)]())(
+        (list: List[(String, String, String, String)], value: (String, String, String, String)) => list:+value,
+        (list1: List[(String, String, String, String)], list2: List[(String, String, String, String)]) => list1:::list2
+      )
       .map(line => {
         val baseCertNo: String = line._1
         val value: Iterator[(String, String, String, String)] = line._2.iterator
@@ -284,14 +292,14 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
 
     val telInfos: DataFrame = telInfo.withColumnRenamed("base_cert_no", "tel_cert_no")
 
-//    关联表格
+    //    关联表格
     val result: DataFrame = certInfo
       .join(telInfos, certInfo("base_cert_no") === telInfos("tel_cert_no"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
         "base_is_retire", "base_province", "base_city", "base_area", "base_coastal", "base_city_type", "base_weather_feature",
         "base_city_weather", "base_city_deit", "base_cons_name", "base_cons_type", "base_cons_character", "base_tel")
 
-//    结果
+    //    结果
     result
 
   }
@@ -313,7 +321,7 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
   def dropSpecial(Temp: String): Boolean = {
     if (Temp != null) {
       val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
-      pattern.matcher(Temp).matches()
+      pattern.matcher(Temp).matches
     } else false
   }
 
@@ -406,4 +414,56 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
     properties
   }
 
+  /**
+    * 将DataFrame写入HBase
+    * @param dataFrame
+    * @param tableName
+    * @param columnFamily
+    */
+  def toHBase2(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
+    //    获取conf
+    val con: (Configuration, Configuration) = HbaseConf(tableName)
+    val conf_fs: Configuration = con._2
+    val conf: Configuration = con._1
+    //    获取列
+    val cols: Array[String] = dataFrame.columns
+    //    取不等于key的列循环
+
+    cols.filter(x => x != "base_cert_no").map(x => {
+      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
+        val certNo = rdd.getAs[String]("base_cert_no")
+        val clo: Any = rdd.getAs[Any](x)
+        //证件号，列值 列名
+        (certNo,clo,x)
+      })
+        .filter(x => x._2 != null && x._2 != "")
+        .map(x => (x._1,x._2.toString,x._3))
+
+      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+    })
+  }
+
 }
+
+/**
+  *                             _ooOoo_
+  *                            o8888888o
+  *                            88" . "88
+  *                            (| -_- |)
+  *                            O\  =  /O
+  *                         ____/`---'\____
+  *                       .'  \\|     |//  `.
+  *                      /  \\|||  :  |||//  \
+  *                     /  _||||| -:- |||||-  \
+  *                     |   | \\\  -  /// |   |
+  *                     | \_|  ''\---/''  |   |
+  *                     \  .-\__  `-`  ___/-. /
+  *                   ___`. .'  /--.--\  `. . __
+  *                ."" '<  `.___\_<|>_/___.'  >'"".
+  *               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+  *               \  \ `-.   \_ __\ /__ _/   .-` /  /
+  *          ======`-.____`-.___\_____/___.-`____.-'======
+  *                             `=---='
+  *          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  *                     佛祖保佑        永无BUG
+  */
