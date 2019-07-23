@@ -1,10 +1,6 @@
 package bzn.c_person.centinfo
 
-<<<<<<< HEAD
-import c_person.util.SparkUtil
-=======
 import bzn.c_person.util.SparkUtil
->>>>>>> 88a4117ffa8d85d2199a4c72612ba185fdac0012
 import bzn.job.common.{HbaseUtil, Until}
 import com.alibaba.fastjson.JSON
 import org.apache.hadoop.hbase.client._

@@ -58,7 +58,8 @@ object CPersonHighInfoLossTest extends SparkUtil with Until with HbaseUtil  {
           (key,cusType,lastCusType,becomeCurrCusTime,lastPolicyEndDate)
         })
       .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time","last_policy_end_date")
-      .where("cus_type in ('1','2','3','4','5')")
+      .where("cus_type in ('1','3')")
+    //and cert_no = '110224198011270836'
 
     /**
       *  客户标签为新客或易流失&保单到期&60内无复购
@@ -77,8 +78,12 @@ object CPersonHighInfoLossTest extends SparkUtil with Until with HbaseUtil  {
         days = getBeg_End_one_two_new(lastPolicyEndDate,currTime)//保险止期和当前日期所差天数
         lossTime = currTimeFuction(lastPolicyEndDate.toString,60)
       }
-      if((cusType == "1" || cusType == "3") && days > 60){
-        lastCusTypeRes.add((cusType,timeSubstring(becomeCurrCusTime)))
+      if(cusType == "1" && days > 60){
+        cusType = "4"
+        becomeCurrCusTime = timeSubstring(lossTime)
+      }
+      if(cusType == "3" && days > 60){
+        lastCusTypeRes.add(("3",timeSubstring(becomeCurrCusTime)))
         cusType = "4"
         becomeCurrCusTime = timeSubstring(lossTime)
       }
@@ -86,15 +91,53 @@ object CPersonHighInfoLossTest extends SparkUtil with Until with HbaseUtil  {
       (certNo,cusType,becomeCurrCusTime,jsonString)
     })
       .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")
+      .limit(200)
+
+//    res.take(200).foreach(println)
+
 
     val res1 = res.selectExpr("cert_no","cus_type")
     val  rowKeyName = "cert_no"
     val  tableName = "label_person"
     val  columnFamily1 = "cent_info"
     val  columnFamily2 = "high_info"
-    toHBase(res1,tableName,columnFamily1,rowKeyName)
-    val res2 = res.selectExpr("cert_no","become_curr_cus_time","last_cus_type")
-    toHBase(res2,tableName,columnFamily2,rowKeyName)
-    res2
+    res1.take(200).foreach(println)
+//    putByList(sc,res1,tableName,columnFamily1,rowKeyName)
+//    toHBase(res1,tableName,columnFamily1,rowKeyName)
+    val res2 = res.selectExpr("cert_no","last_cus_type")
+    res2.take(200).foreach(println)
+//    putByList(sc,res2,tableName,columnFamily2,rowKeyName)
+//    toHBase(res2,tableName,columnFamily2,rowKeyName)
+    val res3 = res.selectExpr("cert_no","become_curr_cus_time")
+    res3.take(200).foreach(println)
+//    putByList(sc,res3,tableName,columnFamily2,rowKeyName)
+    res
+  }
+
+  /**
+    * 测试hbase 数据
+    * @param sc
+    * @param sQLContext
+    */
+  def bbaseTest(sc:SparkContext,sQLContext: HiveContext) ={
+    import sQLContext.implicits._
+    val hbaseData = getHbaseBussValue(sc,"label_person")
+      .map(x => {
+        val key = Bytes.toString(x._2.getRow)
+        val cusType = Bytes.toString(x._2.getValue("cent_info".getBytes, "cus_type".getBytes))
+        val lastCusType = Bytes.toString(x._2.getValue("high_info".getBytes, "last_cus_type".getBytes)) //前一次投保类型
+        val becomeCurrCusTime = Bytes.toString(x._2.getValue("high_info".getBytes, "become_curr_cus_time".getBytes))
+        (key,cusType,lastCusType,becomeCurrCusTime)
+      })
+      .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time")
+      .where("cus_type in ('1','2','3','4','5')")
+    hbaseData.take(1000).foreach(println)
+    hbaseData.map(x => {
+      val cusType = x.getAs[String]("cus_type")
+      (cusType,1)
+    })
+      .reduceByKey(_+_)
+      .map(x=> (x._1,x._2))
+      .foreach(println)
   }
 }

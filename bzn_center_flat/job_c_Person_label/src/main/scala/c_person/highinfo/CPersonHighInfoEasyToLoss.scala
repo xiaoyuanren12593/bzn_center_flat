@@ -150,7 +150,7 @@ object CPersonHighInfoEasyToLoss extends SparkUtil with Until with HbaseUtil  {
           */
         if(cusType == "2"){
           if(policyEndDate != null && policyStartDate != null ){
-            if(cuurTimeNew.compareTo(policyEndDate) <= 0){//在保
+            if((cuurTimeNew.compareTo(policyEndDate) <= 0) && (cuurTimeNew.compareTo(policyStartDate) >= 0)){//在保
             val days1 = getBeg_End_one_two_new(policyStartDate.toString,policyEndDate.toString)//保障期间
             val days2 = getBeg_End_one_two_new(cuurTimeNew.toString,policyEndDate.toString) //终止天数
             var days3 = Long.MaxValue
@@ -167,7 +167,7 @@ object CPersonHighInfoEasyToLoss extends SparkUtil with Until with HbaseUtil  {
                 becomeCurrCusTime = timeSubstring(cuurTimeNew.toString)
               }
             }else{//不在保
-            var days3 = Long.MaxValue
+              var days3 = Long.MinValue
               var easyToLossTime = ""
               if(policyEndDate != null){ //不在保情况
                 days3 = getBeg_End_one_two_new(policyEndDate.toString,cuurTimeNew.toString) //复购天数

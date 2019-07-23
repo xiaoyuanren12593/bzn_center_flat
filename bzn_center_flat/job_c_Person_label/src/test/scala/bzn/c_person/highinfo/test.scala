@@ -5,9 +5,10 @@ import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 
+import bzn.job.common.Until
 import c_person.util.SparkUtil
 
-object test extends SparkUtil {
+object test extends SparkUtil with Until{
 
 
   def main(args: Array[String]): Unit = {
@@ -21,13 +22,24 @@ object test extends SparkUtil {
     val hiveContext = sparkConf._4
 
     import hiveContext.implicits._
-    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
-    val df = Seq(("110105199711248912", "brr"),("11010519971124891X", "hrr"),("110105********8912", "xxr")).toDF("id","name")
+    println( getBeg_End_one_two_new("2018-05-02 07:41:54.0","2019-07-23 09:41:54.0"))
 
-    df.filter("dropSpecial(id) as id").show()
-
-
+//    val days = getBeg_End_one_two_new("2018-05-02 07:41:54.0","2019-07-23 09:41:54.0")
+    var cusType = "3"
+    var lossTime = ""
+    var days = 0L
+    if("2018-05-02 07:41:54.0" != null){
+      days = getBeg_End_one_two_new("2018-05-02 07:41:54.0","2019-07-23 09:41:54.0")//保险止期和当前日期所差天数
+      lossTime = currTimeFuction("2018-05-02 07:41:54.0",60)
+    }
+    if((cusType == "1" || cusType == "3") && days > 60){
+      println(cusType)
+      cusType = "4"
+      val becomeCurrCusTime = timeSubstring(lossTime)
+      println(becomeCurrCusTime)
+    }
+    println(currTimeFuction("2018-08-31 23:59:59.0", 30))
   }
 
   /**

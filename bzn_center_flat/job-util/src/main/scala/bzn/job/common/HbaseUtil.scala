@@ -61,7 +61,7 @@ trait HbaseUtil {
           val put = new Put(Bytes.toBytes(rowKey))
 
           val columns = broadcastColimns.value
-          columns.foreach(println)
+
           columns.foreach(x => {
             val columnsValue = value.getAs[Any](x)
             if(columnsValue != null && columnsValue != ""){

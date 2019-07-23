@@ -73,7 +73,8 @@ object Dependencies {
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------dw层----------------------------------------------------------------
-  val bznDwLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided)
+  val bznDwLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 
   //--------------------------------------------dm层----------------------------------------------------------------
   val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,

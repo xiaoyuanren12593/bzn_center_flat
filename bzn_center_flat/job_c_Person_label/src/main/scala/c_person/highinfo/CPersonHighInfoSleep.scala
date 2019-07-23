@@ -35,7 +35,7 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
     * @param sc 上下文
     * @param sqlContext sql上下文
     */
-  def highInfoDetail(sc:SparkContext,sqlContext:HiveContext): DataFrame ={
+  def highInfoDetail(sc:SparkContext,sqlContext:HiveContext)  ={
     import sqlContext.implicits._
     sqlContext.udf.register("notXing", (str: String) => {
       if (str != null && str.contains("*")) {
@@ -106,9 +106,6 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
         "case when policy_new_start_date > policy_start_date then policy_new_start_date else policy_start_date end policy_new_start_date",
         "policy_start_date","policy_end_date")
 
-    holdInfo.printSchema()
-
-
     /**
       * 读取hbase上的数据
       */
@@ -121,7 +118,7 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
           (key,cusType,lastCusType,becomeCurrCusTime)
         })
       .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time")
-      .where("cus_type in ('1','2','3','4','5')")
+      .where("cus_type in ('4')")
 
     /**
       * 标签数据和投保人数据进行关联
@@ -132,9 +129,7 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
       .map(x => {
         val certNo = x.getAs[String]("cert_no")
         var cusType = x.getAs[String]("cus_type")
-        var lastCusType = x.getAs[String]("last_cus_type")
-        val policyNewStartDate = x.getAs[java.sql.Timestamp]("policy_new_start_date")
-        val policyStartDate = x.getAs[java.sql.Timestamp]("policy_start_date")
+        val lastCusType = x.getAs[String]("last_cus_type")
         val policyEndDate = x.getAs[java.sql.Timestamp]("policy_end_date")
         var becomeCurrCusTime = x.getAs[String]("become_curr_cus_time")
         val cuurTimeNew = Timestamp.valueOf(currTime)
@@ -142,7 +137,6 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
           * 上一个客户类型
           */
         val lastCusTypeRes = JSON.parseArray(lastCusType)
-//        val lastType = lastCusTypeRes.getJSONArray(JSON.parseArray(lastCusType).size()-1).get(0)
         /**
           * 沉睡
           * 客户标签为流失，且近180天未在保&未投保的客户
@@ -162,14 +156,17 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
       })
       .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")
 
+    res.cache()
+
     val res1 = res.selectExpr("cert_no","cus_type")
     val  rowKeyName = "cert_no"
     val  tableName = "label_person"
     val  columnFamily1 = "cent_info"
     val  columnFamily2 = "high_info"
-    toHBase(res1,tableName,columnFamily1,rowKeyName)
-    val res2 = res.selectExpr("cert_no","become_curr_cus_time","last_cus_type")
-    toHBase(res2,tableName,columnFamily2,rowKeyName)
-    res2
+    putByList(sc,res1,tableName,columnFamily1,rowKeyName)
+    val res2 = res.selectExpr("cert_no","last_cus_type")
+    putByList(sc,res2,tableName,columnFamily2,rowKeyName)
+    val res3 = res.selectExpr("cert_no","become_curr_cus_time")
+    putByList(sc,res3,tableName,columnFamily2,rowKeyName)
   }
 }

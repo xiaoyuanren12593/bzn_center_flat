@@ -24,7 +24,8 @@ object CPersonHighInfoLoss extends SparkUtil with Until with HbaseUtil  {
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
 
-   highInfoDetail(sc,hiveContext)
+    highInfoDetail(sc,hiveContext)
+
     sc.stop()
   }
 
@@ -47,16 +48,16 @@ object CPersonHighInfoLoss extends SparkUtil with Until with HbaseUtil  {
       * 读取hbase上的数据
       */
     val hbaseData = getHbaseBussValue(sc,"label_person")
-        .map(x => {
-          val key = Bytes.toString(x._2.getRow)
-          val cusType = Bytes.toString(x._2.getValue("cent_info".getBytes, "cus_type".getBytes))
-          val lastCusType = Bytes.toString(x._2.getValue("high_info".getBytes, "last_cus_type".getBytes)) //前一次投保类型
-          val becomeCurrCusTime = Bytes.toString(x._2.getValue("high_info".getBytes, "become_curr_cus_time".getBytes))
-          val lastPolicyEndDate = Bytes.toString(x._2.getValue("cent_info".getBytes, "last_policy_end_date".getBytes))
-          (key,cusType,lastCusType,becomeCurrCusTime,lastPolicyEndDate)
-        })
+      .map(x => {
+        val key = Bytes.toString(x._2.getRow)
+        val cusType = Bytes.toString(x._2.getValue("cent_info".getBytes, "cus_type".getBytes))
+        val lastCusType = Bytes.toString(x._2.getValue("high_info".getBytes, "last_cus_type".getBytes)) //前一次投保类型
+        val becomeCurrCusTime = Bytes.toString(x._2.getValue("high_info".getBytes, "become_curr_cus_time".getBytes))
+        val lastPolicyEndDate = Bytes.toString(x._2.getValue("cent_info".getBytes, "last_policy_end_date".getBytes))
+        (key,cusType,lastCusType,becomeCurrCusTime,lastPolicyEndDate)
+      })
       .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time","last_policy_end_date")
-      .where("cus_type in ('1','2','3','4','5')")
+      .where("cus_type in ('1','3')")
 
     /**
       *  客户标签为新客或易流失&保单到期&60内无复购
@@ -75,24 +76,31 @@ object CPersonHighInfoLoss extends SparkUtil with Until with HbaseUtil  {
         days = getBeg_End_one_two_new(lastPolicyEndDate,currTime)//保险止期和当前日期所差天数
         lossTime = currTimeFuction(lastPolicyEndDate.toString,60)
       }
-      if((cusType == "1" || cusType == "3") && days > 60){
-        lastCusTypeRes.add((cusType,timeSubstring(becomeCurrCusTime)))
+      if(cusType == "1" && days > 60){
+        cusType = "4"
+        becomeCurrCusTime = timeSubstring(lossTime)
+      }
+      if(cusType == "3" && days > 60){
+        lastCusTypeRes.add(("3",timeSubstring(becomeCurrCusTime)))
         cusType = "4"
         becomeCurrCusTime = timeSubstring(lossTime)
       }
       val jsonString = JSON.toJSONString(lastCusTypeRes, SerializerFeature.BeanToArray)
       (certNo,cusType,becomeCurrCusTime,jsonString)
     })
-      .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")
+    .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")
+    res.cache()
 
     val res1 = res.selectExpr("cert_no","cus_type")
     val  rowKeyName = "cert_no"
     val  tableName = "label_person"
     val  columnFamily1 = "cent_info"
     val  columnFamily2 = "high_info"
-    toHBase(res1,tableName,columnFamily1,rowKeyName)
-    val res2 = res.selectExpr("cert_no","become_curr_cus_time","last_cus_type")
-    toHBase(res2,tableName,columnFamily2,rowKeyName)
+    putByList(sc,res1,tableName,columnFamily1,rowKeyName)
+    val res2 = res.selectExpr("cert_no","last_cus_type")
+    putByList(sc,res2,tableName,columnFamily2,rowKeyName)
+    val res3 = res.selectExpr("cert_no","become_curr_cus_time")
+    putByList(sc,res3,tableName,columnFamily2,rowKeyName)
     res2
   }
 }
