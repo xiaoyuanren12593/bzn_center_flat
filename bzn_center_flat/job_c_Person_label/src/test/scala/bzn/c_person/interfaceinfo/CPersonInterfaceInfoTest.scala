@@ -159,7 +159,7 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
 
     //    个人信息关联区域码表
     val certInfoJoin: DataFrame = certInfoTemp
-      .join(areaInfoDimension, certInfoTemp("native_place_id") === areaInfoDimension("code"), "leftouter")
+      .join(areaInfoDimension, certInfoTemp(" ") === areaInfoDimension("code"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
         "base_is_retire",  "province as base_province", "short_name as base_city", "city_region as base_area",
         "is_coastal as base_coastal", "city_type as base_city_type", "weather_feature as base_weather_feature",

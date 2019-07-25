@@ -27,9 +27,9 @@ object DwIncPolicyDetail extends SparkUtil with Until with HbaseUtil{
 
   /**
     * 得到增量的数据并存储前一天的数据
-    * @param sqlContext
+    * @param sqlContext  上下文
     */
-  def getDwIncPolicyDetail(sqlContext:HiveContext) ={
+  def getDwIncPolicyDetail(sqlContext:HiveContext): Unit = {
     /**
       * 读取前一天数据
       */
@@ -43,16 +43,21 @@ object DwIncPolicyDetail extends SparkUtil with Until with HbaseUtil{
     /**
       * 获取新增数据
       */
-    val incData =  odsPolicyDetail.join(dwPolicyDetailYesterday,odsPolicyDetail("policy_id")===dwPolicyDetailYesterday("policy_id_inc"),"leftouter")
+    odsPolicyDetail.join(dwPolicyDetailYesterday,odsPolicyDetail("policy_id")===dwPolicyDetailYesterday("policy_id_inc"),"leftouter")
       .where("policy_id_inc is null or update_time_inc <> policy_update_time")
-      .drop("policy_id_inc")
-      .drop("update_time_inc")
+      .registerTempTable("inc_table")
+
+    val incDataRes =
+      sqlContext.sql("select *,case when update_time_inc <> policy_update_time and policy_id_inc = policy_id then 1 else 0 end as inc_type from inc_table")
+        .drop("update_time_inc")
+        .drop("policy_id_inc")
 
     sqlContext.sql("truncate table dwdb.dw_inc_policy_detail_inc")
-    incData.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_inc_policy_detail_inc")
+    incDataRes.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_inc_policy_detail_inc")
 
     sqlContext.sql("truncate table dwdb.dw_policy_detail_yesterday")
     odsPolicyDetail.selectExpr("id","policy_id as policy_id_inc","policy_update_time as update_time_inc","dw_create_time")
       .write.mode(SaveMode.Append).saveAsTable("dwdb.dw_policy_detail_yesterday")
+
   }
 }

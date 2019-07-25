@@ -41,7 +41,7 @@ object OdsPreservationSlaveDetailTest extends SparkUtil with Until{
       * 读取从属被保人表
       */
     val bPolicyPreservationSubjectPersonSlaveBzncen = readMysqlTable(sqlContext,"b_policy_preservation_subject_person_slave_bzncen")
-      .selectExpr("inc_dec_order_no","inc_dec_order_no as inc_dec_order_no_temp","policy_no as policy_no_temp","name","case when sex = 2 then 0 else 1 end as gender","cert_type as child_cert_type","regexp_replace(cert_type,'\\n','') as child_cert_no","create_time","update_time")
+      .selectExpr("inc_dec_order_no","inc_dec_order_no as inc_dec_order_no_temp","policy_no as policy_no_temp","name","case when sex = 2 then 0 else 1 end as gender","cert_type as child_cert_type","regexp_replace(cert_no,'\\n','') as child_cert_no","create_time","update_time")
 
     /**
       * 读取被保人表

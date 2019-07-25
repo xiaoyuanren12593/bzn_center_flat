@@ -10,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import util.SparkUtil
 
-object graphTest extends SparkUtil with Until with HbaseUtil {
+object graphTest extends SparkUtil with Until {
 
   def main(args: Array[String]): Unit = {
 
@@ -28,7 +28,7 @@ object graphTest extends SparkUtil with Until with HbaseUtil {
 
 //    创建图
     val graph = createGraph(vertex, edge)
-
+    println(graph.toString)
     sc.stop()
 
   }

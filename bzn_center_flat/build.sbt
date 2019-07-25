@@ -61,7 +61,11 @@ lazy val bznSparkNeed = (project in file("."))
 // 事例项目
 lazy val jobUtil = (project in file("job-util"))
   .settings(
-    libraryDependencies ++= utilDeps)
+    libraryDependencies ++= utilDeps.map(
+    _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
   .settings(commonSettings)
   .settings(commonAssemblySettings)
   .settings(

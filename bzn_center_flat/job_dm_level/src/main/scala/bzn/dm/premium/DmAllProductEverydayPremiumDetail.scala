@@ -1,11 +1,11 @@
-package dm.premium
+package bzn.dm.premium
 
 import java.sql.{Connection, DriverManager}
 import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
 import bzn.job.common.Until
-import dm.util.SparkUtil
+import bzn.dm.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}

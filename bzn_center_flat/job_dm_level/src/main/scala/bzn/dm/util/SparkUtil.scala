@@ -1,4 +1,4 @@
-package dm.util
+package bzn.dm.util
 
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext
