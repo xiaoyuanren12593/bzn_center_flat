@@ -53,8 +53,8 @@ object DwIncPolicyDetailTest extends SparkUtil with Until with HbaseUtil{
         .drop("policy_id_inc")
 
     incDataRes.printSchema()
-//    sqlContext.sql("truncate table dwdb.dw_inc_policy_detail_inc")
-//    incDataRes.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_inc_policy_detail_inc")
+//    sqlContext.sql("truncate table dwdb.dw_policy_detail_inc")
+//    incDataRes.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_policy_detail_inc")
 
 //    sqlContext.sql("truncate table dwdb.dw_policy_detail_yesterday")
 //    odsPolicyDetail.selectExpr("id","policy_id as policy_id_inc","policy_update_time as update_time_inc","dw_create_time")

@@ -243,4 +243,5 @@ trait HbaseUtil {
       saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
     })
   }
+
 }
