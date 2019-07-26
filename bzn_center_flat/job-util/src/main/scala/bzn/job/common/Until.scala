@@ -8,6 +8,7 @@ import java.util.{Calendar, Date}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, Months}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -450,6 +451,95 @@ trait Until {
     //这个是你要转成后的时间的格式, 时间戳转换成时间
     val sd = sdf.format(new Date(current));
     sd
+  }
+
+  /**
+    * 获得骑行天数
+    * @param list
+    * @return
+    */
+  def rideDays(list: List[(String, String, String, String, String)]): String = {
+    val set: mutable.Set[String] = mutable.Set[String]()
+    for (l <- list) {
+      set.add(l._2)
+    }
+    set.size.toString
+  }
+
+  /**
+    * 获得最多骑行时间段
+    * @param list
+    * @return
+    */
+  def rideTimeStep(list: List[(String, String, String, String, String)]): String = {
+    val lists: List[String] = List[String]()
+    for (l <- list) {
+      lists:+(if (l._3.toInt >= 1 && l._3.toInt < 3) "1-3时"
+      else if (l._3.toInt >= 3 && l._3.toInt < 5) "3-5时"
+      else if (l._3.toInt >= 5 && l._3.toInt < 7) "5-7时"
+      else if (l._3.toInt >= 7 && l._3.toInt < 9) "7-9时"
+      else if (l._3.toInt >= 9 && l._3.toInt < 11) "9-11时"
+      else if (l._3.toInt >= 11 && l._3.toInt < 13) "11-13时"
+      else if (l._3.toInt >= 13 && l._3.toInt < 15) "13-15时"
+      else if (l._3.toInt >= 15 && l._3.toInt < 17) "15-17时"
+      else if (l._3.toInt >= 17 && l._3.toInt < 19) "17-19时"
+      else if (l._3.toInt >= 19 && l._3.toInt < 21) "19-21时"
+      else if (l._3.toInt >= 21 && l._3.toInt < 23) "21-23时"
+      else "23-1时")
+    }
+    lists.max
+  }
+
+  /**
+    * 获得最多骑行品牌
+    * @param list
+    * @return
+    */
+  def rideBrand(list: List[(String, String, String, String, String)]): String = {
+    val lists: List[String] = List[String]()
+    for (l <- list) {
+      lists:+l._1
+    }
+    lists.max
+  }
+
+  /**
+    * 获得最多骑行日期
+    * @param list
+    * @return
+    */
+  def rideDate(list: List[(String, String, String, String, String)]): String = {
+    val lists: List[String] = List[String]()
+    for (l <- list) {
+      lists:+l._4
+    }
+    lists.max
+  }
+
+  /**
+    * 获得近90天骑行频率
+    * @param list
+    * @return
+    */
+  def tripRate(list: List[(String, String, String, String, String)]): String = {
+    val lists: List[String] = List[String]()
+    for (l <- list) {
+      if (l._2 > l._5) lists:+l._2
+    }
+    lists.size.toString
+  }
+
+  /**
+    * 获得生物钟
+    * @param list
+    * @return
+    */
+  def internalClock(list: List[(String, String, String, String, String)]): String = {
+    val time: String = rideTimeStep(list)
+    val internal: String = if (time == "5-7时") "早期族"
+    else if (time == "23-1时" || time == "1-3时" || time == "3-5时") "夜猫子"
+    else null
+    internal
   }
 
 }

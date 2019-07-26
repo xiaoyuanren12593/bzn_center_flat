@@ -1,9 +1,9 @@
-package c_person.interfaceinfo
+package bzn.c_person.interfaceinfo
 
 import java.text.SimpleDateFormat
 import java.util
-import java.util.regex.Pattern
 import java.util.{Date, Properties}
+import java.util.regex.Pattern
 
 import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
@@ -11,23 +11,23 @@ import com.alibaba.fastjson.{JSON, JSONObject}
 import com.alibaba.fastjson.serializer.SerializerFeature
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
-import scala.collection.mutable.LinkedList
 
-object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
+object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
 
   def main(args: Array[String]): Unit = {
 
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
-    val appName = this.getClass.getName
-    val sparkConf = sparkConfInfo(appName, "")
+    val appName: String = this.getClass.getName
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
 
-    val sc = sparkConf._2
-    val hiveContext = sparkConf._4
+    val sc: SparkContext = sparkConf._2
+    val hiveContext: HiveContext = sparkConf._4
 
     //    清洗标签
     val certInfo: DataFrame = getCertInfo(hiveContext)
@@ -37,23 +37,17 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     val result: DataFrame = unionTable(certInfo, telInfo)
 
     //    写到hive中
-    result.write.mode(SaveMode.Overwrite).saveAsTable("label.interface_label")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.interface_label")
+    result.show()
 
-    //    写入hbase中
-    try {
-      toHBase2(result, "label_person", "base_info")
-    } catch {
-      case _ => {toHBase2(certInfo, "label_person", "base_info"); toHBase2(telInfo, "label_person", "base_info")}
-    } finally {
-      sc.stop()
-    }
+    sc.stop()
 
   }
 
   /**
-    * 获取身份信息
+    * 清洗cert信息
     * @param hiveContext
-    * @return
+    * @return cert的dataframe
     */
   def getCertInfo(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
@@ -61,27 +55,16 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     /**
-      * 读取ofo接口的hive表
+      * 读取other接口的mysql表
       */
-    val ofoInfo: DataFrame = hiveContext.sql("select product_code, insured_name, insured_cert_no from odsdb_prd.open_ofo_policy_parquet")
-      .where("product_code = 'OFO00002' and length(insured_cert_no) = 18")
+    val otherInfo: DataFrame = readMysqlOtherTable(hiveContext)
+      .where("insured_cert_type = 2 and length(insured_cert_no) = 18")
       .selectExpr("insured_cert_no as base_cert_no", "insured_name as base_name")
-
-    /**
-      * 读取58速运接口的hive表
-      */
-    val suyunInfo: DataFrame = hiveContext.sql("select courier_card_no, courier_name from odsdb_prd.open_express_policy")
-      .where("length(courier_card_no) = 18")
-      .selectExpr("courier_card_no as base_cert_no", "courier_name as base_name")
-
-    //    合并数据
-    val certInfo: DataFrame = ofoInfo
-      .unionAll(suyunInfo)
       .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no"))
 
-    //    清洗身份证标签
-    val certInfoTemp: DataFrame = certInfo
+//    清洗身份证标签
+    val certInfoTemp: DataFrame = otherInfo
       .map(line => {
         //        身份证号
         val baseCertNo: String = line.getAs[String]("base_cert_no")
@@ -163,6 +146,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     val areaInfoDimension: DataFrame = hiveContext.sql("select * from odsdb.ods_area_info_dimension")
       .selectExpr("code", "province", "short_name", "city_region", "case when is_coastal = '' then null else is_coastal end as is_coastal",
         "case when city_type = '' then null else city_type end as city_type", "weather_feature", "weather_type", "city_deit")
+      .limit(10)
 
     //    个人信息关联区域码表
     val certInfoJoin: DataFrame = certInfoTemp
@@ -216,33 +200,25 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     /**
-      * 读取ofo接口的手机号信息
+      * 读取other的mysql表
       */
-    val ofoTelInfo: DataFrame = hiveContext.sql("select product_code, insured_cert_no, insured_mobile from odsdb_prd.open_ofo_policy_parquet")
-      .where("product_code = 'OFO00002' and length(insured_cert_no) = 18")
-      .selectExpr("insured_cert_no as base_cert_no", "insured_mobile as base_mobile")
-
-    /**
-      * 读取58速运接口的手机号信息
-      */
-    val suyunTelInfo: DataFrame = hiveContext.sql("select courier_card_no, courier_mobile from odsdb_prd.open_express_policy")
-      .where("length(courier_card_no) = 18")
-      .selectExpr("courier_card_no as base_cert_no", "courier_mobile as base_mobile")
-
-    //    合并数据
-    val telInfo: DataFrame = ofoTelInfo
-      .unionAll(suyunTelInfo)
+    val otherInfo: DataFrame = readMysqlOtherTable(hiveContext)
+      .where("insured_cert_type = 2 and length(insured_cert_no) = 18")
+      .selectExpr("insured_cert_no as base_cert_no", "dropEmpty(insured_mobile) as base_mobile")
       .filter("dropSpecial(base_cert_no) as base_cert_no")
-      .selectExpr("base_cert_no", "dropEmptys(base_mobile) as base_mobile")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
+      .limit(10)
 
     //    读取手机信息表
-    val mobileInfo: DataFrame = readMysqlTable(hiveContext, "t_mobile_location")
+    val mobileInfo: DataFrame = readMysqlTelTable(hiveContext)
       .selectExpr("mobile", "province", "city", "operator")
+      .limit(100000)
+
+    println(mobileInfo.rdd.getNumPartitions)
 
     //    与手机信息表连接
-    val telInfoAll: DataFrame = telInfo
-      .join(mobileInfo, telInfo("base_mobile") === mobileInfo("mobile"), "leftouter")
+    val telInfoAll: DataFrame = otherInfo
+      .join(mobileInfo, otherInfo("base_mobile") === mobileInfo("mobile"), "leftouter")
       .selectExpr("base_cert_no", "base_mobile as base_tel_name", "province as base_tel_province", "city as base_tel_city",
         "operator as base_tel_operator")
 
@@ -294,6 +270,54 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
 
     //    结果
     result
+
+  }
+
+  /**
+    * 获取 Mysql 表的数据
+    * @param sqlContext
+    * @return 返回 Mysql 表的 DataFrame
+    */
+  def readMysqlOtherTable(sqlContext: SQLContext): DataFrame = {
+    val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val properties: Properties = getProPerties()
+    val predicates = Array[String]("month <= '2018-12-01'",
+      "month > '2018-12-01' and month <= '2019-01-01'",
+      "month > '2019-01-01' and month <= '2019-02-01'",
+      "month > '2019-02-01' and month <= '2019-03-01'",
+      "month > '2019-03-01' and month <= '2019-04-01'",
+      "month > '2019-04-01' and month <= '2019-05-01'",
+      "month > '2019-05-01' and month <= '2019-06-01'",
+      "month > '2019-06-01' and month <= '2019-07-01'",
+      "month > '2019-07-01'"
+    )
+
+    sqlContext
+      .read
+      .jdbc(url, "open_other_policy", predicates, properties)
+
+  }
+
+  /**
+    * 获取 Mysql 表的数据
+    * @param sqlContext
+    * @return 返回 Mysql 表的 DataFrame
+    */
+  def readMysqlTelTable(sqlContext: SQLContext): DataFrame = {
+    val properties: Properties = getProPerties()
+    sqlContext
+      .read
+      .format("jdbc")
+      .option("url", properties.getProperty("mysql.url"))
+      .option("driver", properties.getProperty("mysql.driver"))
+      .option("user", properties.getProperty("mysql.username"))
+      .option("password", properties.getProperty("mysql.password"))
+      .option("numPartitions","20")
+      .option("partitionColumn","id")
+      .option("lowerBound", "126787")
+      .option("upperBound","64944871")
+      .option("dbtable", "t_mobile_location")
+      .load()
 
   }
 
@@ -367,30 +391,6 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
   }
 
   /**
-    * 获取 Mysql 表的数据
-    * @param sqlContext
-    * @param tableName 读取Mysql表的名字
-    * @return 返回 Mysql 表的 DataFrame
-    */
-  def readMysqlTable(sqlContext: SQLContext, tableName: String): DataFrame = {
-    val properties: Properties = getProPerties()
-    sqlContext
-      .read
-      .format("jdbc")
-      .option("url", properties.getProperty("mysql.url"))
-      .option("driver", properties.getProperty("mysql.driver"))
-      .option("user", properties.getProperty("mysql.username"))
-      .option("password", properties.getProperty("mysql.password"))
-      .option("numPartitions","20")
-      .option("partitionColumn","id")
-      .option("lowerBound", "126787")
-      .option("upperBound","65944871")
-      .option("dbtable", tableName)
-      .load()
-
-  }
-
-  /**
     * 获取配置文件
     *
     * @return
@@ -437,26 +437,3 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
   }
 
 }
-
-/**
- *                             _ooOoo_
- *                            o8888888o
- *                            88" . "88
- *                            (| -_- |)
- *                            O\  =  /O
- *                         ____/`---'\____
- *                       .'  \\|     |//  `.
- *                      /  \\|||  :  |||//  \
- *                     /  _||||| -:- |||||-  \
- *                     |   | \\\  -  /// |   |
- *                     | \_|  ''\---/''  |   |
- *                     \  .-\__  `-`  ___/-. /
- *                   ___`. .'  /--.--\  `. . __
- *                ."" '<  `.___\_<|>_/___.'  >'"".
- *               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
- *               \  \ `-.   \_ __\ /__ _/   .-` /  /
- *          ======`-.____`-.___\_____/___.-`____.-'======
- *                             `=---='
- *          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- *                     佛祖保佑        永无BUG
- */
