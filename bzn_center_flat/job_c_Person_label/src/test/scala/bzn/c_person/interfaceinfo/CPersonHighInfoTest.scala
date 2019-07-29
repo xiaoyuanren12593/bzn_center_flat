@@ -2,21 +2,17 @@ package bzn.c_person.interfaceinfo
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-import java.util
 import java.util.{Date, Properties}
 import java.util.regex.Pattern
 
 import bzn.c_person.util.SparkUtil
 import bzn.job.common.{HbaseUtil, Until}
-import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.serializer.SerializerFeature
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.collection.mutable
 import scala.io.Source
 
 object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
@@ -26,7 +22,7 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName: String = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
 
     val sc: SparkContext = sparkConf._2
     val hiveContext: HiveContext = sparkConf._4
@@ -34,6 +30,9 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     //    清洗标签
     val peopleInfo: DataFrame = readMysqlOtherTable(hiveContext)
     val productInfo: DataFrame = readMysqlProTable(hiveContext)
+
+    peopleInfo.cache()
+    productInfo.cache()
 
     val certInfo: DataFrame = getCertInfo(hiveContext, peopleInfo)
     val coxcombry: DataFrame = getCoxcombry(hiveContext, peopleInfo, productInfo)
@@ -44,9 +43,9 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     val house: DataFrame = getHouse(hiveContext, peopleInfo, productInfo)
     val amplitudeFrequenter = getamplitudeFrequenter(hiveContext, peopleInfo, productInfo)
 
-    val allData: DataFrame = unionAll(certInfo, coxcombry, wedding, ride, onlineCar, partTimeNums, house, amplitudeFrequenter)
+    val allData: DataFrame = unionAll(hiveContext, certInfo, coxcombry, wedding, ride, onlineCar, partTimeNums, house, amplitudeFrequenter)
 
-    allData.show()
+    ride.show()
 
     sc.stop()
 
@@ -182,7 +181,7 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       */
     val peopleInfos: DataFrame = peopleInfo
       .selectExpr("high_cert_no", "product_code", "start_date")
-
+    println("start")
     //    清洗wedding_month标签
     val result: DataFrame = peopleInfos
       .join(productInfo, peopleInfos("product_code") === productInfo("product_codes"), "leftouter")
@@ -198,32 +197,49 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
 //        获取当前时间
         val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val dateStr: String = sdf.format(new Date())
+
         val nintyDay: String = dateDelNintyDay(dateStr).split(" ")(0)
-//        结果
+        println(highCertNo + productDesc + date + hour + week + nintyDay)
+        //        结果
         (highCertNo, (productDesc, date, hour, week, nintyDay))
       })
       .filter(line => {
-        (line._2._1 == "星驾单车" || line._2._1 == "七彩单车" || line._2._1 == "闪骑电单车" || line._2._1 == "DDbike" ||
+        val res = if(line._2._1 == "星驾单车" || line._2._1 == "七彩单车" || line._2._1 == "闪骑电单车" || line._2._1 == "DDbike" ||
           line._2._1 == "酷骑单车" || line._2._1 == "小鹿单车" || line._2._1 == "骑迹单车" || line._2._1 == "OFO" ||
           line._2._1 == "便利蜂单车" || line._2._1 == "飞鸽出行" || line._2._1 == "骑迹单车" || line._2._1 == "西游单车" ||
-          line._2._1 == "景智单车")
+          line._2._1 == "景智单车"){
+          true
+        }else{
+          false
+        }
+        res
+      })
+      .map(line => {
+        println("1234")
+        println(line._1 + line._2._1 + line._2._2 + line._2._3 + line._2._4 + line._2._5)
+        (line._1, (line._2._1, line._2._2, line._2._3, line._2._4, line._2._5))
       })
       .aggregateByKey(List[(String, String, String, String, String)]())(
         (List: List[(String, String, String, String, String)], value: (String, String, String, String, String)) => List:+value,
         (List1: List[(String, String, String, String, String)], List2: List[(String, String, String, String, String)]) => List1:::List2
       )
       .map(line => {
-        val rideDays: String = rideDate(line._2)
+        println("123456")
+        println(line._1 + line._2.mkString(",").toString)
+        val highCertNo: String = line._1
+        val rideDay: String = rideDate(line._2)
         val maxRideTimeStep: String = rideTimeStep(line._2)
         val maxRideBrand: String = rideBrand(line._2)
         val maxRideDate: String = rideDate(line._2)
         val tripRates: String = tripRate(line._2)
         val internalClocks: String = internalClock(line._2)
+        println("rideDays   "+rideDay)
 //        结果
-        (rideDays, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks)
+        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks)
       })
-      .toDF("ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate", "internal_clock")
+      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate", "internal_clock")
 
+    println("end")
 //    结果
     result
 
@@ -309,8 +325,8 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
           line._2 == "蒲公英" || line._2 == "独立日")
       })
       .aggregateByKey(List[String]())(
-        seqOp = (List: List[String], value: String) => List :+ value,
-        combOp = (List1: List[String], List2: List[String]) => List1 ::: List2
+        (List: List[String], value: String) => List :+ value,
+        (List1: List[String], List2: List[String]) => List1 ::: List2
       )
       .map(line => {
         val highCertNo: String = line._1
@@ -417,8 +433,11 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
 
   }
 
-  def unionAll(certInfo: DataFrame, coxcombry: DataFrame, wedding: DataFrame, ride: DataFrame, onlineCar: DataFrame,
+  def unionAll(hiveContext: HiveContext, certInfo: DataFrame, coxcombry: DataFrame, wedding: DataFrame, ride: DataFrame, onlineCar: DataFrame,
                partTimeNums: DataFrame, house: DataFrame, amplitudeFrequenter: DataFrame): DataFrame = {
+    import hiveContext.implicits._
+    hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 
     val coxcombrys: DataFrame = coxcombry.withColumnRenamed("high_cert_no", "co_cert_no")
     val weddings: DataFrame = wedding.withColumnRenamed("high_cert_no", "we_cert_no")
@@ -437,6 +456,11 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       .join(partTimeNumss, certInfo("high_cert_no") === partTimeNumss("pa_cert_no"), "leftouter")
       .join(houses, certInfo("high_cert_no") === houses("ho_cert_no"), "leftouter")
       .join(amplitudeFrequenters, certInfo("high_cert_no") === amplitudeFrequenters("am_cert_no"), "leftouter")
+      .selectExpr("high_cert_no", "dropEmptys(is_coxcombry) as is_coxcombry", "dropEmptys(wedding_month) as wedding_month",
+      "dropEmptys(ride_days) as ride_days", "dropEmptys(max_ride_time_step) as max_ride_time_step",
+      "dropEmptys(max_ride_brand) as max_ride_brand", "dropEmptys(max_ride_date) as max_ride_date",
+      "dropEmptys(trip_rate) as trip_rate", "dropEmptys(internal_clock) as internal_clock", "dropEmptys(is_online_car) as is_online_car",
+      "dropEmptys(part_time_nums) as part_time_nums", "dropEmptys(is_h_house) as is_h_house", "dropEmptys(amplitude_frequenter) as amplitude_frequenter")
 
 //    结果
     result
@@ -450,6 +474,8 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlOtherTable(sqlContext: SQLContext): DataFrame = {
+    import sqlContext.implicits._
+
     val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
     val properties: Properties = getProPerties()
     val predicates = Array[String]("month <= '2018-12-01'",
@@ -463,13 +489,21 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       "month > '2019-07-01'"
     )
 
-    val result: DataFrame = sqlContext
+    val result = sqlContext
       .read
       .jdbc(url, "open_other_policy", predicates, properties)
-      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
-      .where("insured_cert_type = 2 and length(insured_cert_no) = 18 and length(start_date) > 0")
-      .filter("dropSpecial(insured_cert_no) as high_cert_no")
-      .cache()
+      .selectExpr("insured_cert_no as high_cert_no", "insured_cert_type", "product_code", "start_date")
+      .where("insured_cert_type = 2 and length(high_cert_no) = 18")
+      .map(line => {
+        val highCertNo: String = line.getAs[String]("high_cert_no")
+        val productCode: String = line.getAs[String]("product_code")
+        val startDate: Timestamp = line.getAs[java.sql.Timestamp]("start_date")
+//        结果
+        (highCertNo, productCode, startDate)
+      })
+      .filter(line => {dropSpecial(line._1) && line._3 != null})
+      .toDF("high_cert_no", "product_code", "start_date")
+      .limit(2)
 
     result
 
@@ -481,14 +515,17 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlProTable(sqlContext: SQLContext): DataFrame = {
-    val url = "jdbc:mysql://172.16.11.105:3306/dwdb?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    import sqlContext.implicits._
+    sqlContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    sqlContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
+
+    val url = "jdbc:mysql://172.16.11.105:3306/dwdb?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=bzn@cdh123!"
     val properties: Properties = getProPerties()
 
     val result: DataFrame = sqlContext
       .read
       .jdbc(url, "dim_product", properties)
       .selectExpr("product_code as product_codes", "product_desc")
-      .cache()
 
     result
 
@@ -513,54 +550,6 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
       pattern.matcher(Temp).matches
     } else false
-  }
-
-  /**
-    * 根据生日月日获取星座id
-    * @param month
-    * @param day
-    * @return
-    */
-  def getConstellation(month: String, day: String): String = {
-    val dayArr = Array[Int](20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22)
-    val constellationArr = Array[Int](10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-    return if (day.toInt < dayArr(month.toInt - 1)) {
-      constellationArr(month.toInt - 1).toString
-    } else {
-      constellationArr(month.toInt).toString
-    }
-  }
-
-  /**
-    * 自定义拼接Json
-    * @param tuples
-    * @return
-    */
-  def udfJson(tuples: Iterator[(String, String, String, String)]): String = {
-    //    创建手机号信息List
-    val list: util.List[util.HashMap[String, String]] = new util.ArrayList[util.HashMap[String, String]]()
-    //    遍历迭代器
-    while (tuples.hasNext) {
-      val tuple: (String, String, String, String) = tuples.next()
-      //      当手机信息都不为空时全部塞进去，只手机号不为空时就把手机号塞进去，都为空时什么都不塞进去
-      if (tuple._1 != null && tuple._2 != null && tuple._3 != null && tuple._4 != null) {
-        val map: util.HashMap[String, String] = new util.HashMap[String, String]()
-        map.put("base_tel_name", tuple._1)
-        map.put("base_tel_province", tuple._2)
-        map.put("base_tel_city", tuple._3)
-        map.put("base_tel_operator", tuple._4)
-        list.add(map)
-      } else if (tuple._1 != null && tuple._2 == null && tuple._3 == null && tuple._4 == null) {
-        val map: util.HashMap[String, String] = new util.HashMap[String, String]()
-        map.put("base_tel_name", tuple._1)
-        list.add(map)
-      }
-    }
-    //    将嵌套数组改为Json格式字符串
-    val jsonString: String = JSON.toJSONString(list, SerializerFeature.BeanToArray)
-    //    如果Json格式字符串为[]，则转为null
-    if (jsonString == "[]") null else jsonString
-
   }
 
   /**

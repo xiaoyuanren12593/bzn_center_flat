@@ -463,7 +463,7 @@ trait Until {
     for (l <- list) {
       set.add(l._2)
     }
-    set.size.toString
+    if (set.isEmpty) null else set.size.toString
   }
 
   /**
@@ -487,7 +487,7 @@ trait Until {
       else if (l._3.toInt >= 21 && l._3.toInt < 23) "21-23时"
       else "23-1时")
     }
-    lists.max
+    if (lists.isEmpty) null else lists.max
   }
 
   /**
@@ -500,7 +500,7 @@ trait Until {
     for (l <- list) {
       lists:+l._1
     }
-    lists.max
+    if (lists.isEmpty) null else lists.max
   }
 
   /**
@@ -513,7 +513,9 @@ trait Until {
     for (l <- list) {
       lists:+l._4
     }
-    lists.max
+    println("qaz")
+    lists.foreach(println)
+    if (lists.isEmpty) null else lists.max
   }
 
   /**
@@ -526,7 +528,7 @@ trait Until {
     for (l <- list) {
       if (l._2 > l._5) lists:+l._2
     }
-    lists.size.toString
+    if (lists.isEmpty) null else lists.size.toString
   }
 
   /**
