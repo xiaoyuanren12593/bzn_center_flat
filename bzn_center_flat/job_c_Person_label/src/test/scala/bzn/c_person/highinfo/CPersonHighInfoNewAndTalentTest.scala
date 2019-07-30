@@ -1,4 +1,4 @@
-package c_person.highinfo
+package bzn.c_person.highinfo
 
 import java.sql.Timestamp
 import java.util
@@ -8,8 +8,8 @@ import c_person.util.SparkUtil
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.serializer.SerializerFeature
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -18,11 +18,11 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:53
   * describe: 高级标签
   **/
-object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
+object CPersonHighInfoNewAndTalentTest extends SparkUtil with Until with HbaseUtil  {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[4]")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
@@ -139,6 +139,7 @@ object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
         (x._1,becomeCurrCusTime,jsonString)
       })
       .toDF("cert_no_insured","become_curr_cus_time","last_cus_type_slave")
+    insuredRes.printSchema()
 
     /**
       * 得到止期最大的保单
@@ -247,14 +248,16 @@ object CPersonHighInfoNew extends SparkUtil with Until with HbaseUtil  {
       })
       .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")
 
-    val res1 = res.selectExpr("cert_no","cus_type")
-    val  rowKeyName = "cert_no"
-    val  tableName = "label_person"
-    val  columnFamily1 = "cent_info"
-    val  columnFamily2 = "high_info"
-    toHBase(res1,tableName,columnFamily1,rowKeyName)
-    val res2 = res.selectExpr("cert_no","become_curr_cus_time","last_cus_type")
-    toHBase(res2,tableName,columnFamily2,rowKeyName)
-    toHBase(resOne,tableName,columnFamily1,rowKeyName)
+    res.printSchema()
+
+//    val res1 = res.selectExpr("cert_no","cus_type")
+//    val  rowKeyName = "cert_no"
+//    val  tableName = "label_person"
+//    val  columnFamily1 = "cent_info"
+//    val  columnFamily2 = "high_info"
+//    toHBase(res1,tableName,columnFamily1,rowKeyName)
+//    val res2 = res.selectExpr("cert_no","become_curr_cus_time","last_cus_type")
+//    toHBase(res2,tableName,columnFamily2,rowKeyName)
+//    toHBase(resOne,tableName,columnFamily1,rowKeyName)
   }
 }
