@@ -14,13 +14,16 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+
 /**
   * author:xiaoYuanRen
   * Date:2019/7/10
   * Time:9:27
   * describe: c端标签基础信息类
   **/
-object CPersonBaseinfo extends SparkUtil with Until {
+object CPersonBaseInfo extends SparkUtil with Until {
 
   def main(args: Array[String]): Unit = {
 
@@ -281,12 +284,14 @@ object CPersonBaseinfo extends SparkUtil with Until {
         val baseTelOperator: String = line.getAs[String]("base_tel_operator")
         (baseCertNo, (baseTelMobile, baseTelProvince, baseTelCity, baseTelOperator))
       })
-      .groupByKey()
+      .aggregateByKey(mutable.ListBuffer[(String, String, String, String)]())(
+        (List: ListBuffer[(String, String, String, String)], value: (String, String, String, String)) => List += value,
+        (List1: ListBuffer[(String, String, String, String)], List2: ListBuffer[(String, String, String, String)]) => List1 ++= List2
+      )
       .map(line => {
         val baseCertNo: String = line._1
-        val value: Iterator[(String, String, String, String)] = line._2.iterator
-        val baseTel: String = udfJson(value)
-//        结果
+        val baseTel: String = udfJson(line._2)
+        //        结果
         (baseCertNo, baseTel)
       })
       .toDF("base_cert_no", "base_tel")
@@ -344,19 +349,19 @@ object CPersonBaseinfo extends SparkUtil with Until {
         ((baseCertNo, habitName), 1)
       })
       .reduceByKey(_ + _) //计算购买特定产品次数
-      .filter(x => x._1._2 != "无" && x._2 >= 3)  //获取特定产品购买三次以上的
-      .map(x => (x._1._1, x._1._2))
-      .groupByKey()   //获取购买三次的作为爱好
+      .filter(line => line._1._2 != "无")
+      .map(x => (x._1._1, (x._1._2, x._2.toString)))
+      .aggregateByKey(mutable.ListBuffer[(String, String)]())(
+        (List: ListBuffer[(String, String)], value: (String, String)) => List += value,
+        (List1: ListBuffer[(String, String)], List2: ListBuffer[(String, String)]) => List1 ++= List2
+      )
       .map(line => {
-      val baseCertNo: String = line._1
-      //      创建Json装箱爱好
-      val json_value: JSONObject = new JSONObject()
-      //        获取迭代器
-      val it: Iterator[String] = line._2.iterator
-      while (it.hasNext) json_value.put("habit", it.next())
-      //        结果
-      (baseCertNo, json_value.toString)
-    })
+        val baseCertNo: String = line._1
+        val baseHabit: JSONObject = new JSONObject()
+        for (l <- line._2) baseHabit.put(l._1, l._2)
+        //        结果
+        (baseCertNo, baseHabit.toString)
+      })
       .toDF("base_cert_no", "base_habit")
 
 
@@ -587,29 +592,28 @@ object CPersonBaseinfo extends SparkUtil with Until {
     * @param tuples
     * @return
     */
-  def udfJson(tuples: Iterator[(String, String, String, String)]): String = {
-//    创建手机号信息List
+  def udfJson(tuples: ListBuffer[(String, String, String, String)]): String = {
+    //    创建手机号信息List
     val list: util.List[util.HashMap[String, String]] = new util.ArrayList[util.HashMap[String, String]]()
-//    遍历迭代器
-    while (tuples.hasNext) {
-      val tuple: (String, String, String, String) = tuples.next()
-//      当手机信息都不为空时全部塞进去，只手机号不为空时就把手机号塞进去，都为空时什么都不塞进去
-      if (tuple._1 != null && tuple._2 != null && tuple._3 != null && tuple._4 != null) {
+    //    遍历迭代器
+    for (t <- tuples) {
+      //      当手机信息都不为空时全部塞进去，只手机号不为空时就把手机号塞进去，都为空时什么都不塞进去
+      if (t._1 != null && t._2 != null && t._3 != null && t._4 != null) {
         val map: util.HashMap[String, String] = new util.HashMap[String, String]()
-        map.put("base_tel_name", tuple._1)
-        map.put("base_tel_province", tuple._2)
-        map.put("base_tel_city", tuple._3)
-        map.put("base_tel_operator", tuple._4)
+        map.put("base_tel_name", t._1)
+        map.put("base_tel_province", t._2)
+        map.put("base_tel_city", t._3)
+        map.put("base_tel_operator", t._4)
         list.add(map)
-      } else if (tuple._1 != null && tuple._2 == null && tuple._3 == null && tuple._4 == null) {
+      } else if (t._1 != null && t._2 == null && t._3 == null && t._4 == null) {
         val map: util.HashMap[String, String] = new util.HashMap[String, String]()
-        map.put("base_tel_name", tuple._1)
+        map.put("base_tel_name", t._1)
         list.add(map)
       }
     }
-//    将嵌套数组改为Json格式字符串
+    //    将嵌套数组改为Json格式字符串
     val jsonString: String = JSON.toJSONString(list, SerializerFeature.BeanToArray)
-//    如果Json格式字符串为[]，则转为null
+    //    如果Json格式字符串为[]，则转为null
     if (jsonString == "[]") null else jsonString
 
   }

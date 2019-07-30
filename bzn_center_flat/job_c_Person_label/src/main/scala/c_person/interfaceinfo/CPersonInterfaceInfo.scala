@@ -17,6 +17,11 @@ import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import scala.io.Source
 import scala.collection.mutable.LinkedList
 
+/**
+  * author:sangJiaQI
+  * Date:2019/7/30
+  * describe: 接口（ofo\58)基础标签
+  */
 object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
 
   def main(args: Array[String]): Unit = {
@@ -39,14 +44,7 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     //    写到hive中
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.interface_label")
 
-    //    写入hbase中
-    try {
-      toHBase2(result, "label_person", "base_info")
-    } catch {
-      case _ => {toHBase2(certInfo, "label_person", "base_info"); toHBase2(telInfo, "label_person", "base_info")}
-    } finally {
-      sc.stop()
-    }
+    sc.stop()
 
   }
 

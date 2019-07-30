@@ -11,6 +11,11 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
+/**
+  * author:sangJiaQI
+  * Date:2019/7/30
+  * describe: 高级标签部分
+  */
 object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
 
   def main(args: Array[String]): Unit = {

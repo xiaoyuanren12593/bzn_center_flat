@@ -8,8 +8,9 @@ import java.util.{Calendar, Date}
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, Months}
 
+import scala.collection.immutable
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Created by a2589 on 2018/4/2.
@@ -458,7 +459,7 @@ trait Until {
     * @param list
     * @return
     */
-  def rideDays(list: List[(String, String, String, String, String)]): String = {
+  def rideDays(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
     val set: mutable.Set[String] = mutable.Set[String]()
     for (l <- list) {
       set.add(l._2)
@@ -471,10 +472,10 @@ trait Until {
     * @param list
     * @return
     */
-  def rideTimeStep(list: List[(String, String, String, String, String)]): String = {
-    val lists: List[String] = List[String]()
+  def rideTimeStep(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
     for (l <- list) {
-      lists:+(if (l._3.toInt >= 1 && l._3.toInt < 3) "1-3时"
+      lists += (if (l._3.toInt >= 1 && l._3.toInt < 3) "1-3时"
       else if (l._3.toInt >= 3 && l._3.toInt < 5) "3-5时"
       else if (l._3.toInt >= 5 && l._3.toInt < 7) "5-7时"
       else if (l._3.toInt >= 7 && l._3.toInt < 9) "7-9时"
@@ -495,10 +496,10 @@ trait Until {
     * @param list
     * @return
     */
-  def rideBrand(list: List[(String, String, String, String, String)]): String = {
-    val lists: List[String] = List[String]()
+  def rideBrand(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
     for (l <- list) {
-      lists:+l._1
+      lists += l._1
     }
     if (lists.isEmpty) null else lists.max
   }
@@ -508,10 +509,10 @@ trait Until {
     * @param list
     * @return
     */
-  def rideDate(list: List[(String, String, String, String, String)]): String = {
-    val lists: List[String] = List[String]()
+  def rideDate(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
     for (l <- list) {
-      lists:+l._4
+      lists += l._4
     }
     println("qaz")
     lists.foreach(println)
@@ -523,10 +524,10 @@ trait Until {
     * @param list
     * @return
     */
-  def tripRate(list: List[(String, String, String, String, String)]): String = {
-    val lists: List[String] = List[String]()
+  def tripRate(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
     for (l <- list) {
-      if (l._2 > l._5) lists:+l._2
+      if (l._2 > l._5) lists += l._2
     }
     if (lists.isEmpty) null else lists.size.toString
   }
@@ -536,7 +537,7 @@ trait Until {
     * @param list
     * @return
     */
-  def internalClock(list: List[(String, String, String, String, String)]): String = {
+  def internalClock(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
     val time: String = rideTimeStep(list)
     val internal: String = if (time == "5-7时") "早期族"
     else if (time == "23-1时" || time == "1-3时" || time == "3-5时") "夜猫子"

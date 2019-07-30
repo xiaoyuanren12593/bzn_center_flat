@@ -13,6 +13,8 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
@@ -45,7 +47,7 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
 
     val allData: DataFrame = unionAll(hiveContext, certInfo, coxcombry, wedding, ride, onlineCar, partTimeNums, house, amplitudeFrequenter)
 
-    ride.show()
+    peopleInfo.show()
 
     sc.stop()
 
@@ -103,13 +105,13 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
 //        结果
         (highCertNo, productDesc)
       })
-      .aggregateByKey(List[String]())(
-        (List: List[String], value: String) => List:+value,
-        (List1: List[String], List2: List[String]) => List1:::List2
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        seqOp = (List: ListBuffer[String], value: String) => List += value,
+        combOp = (List1: mutable.ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
       )
       .map(line => {
         val highCertNo: String = line._1
-        val isCoxcombry: String = if (line._2.contains("新氧医美")) "是" else "否"
+        val isCoxcombry: String = if (line._2.contains("新氧医美")) "是" else null
 //        结果
         (highCertNo, isCoxcombry)
       })
@@ -181,7 +183,7 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       */
     val peopleInfos: DataFrame = peopleInfo
       .selectExpr("high_cert_no", "product_code", "start_date")
-    println("start")
+
     //    清洗wedding_month标签
     val result: DataFrame = peopleInfos
       .join(productInfo, peopleInfos("product_code") === productInfo("product_codes"), "leftouter")
@@ -197,49 +199,33 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
 //        获取当前时间
         val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val dateStr: String = sdf.format(new Date())
-
         val nintyDay: String = dateDelNintyDay(dateStr).split(" ")(0)
-        println(highCertNo + productDesc + date + hour + week + nintyDay)
         //        结果
         (highCertNo, (productDesc, date, hour, week, nintyDay))
       })
       .filter(line => {
-        val res = if(line._2._1 == "星驾单车" || line._2._1 == "七彩单车" || line._2._1 == "闪骑电单车" || line._2._1 == "DDbike" ||
+        line._2._1 == "星驾单车" || line._2._1 == "七彩单车" || line._2._1 == "闪骑电单车" || line._2._1 == "DDbike" ||
           line._2._1 == "酷骑单车" || line._2._1 == "小鹿单车" || line._2._1 == "骑迹单车" || line._2._1 == "OFO" ||
           line._2._1 == "便利蜂单车" || line._2._1 == "飞鸽出行" || line._2._1 == "骑迹单车" || line._2._1 == "西游单车" ||
-          line._2._1 == "景智单车"){
-          true
-        }else{
-          false
-        }
-        res
+          line._2._1 == "景智单车"
       })
-      .map(line => {
-        println("1234")
-        println(line._1 + line._2._1 + line._2._2 + line._2._3 + line._2._4 + line._2._5)
-        (line._1, (line._2._1, line._2._2, line._2._3, line._2._4, line._2._5))
-      })
-      .aggregateByKey(List[(String, String, String, String, String)]())(
-        (List: List[(String, String, String, String, String)], value: (String, String, String, String, String)) => List:+value,
-        (List1: List[(String, String, String, String, String)], List2: List[(String, String, String, String, String)]) => List1:::List2
+      .aggregateByKey(mutable.ListBuffer[(String, String, String, String, String)]())(
+        (List: ListBuffer[(String, String, String, String, String)], value: (String, String, String, String, String)) => List += value,
+        (List1: ListBuffer[(String, String, String, String, String)], List2: ListBuffer[(String, String, String, String, String)]) => List1 ++= List2
       )
       .map(line => {
-        println("123456")
-        println(line._1 + line._2.mkString(",").toString)
         val highCertNo: String = line._1
-        val rideDay: String = rideDate(line._2)
+        val rideDay: String = rideDays(line._2)
         val maxRideTimeStep: String = rideTimeStep(line._2)
         val maxRideBrand: String = rideBrand(line._2)
         val maxRideDate: String = rideDate(line._2)
         val tripRates: String = tripRate(line._2)
         val internalClocks: String = internalClock(line._2)
-        println("rideDays   "+rideDay)
 //        结果
         (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks)
       })
       .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate", "internal_clock")
 
-    println("end")
 //    结果
     result
 
@@ -274,13 +260,13 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
         //        结果
         (highCertNo, productDesc)
       })
-      .aggregateByKey(List[String]())(
-        (List: List[String], value: String) => List:+value,
-        (List1: List[String], List2: List[String]) => List1:::List2
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        (List: ListBuffer[String], value: String) => List += value,
+        (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
       )
       .map(line => {
         val highCertNo: String = line._1
-        val isOnlineCar: String = if (line._2.contains("曹操意外险")) "是" else "否"
+        val isOnlineCar: String = if (line._2.contains("曹操意外险")) "是" else null
         //        结果
         (highCertNo, isOnlineCar)
       })
@@ -324,9 +310,9 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
         (line._2 == "斗米兼职" || line._2 == "万能小哥" || line._2 == "弧聚网络" || line._2 == "找活儿兼职" || line._2 == "第二职场" ||
           line._2 == "蒲公英" || line._2 == "独立日")
       })
-      .aggregateByKey(List[String]())(
-        (List: List[String], value: String) => List :+ value,
-        (List1: List[String], List2: List[String]) => List1 ::: List2
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        (List: ListBuffer[String], value: String) => List += value,
+        (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
       )
       .map(line => {
         val highCertNo: String = line._1
@@ -370,13 +356,13 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
         //        结果
         (highCertNo, productDesc)
       })
-      .aggregateByKey(List[String]())(
-        (List: List[String], value: String) => List:+value,
-        (List1: List[String], List2: List[String]) => List1:::List2
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        (List: ListBuffer[String], value: String) => List += value,
+        (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
       )
       .map(line => {
         val highCertNo: String = line._1
-        val ishHouse: String = if (line._2.contains("侃家")) "是" else "否"
+        val ishHouse: String = if (line._2.contains("侃家")) "是" else null
         //        结果
         (highCertNo, ishHouse)
       })
@@ -416,13 +402,13 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
         (highCertNo, productDesc)
       })
       .filter(line => line._2.contains("青芒果方案1"))
-      .aggregateByKey(List[String]())(
-        (List: List[String], value: String) => List:+value,
-        (List1: List[String], List2: List[String]) => List1:::List2
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        (List: ListBuffer[String], value: String) => List += value,
+        (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
       )
       .map(line => {
         val highCertNo: String = line._1
-        val amplitudeFrequenter: String = line._2.size.toString
+        val amplitudeFrequenter: String = if (line._2.size >= 12) "是" else null
         //        结果
         (highCertNo, amplitudeFrequenter)
       })
@@ -475,9 +461,26 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     */
   def readMysqlOtherTable(sqlContext: SQLContext): DataFrame = {
     import sqlContext.implicits._
-
-    val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    sqlContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    sqlContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     val properties: Properties = getProPerties()
+
+    //    201711-201810
+    val url1: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201711?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url2: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201712?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url3: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201801?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url4: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201802?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url5: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201803?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url6: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201804?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url7: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201805?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url8: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201806?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url9: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201807?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url10: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201808?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url11: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201809?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url12: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201810?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+
+    //    201811-
+    val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
     val predicates = Array[String]("month <= '2018-12-01'",
       "month > '2018-12-01' and month <= '2019-01-01'",
       "month > '2019-01-01' and month <= '2019-02-01'",
@@ -489,21 +492,63 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       "month > '2019-07-01'"
     )
 
-    val result = sqlContext
+    //    mysql 201711-201810
+    val data01: DataFrame = sqlContext.read.jdbc(url1, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data02: DataFrame = sqlContext.read.jdbc(url2, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data03: DataFrame = sqlContext.read.jdbc(url3, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data04: DataFrame = sqlContext.read.jdbc(url4, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data05: DataFrame = sqlContext.read.jdbc(url5, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data06: DataFrame = sqlContext.read.jdbc(url6, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data07: DataFrame = sqlContext.read.jdbc(url7, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data08: DataFrame = sqlContext.read.jdbc(url8, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data09: DataFrame = sqlContext.read.jdbc(url9, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data10: DataFrame = sqlContext.read.jdbc(url10, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data11: DataFrame = sqlContext.read.jdbc(url11, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+    val data12: DataFrame = sqlContext.read.jdbc(url12, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+
+    //    mysql 201811-
+    val data13: DataFrame = sqlContext
       .read
       .jdbc(url, "open_other_policy", predicates, properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "product_code", "start_date")
+
+    //      合并
+    val result: DataFrame = data13
+      .unionAll(data12)
+      .unionAll(data11)
+      .unionAll(data10)
+      .unionAll(data09)
+      .unionAll(data08)
+      .unionAll(data07)
+      .unionAll(data06)
+      .unionAll(data05)
+      .unionAll(data04)
+      .unionAll(data03)
+      .unionAll(data02)
+      .unionAll(data01)
       .selectExpr("insured_cert_no as high_cert_no", "insured_cert_type", "product_code", "start_date")
       .where("insured_cert_type = 2 and length(high_cert_no) = 18")
       .map(line => {
         val highCertNo: String = line.getAs[String]("high_cert_no")
         val productCode: String = line.getAs[String]("product_code")
         val startDate: Timestamp = line.getAs[java.sql.Timestamp]("start_date")
-//        结果
+        //        结果
         (highCertNo, productCode, startDate)
       })
       .filter(line => {dropSpecial(line._1) && line._3 != null})
       .toDF("high_cert_no", "product_code", "start_date")
-      .limit(2)
 
     result
 

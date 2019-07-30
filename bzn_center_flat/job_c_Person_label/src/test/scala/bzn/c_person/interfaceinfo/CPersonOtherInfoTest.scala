@@ -30,8 +30,11 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     val hiveContext: HiveContext = sparkConf._4
 
     //    清洗标签
-    val certInfo: DataFrame = getCertInfo(hiveContext)
-    val telInfo: DataFrame = getTelInfo(hiveContext)
+    val peopleInfo: DataFrame = readMysqlOtherTable(hiveContext)
+    peopleInfo.cache()
+
+    val certInfo: DataFrame = getCertInfo(hiveContext, peopleInfo)
+    val telInfo: DataFrame = getTelInfo(hiveContext, peopleInfo)
 
     //    合并
     val result: DataFrame = unionTable(certInfo, telInfo)
@@ -49,7 +52,7 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     * @param hiveContext
     * @return cert的dataframe
     */
-  def getCertInfo(hiveContext: HiveContext): DataFrame = {
+  def getCertInfo(hiveContext: HiveContext, peopleInfo: DataFrame): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
@@ -57,13 +60,12 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     /**
       * 读取other接口的mysql表
       */
-    val otherInfo: DataFrame = readMysqlOtherTable(hiveContext)
-      .where("insured_cert_type = 2 and length(insured_cert_no) = 18")
+    val otherInfo: DataFrame = peopleInfo
       .selectExpr("insured_cert_no as base_cert_no", "insured_name as base_name")
       .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no"))
 
-//    清洗身份证标签
+    //    清洗身份证标签
     val certInfoTemp: DataFrame = otherInfo
       .map(line => {
         //        身份证号
@@ -146,7 +148,6 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     val areaInfoDimension: DataFrame = hiveContext.sql("select * from odsdb.ods_area_info_dimension")
       .selectExpr("code", "province", "short_name", "city_region", "case when is_coastal = '' then null else is_coastal end as is_coastal",
         "case when city_type = '' then null else city_type end as city_type", "weather_feature", "weather_type", "city_deit")
-      .limit(10)
 
     //    个人信息关联区域码表
     val certInfoJoin: DataFrame = certInfoTemp
@@ -194,7 +195,7 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     * @param hiveContext
     * @return
     */
-  def getTelInfo(hiveContext: HiveContext): DataFrame = {
+  def getTelInfo(hiveContext: HiveContext, peopleInfo: DataFrame): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
@@ -202,19 +203,14 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     /**
       * 读取other的mysql表
       */
-    val otherInfo: DataFrame = readMysqlOtherTable(hiveContext)
-      .where("insured_cert_type = 2 and length(insured_cert_no) = 18")
-      .selectExpr("insured_cert_no as base_cert_no", "dropEmpty(insured_mobile) as base_mobile")
+    val otherInfo: DataFrame = peopleInfo
+      .selectExpr("insured_cert_no as base_cert_no", "dropEmptys(insured_mobile) as base_mobile")
       .filter("dropSpecial(base_cert_no) as base_cert_no")
       .dropDuplicates(Array("base_cert_no", "base_mobile"))
-      .limit(10)
 
     //    读取手机信息表
     val mobileInfo: DataFrame = readMysqlTelTable(hiveContext)
       .selectExpr("mobile", "province", "city", "operator")
-      .limit(100000)
-
-    println(mobileInfo.rdd.getNumPartitions)
 
     //    与手机信息表连接
     val telInfoAll: DataFrame = otherInfo
@@ -279,8 +275,27 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlOtherTable(sqlContext: SQLContext): DataFrame = {
-    val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    import sqlContext.implicits._
+    sqlContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    sqlContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     val properties: Properties = getProPerties()
+
+    //    201711-201810
+    val url1: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201711?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url2: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201712?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url3: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201801?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url4: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201802?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url5: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201803?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url6: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201804?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url7: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201805?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url8: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201806?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url9: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201807?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url10: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201808?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url11: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201809?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+    val url12: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201810?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+
+    //    201811-
+    val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
     val predicates = Array[String]("month <= '2018-12-01'",
       "month > '2018-12-01' and month <= '2019-01-01'",
       "month > '2019-01-01' and month <= '2019-02-01'",
@@ -292,9 +307,55 @@ object CPersonOtherInfoTest extends SparkUtil with Until with HbaseUtil {
       "month > '2019-07-01'"
     )
 
-    sqlContext
+    //    mysql 201711-201810
+    val data01: DataFrame = sqlContext.read.jdbc(url1, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data02: DataFrame = sqlContext.read.jdbc(url2, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data03: DataFrame = sqlContext.read.jdbc(url3, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data04: DataFrame = sqlContext.read.jdbc(url4, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data05: DataFrame = sqlContext.read.jdbc(url5, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data06: DataFrame = sqlContext.read.jdbc(url6, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data07: DataFrame = sqlContext.read.jdbc(url7, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data08: DataFrame = sqlContext.read.jdbc(url8, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data09: DataFrame = sqlContext.read.jdbc(url9, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data10: DataFrame = sqlContext.read.jdbc(url10, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data11: DataFrame = sqlContext.read.jdbc(url11, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+    val data12: DataFrame = sqlContext.read.jdbc(url12, "open_other_policy", properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+
+    //    mysql 201811-
+    val data13: DataFrame = sqlContext
       .read
       .jdbc(url, "open_other_policy", predicates, properties)
+      .selectExpr("insured_cert_no", "insured_cert_type", "insured_name", "insured_mobile")
+
+    //      合并
+    val result: DataFrame = data13
+      .unionAll(data12)
+      .unionAll(data11)
+      .unionAll(data10)
+      .unionAll(data09)
+      .unionAll(data08)
+      .unionAll(data07)
+      .unionAll(data06)
+      .unionAll(data05)
+      .unionAll(data04)
+      .unionAll(data03)
+      .unionAll(data02)
+      .unionAll(data01)
+      .where("insured_cert_type = 2 and length(insured_cert_no) = 18")
+
+    result
 
   }
 
