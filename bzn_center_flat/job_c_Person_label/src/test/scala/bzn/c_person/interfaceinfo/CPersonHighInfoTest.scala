@@ -577,27 +577,6 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
   }
 
   /**
-    * 将空字符串、空值转换为NULL
-    * @param Temp
-    * @return
-    */
-  def dropEmpty(Temp: String): String = {
-    if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
-  }
-
-  /**
-    * 身份证匹配
-    * @param Temp
-    * @return
-    */
-  def dropSpecial(Temp: String): Boolean = {
-    if (Temp != null) {
-      val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
-      pattern.matcher(Temp).matches
-    } else false
-  }
-
-  /**
     * 获取配置文件
     *
     * @return

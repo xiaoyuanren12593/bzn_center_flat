@@ -297,43 +297,6 @@ object CPersonInterfaceInfoTest extends SparkUtil with Until with HbaseUtil{
   }
 
   /**
-    * 将空字符串、空值转换为NULL
-    * @param Temp
-    * @return
-    */
-  def dropEmpty(Temp: String): String = {
-    if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
-  }
-
-  /**
-    * 身份证匹配
-    * @param Temp
-    * @return
-    */
-  def dropSpecial(Temp: String): Boolean = {
-    if (Temp != null) {
-      val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
-      pattern.matcher(Temp).matches()
-    } else false
-  }
-
-  /**
-    * 根据生日月日获取星座id
-    * @param month
-    * @param day
-    * @return
-    */
-  def getConstellation(month: String, day: String): String = {
-    val dayArr = Array[Int](20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22)
-    val constellationArr = Array[Int](10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-    return if (day.toInt < dayArr(month.toInt - 1)) {
-      constellationArr(month.toInt - 1).toString
-    } else {
-      constellationArr(month.toInt).toString
-    }
-  }
-
-  /**
     * 自定义拼接Json
     * @param tuples
     * @return
