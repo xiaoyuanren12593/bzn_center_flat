@@ -56,19 +56,5 @@ object CPersonBaseInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
 
   }
 
-  def hbaseInfo(sc: SparkContext): DataFrame = {
-
-    /**
-      * 读取hbase中的部分标签
-      */
-    val hbaseData: DataFrame = getHbaseBussValue(sc, "label_person")
-      .map(line => {
-        val key = Bytes.toString(line._2.getRow)
-        val
-      })
-
-  }
-
-
 
 }
