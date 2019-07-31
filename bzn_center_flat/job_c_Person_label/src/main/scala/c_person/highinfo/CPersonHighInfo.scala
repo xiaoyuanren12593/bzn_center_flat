@@ -307,15 +307,6 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
   }
 
   /**
-    * 将空字符串、空值转换为NULL
-    * @param Temp
-    * @return
-    */
-  def dropEmpty(Temp: String): String = {
-    if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
-  }
-
-  /**
     * 将DataFrame写入HBase
     * @param dataFrame
     * @param tableName
