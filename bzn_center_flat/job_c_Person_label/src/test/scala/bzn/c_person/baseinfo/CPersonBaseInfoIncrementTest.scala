@@ -379,6 +379,7 @@ object CPersonBaseInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
 
   }
 
+<<<<<<< HEAD
   /**
     * 读取hbase中的标签
     * @param sc
@@ -478,5 +479,7 @@ object CPersonBaseInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
       saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
     })
   }
+=======
+>>>>>>> fea-xwc-add-user-label
 
 }

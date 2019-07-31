@@ -158,7 +158,6 @@ object CPersonCenInfoTest extends SparkUtil with Until with HbaseUtil{
 
   /**
     * 当前生效报单数,参保产品code和产品名称
-    *
     * @param sqlContext                  上下文
     * @param holderPolicy                投保人保单信息
     * @param odsPolicyDetail             保单信息

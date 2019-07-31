@@ -66,11 +66,16 @@ object test extends Until{
     println(res2)
     res2.add(("12000005","zz旅游保"))
     res2.add(("12000006","旅游保"))
-    res2.add(("0","2019-4-7"))
+    res2.add(("12000006","旅游保"))
+    res2.add(("0",null))
+
+    //13936939565[["12000002","亚洲旅游保"],["12000003","世界旅游保"],["12000005","zz旅游保"],["12000006","旅游保"],["0","2019-4-7"],["0011","雇主"],["0022","骑士"],["0033","大货车"]]
     val zzz = JSON.toJSONString(res2,SerializerFeature.BeanToArray)
-    val value: AnyRef = JSON.parseArray(zzz).getJSONArray(JSON.parseArray(zzz).size()-1).get(0)
+    val res3 = res2.fluentAddAll(JSON.parseArray(jsonStringNew)).toArray.distinct
+    println ("13936939565"+JSON.toJSONString (res3, SerializerFeature.BeanToArray))
+//    val value: AnyRef = JSON.parseArray(zzz).getJSONArray(JSON.parseArray(zzz).size()-1).get(0)
     println()
-    println(zzz)
+    println("2313")
 
 
     val zz = new util.ArrayList[(String, String)]

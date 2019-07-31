@@ -1,4 +1,4 @@
-package bzn.c_person.centinfo
+package c_person.centinfo
 
 import java.sql.Timestamp
 import java.util
@@ -20,11 +20,11 @@ import scala.math.BigDecimal.RoundingMode
   * Time:13:39
   * describe: c端核心标签清洗
   **/
-object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
+object CPersonCenInfoInc extends SparkUtil with Until with HbaseUtil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
@@ -54,6 +54,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       .toDF("cert_no","cus_type","new_cus_buy_cun","new_cus_insured_cun","new_cus_sum_premium","policy_cun","policy_insured_cun",
         "policy_premium","premium_avg","last_policy_end_date","cus_source","latent_product_info","last_cus_type","become_curr_cus_time")
       .where("cus_type in ('0','1','2','3','4','5')")
+      .cache()
 
     getIncCPersonCenInfoDetail(hbaseData,sc,hiveContext)
 
@@ -189,78 +190,92 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       .selectExpr("policy_id","first_premium","sum_premium","product_code","product_name","policy_start_date","policy_end_date","holder_cert_no",
         "channel_name","insure_company_name","sku_coverage","pay_way")
 
-    /**
-      * 新客阶段和老客阶段的部分数据
-      * 证件号，当前客户类型的时间，首次投保时间，首次投保产品，首次投保产品code，首次投保保额，首次投保保费，首次投保来源，首次投保支付方式
-      * 首次投保保险公司 首次投保省份  首次投保城市  首次投保城市级别  首次投保区间
-      * 老客阶段--成为老客的时间
-      */
-    getNewInfoDate(sqlContext,policyHolderData,hbaseData)
-
-    /**
-      * 新客阶段和老了阶段累计参保次数
-      */
-    getInsuredCount(sqlContext,odsPolicyInsuredDetail,policyHolderData,hbaseData,odsPolicyInsuredSlaveDetail:DataFrame)
-
-    /**
-      * 新客阶段和老了阶段累计贡献保费和累计购买次数和件均保费 以及新客阶段购买次数和贡献保费
-      */
-    getBuysAndPremiums(sqlContext,policyHolderData,hbaseData)
-
-    /**
-      * 累计出险次数,累计赔付保费
-      */
-    getPrePremiumAndRiskCount(sqlContext,odsClaimsDetail)
-
-    /**
-      * 最后一次投保产品code  最后一次投保产品名称 当前居住省份 当前居住城市  最后一次投保时间
-      */
-    getLastStartDateInfo(sqlContext,policyHolderData)
-
-    /**
-      * 保险止期
-      */
-    getPolicyEndDate(sqlContext,policyHolderData,hbaseData)
-
-    /**
-      * 拒赔案件数,撤案案件数
-      */
-    getRrejectClaimCunAndWithdrawClaimCun(sqlContext,odsClaimsDetail)
-
-    /**
-      * 当前职业名称（被保人）[工种]  当前所在单位名称当前  职业风险等级
-      */
-    getInsuredProfessionInfo(sqlContext,dwPolicyDetailInc,odsPolicyInsuredDetail,odsWorktypeDimension)
-
-    /**
-      * 近90天购买次数 近90天贡献保费 近90天件均保费
-      */
-    getNintyDaysInfo(sqlContext,policyHolderDataAll)
-
-    /**
-      * 最后一次投保距今天的天数
-      */
-    getLastPolicyDisTodayDays(sqlContext,policyHolderDataAll)
-
-    /**
-      * 第一次投保至今天数
-      */
-    getFirstPolicyDisTodayDays(sqlContext,policyHolderDataAll)
-
-    /**
-      * 当前生效报单数
-      */
-    getEffectPolicyCunInfo(sqlContext,policyHolderDataAll,odsPolicyDetail,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail)
-
-    /**
-      * 是否在保
-      */
-    getIsInsured(sqlContext,odsPolicyDetail,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail)
-
+//    /**
+//      * 新客阶段和老客阶段的部分数据
+//      * 证件号，当前客户类型的时间，首次投保时间，首次投保产品，首次投保产品code，首次投保保额，首次投保保费，首次投保来源，首次投保支付方式
+//      * 首次投保保险公司 首次投保省份  首次投保城市  首次投保城市级别  首次投保区间
+//      * 老客阶段--成为老客的时间
+//      */
+//    getNewInfoDate(sqlContext,policyHolderData,hbaseData)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getNewInfoDate")
+//
+//    /**
+//      * 新客阶段和老了阶段累计参保次数
+//      */
+//    getInsuredCount(sqlContext,odsPolicyInsuredDetail,policyHolderData,hbaseData,odsPolicyInsuredSlaveDetail:DataFrame)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getInsuredCount")
+//
+//    /**
+//      * 新客阶段和老了阶段累计贡献保费和累计购买次数和件均保费 以及新客阶段购买次数和贡献保费
+//      */
+//    getBuysAndPremiums(sqlContext,policyHolderData,hbaseData)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getBuysAndPremiums")
+//
+//    /**
+//      * 累计出险次数,累计赔付保费
+//      */
+//    getPrePremiumAndRiskCount(sqlContext,odsClaimsDetail)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getPrePremiumAndRiskCount")
+//
+//    /**
+//      * 最后一次投保产品code  最后一次投保产品名称 当前居住省份 当前居住城市  最后一次投保时间
+//      */
+//    getLastStartDateInfo(sqlContext,policyHolderData)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getLastStartDateInfo")
+//
+//    /**
+//      * 保险止期
+//      */
+//    getPolicyEndDate(sqlContext,policyHolderData,hbaseData)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getPolicyEndDate")
+//
+//    /**
+//      * 拒赔案件数,撤案案件数
+//      */
+//    getRrejectClaimCunAndWithdrawClaimCun(sqlContext,odsClaimsDetail)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getRrejectClaimCunAndWithdrawClaimCun")
+//
+//    /**
+//      * 当前职业名称（被保人）[工种]  当前所在单位名称当前  职业风险等级
+//      */
+//    getInsuredProfessionInfo(sqlContext,dwPolicyDetailInc,odsPolicyInsuredDetail,odsWorktypeDimension)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getInsuredProfessionInfo")
+//
+//    /**
+//      * 近90天购买次数 近90天贡献保费 近90天件均保费
+//      */
+//    getNintyDaysInfo(sqlContext,policyHolderDataAll)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getNintyDaysInfo")
+//
+//    /**
+//      * 最后一次投保距今天的天数
+//      */
+//    getLastPolicyDisTodayDays(sqlContext,policyHolderDataAll)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getLastPolicyDisTodayDays")
+//
+//    /**
+//      * 第一次投保至今天数
+//      */
+//    getFirstPolicyDisTodayDays(sqlContext,policyHolderDataAll)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getFirstPolicyDisTodayDays")
+//
+//    /**
+//      * 当前生效报单数
+//      */
+//    getEffectPolicyCunInfo(sqlContext,policyHolderDataAll,odsPolicyDetail,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getEffectPolicyCunInfo")
+//
+//    /**
+//      * 是否在保
+//      */
+//    getIsInsured(sqlContext,odsPolicyDetail,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail)
+//      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getIsInsured")
+//
     /**
       * 是否参保 客户来源 参保的所有产品名称和产品code
       */
     getJoinAndSouceAndProductInfo(sqlContext,dwPolicyDetailInc,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail,hbaseData)
+      .rdd.repartition(1).saveAsTextFile("/xing/data/2019-7-31/getJoinAndSouceAndProductInfo")
   }
 
   /**
@@ -365,7 +380,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
           */
         if(cusSourceAll != null){
           if(cusSource != null){
-            val jsonTemp = JSON.parseArray(cusSourceAll).fluentAddAll(JSON.parseArray(cusSource)).toArray.toSet.toArray
+            val jsonTemp = JSON.parseArray(cusSourceAll).fluentAddAll(JSON.parseArray(cusSource)).toArray().toSet.toArray
             cusSource = JSON.toJSONString(jsonTemp,SerializerFeature.BeanToArray)
           }else{
             cusSource = cusSourceAll
@@ -385,7 +400,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         (allCertNo,cusSource,latentProductInfo,isJoinPolicy)
       })
       .toDF("cert_no","cus_source","latent_product_info","is_join_policy")
-    res.printSchema()
     res
   }
 
@@ -436,7 +450,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       })
       .reduceByKey((x1, x2) => {
         val isInsuredCount = x1 + x2 //在保数 如果在保数》0 说明又在保的保单
-        (isInsuredCount)
+        isInsuredCount
       })
       .map(x => {
         if (x._2 > 0) {
@@ -446,7 +460,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         }
       })
       .toDF("cert_no","is_insured")
-    res.printSchema()
     res
   }
 
@@ -493,7 +506,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       .reduceByKey(_ + _)
       .map(x => (x._1, x._2))
       .toDF("all_cert_no", "effect_policy_cun")
-    effectPolicyCun.printSchema()
     effectPolicyCun
   }
 
@@ -535,7 +547,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         }
       })
       .toDF("holder_cert_no","last_policy_days")
-    newResOne.printSchema()
     newResOne
   }
 
@@ -576,7 +587,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         }
       })
       .toDF("holder_cert_no","last_policy_days")
-    newResOne.printSchema()
     newResOne
   }
 
@@ -617,7 +627,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       })
       .map(x => (x._1, x._2._1, x._2._2, BigDecimal.valueOf(x._2._1 / x._2._2).setScale(4, RoundingMode.HALF_UP).doubleValue()))
       .toDF("cert_no", "ninety_policy_premium", "ninety_policy_cun", "ninety_premium_avg")
-    newResTwo.printSchema()
     newResTwo
   }
 
@@ -665,7 +674,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         (x._1,x._2._2,x._2._3,x._2._4)
       })
       .toDF("cert_no","now_profession_name","now_company_name","now_profession_risk_level")
-    res.printSchema()
     res
   }
 
@@ -758,7 +766,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       })
       .toDF("cert_no","new_cus_sum_premium","new_cus_buy_cun","policy_premium","policy_cun","premium_avg")
 
-    hbaseBuysAndPremoums.printSchema()
     hbaseBuysAndPremoums
   }
 
@@ -824,7 +831,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       })
       .toDF("cert_no","policy_insured_cun","new_cus_insured_cun")
 
-    hbaseInsuredCount.printSchema()
     hbaseInsuredCount
   }
 
@@ -903,7 +909,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         "case when cert_no is null or cus_type = '0' then concat(cast(policy_start_date as string),'-',cast(policy_end_date as string)) end as first_policy_section"
       )
 
-    incHolderNewInfoTemp.printSchema()
     incHolderNewInfoTemp
   }
 
@@ -944,10 +949,8 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         })
         .map(x => (x._1, x._2._1, x._2._2))
         .toDF("risk_cert_no", "pre_premium_sum", "risk_cun")
-    claimOne.printSchema()
     claimOne
   }
-
   /**
     * 最后一次投保产品code  最后一次投保产品名称 当前居住省份 当前居住城市  最后一次投保时间
     * @param sqlContext sql上下文
@@ -986,7 +989,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         (x._1,x._2._1,x._2._2,x._2._3,x._2._4,x._2._5)
       })
       .toDF("cert_no","last_policy_product_code","last_policy_product_name","now_province","now_city","last_policy_date")
-    res.printSchema()
+
     res
   }
 
@@ -1028,7 +1031,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         (holderCertNo,lastPlicyEndDate)
       })
       .toDF("cert_no","last_policy_end_date")
-    res.printSchema()
     res
   }
   /**
@@ -1070,7 +1072,6 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       .toDF("risk_cert_no", "reject_claim_cun", "withdraw_claim_cun")
       .selectExpr("risk_cert_no", "case when reject_claim_cun = -1 then null else reject_claim_cun end as reject_claim_cun",
         "case when withdraw_claim_cun = -1 then null else withdraw_claim_cun end as withdraw_claim_cun")
-    claimTwo.printSchema()
     claimTwo
   }
 }
