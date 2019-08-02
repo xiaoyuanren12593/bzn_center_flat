@@ -125,9 +125,24 @@ object CPersonHighInfoCusTypeTest extends SparkUtil with Until with HbaseUtil{
       *  客户类型 是否是挽回客户 是否是被唤醒客户 挽回时长  唤醒时长 原客户类型
       */
     getNewInfo(sqlContext,dwPolicyDetailInc,policyHolderData,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail,hbaseData)
+    /**
+      * 客户类型 变成当前客户类型的时间  原客户类型
+      */
     getOldInfo(sqlContext,dwPolicyDetailInc,odsPolicyDetail,policyHolderData,odsPolicyInsuredDetail,odsPolicyInsuredSlaveDetail,odsHolderDetail,hbaseData)
   }
 
+  /**
+    * 客户类型 变成当前客户类型的时间  原客户类型
+    * @param sqlContext sql上下文
+    * @param dwPolicyDetailInc 增量的保单信息
+    * @param odsPolicyDetail 总保单信息
+    * @param policyHolderData 投保保单信息和投保人信息
+    * @param odsPolicyInsuredDetail 被保人信息
+    * @param odsPolicyInsuredSlaveDetail 从被保人信息
+    * @param odsHolderDetail 投保人信息
+    * @param hbaseData hbase data
+    * @return 返回值
+    */
   def getOldInfo(sqlContext:HiveContext,dwPolicyDetailInc:DataFrame,odsPolicyDetail:DataFrame,policyHolderData:DataFrame,odsPolicyInsuredDetail:DataFrame,
     odsPolicyInsuredSlaveDetail:DataFrame,odsHolderDetail:DataFrame,hbaseData:DataFrame) ={
 
@@ -194,13 +209,13 @@ object CPersonHighInfoCusTypeTest extends SparkUtil with Until with HbaseUtil{
       */
     val incHolderResult = holdInfo.join(incHolderRes,holdInfo("cert_no")===incHolderRes("holder_cert_no"),"leftouter")
       .where("holder_cert_no is null")
-      .selectExpr("holder_cert_no","policy_new_start_date","policy_start_date","policy_end_date")
+      .selectExpr("cert_no as cert_no_inc","policy_new_start_date","policy_start_date","policy_end_date")
 
     /**
       * 标签数据和投保人数据进行关联
       */
     val currTime = getNowTime()
-    val res = incHolderResult.join(hbaseData,incHolderResult("holder_cert_no")===hbaseData("cert_no"))
+    val res = incHolderResult.join(hbaseData,incHolderResult("cert_no_inc")===hbaseData("cert_no"))
       .selectExpr("cert_no","cus_type","become_old_time","become_curr_cus_time","policy_new_start_date","policy_start_date","policy_end_date","last_cus_type")
       .map(x => {
         val certNo = x.getAs[String]("cert_no")
@@ -375,6 +390,8 @@ object CPersonHighInfoCusTypeTest extends SparkUtil with Until with HbaseUtil{
         val lastCusType = x.getAs[String]("last_cus_type")
         var becomeCurrCusTime = x.getAs[String]("become_curr_cus_time")
         val lastCusTypeRes =  JSON.parseArray(lastCusType)
+        //空的集合
+        val arrayList = new util.ArrayList[(String, String)]
         //是否是被挽回客户
         var is_redeem = ""
         //是否是被唤醒客户
@@ -387,7 +404,16 @@ object CPersonHighInfoCusTypeTest extends SparkUtil with Until with HbaseUtil{
         if(certNo  !=  null){
           if(cusType == "0"){ //从潜在客户变成新客
             cusType = "1"
-            lastCusTypeRes.add(("0",null))
+            if(lastCusTypeRes == null){
+              arrayList.add(("0",null))
+            }else{
+              lastCusTypeRes.add(("0",null))
+            }
+            becomeCurrCusTime = timeSubstring(nowTime)
+            is_redeem = null
+            is_awaken = null
+            redeem_time = null
+            awaken_time = null
           }
           if(cusType == "3" || cusType == "4" || cusType == "5"){  //如果是易流失或者流失或者沉睡重新投保单 则变成老客  并且是回归客户
             lastCusTypeRes.add((cusType,becomeCurrCusTime))
@@ -410,8 +436,18 @@ object CPersonHighInfoCusTypeTest extends SparkUtil with Until with HbaseUtil{
           }
         }else{
           cusType = "1"
+          becomeCurrCusTime = timeSubstring(nowTime)
+          arrayList.add(("1",becomeCurrCusTime))
+          is_redeem = null
+          redeem_time = null
+          is_awaken = null
+          awaken_time = null
         }
-        val jsonString = JSON.toJSONString(lastCusTypeRes, SerializerFeature.BeanToArray)
+        val jsonString = if(!arrayList.isEmpty){
+          JSON.toJSONString(arrayList, SerializerFeature.BeanToArray)
+        }else{
+          JSON.toJSONString(lastCusTypeRes, SerializerFeature.BeanToArray)
+        }
         (holderCertNo,cusType,jsonString,becomeCurrCusTime,is_redeem,is_awaken,redeem_time,awaken_time)
       })
       .toDF("cert_no","cus_type","last_cus_type","become_curr_cus_time","is_redeem","is_awaken","redeem_time","awaken_time")
