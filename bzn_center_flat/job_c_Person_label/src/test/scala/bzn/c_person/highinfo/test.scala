@@ -52,6 +52,12 @@ object test extends SparkUtil with Until{
     if(arrayList.isEmpty){
       println("isEmpty")
     }
+
+    val columnFamily1 = "base_info"
+    val column = "cus_type"
+    val stagingFolder = s"/hbasehfile/$columnFamily1/$column"
+    println(stagingFolder)
+
   }
 
   /**

@@ -132,9 +132,9 @@ trait HbaseUtil {
   }
 
   //将hfile存到Hbase中
-  def saveToHbase(result: RDD[(String, String, String)], columnFamily1: String,
+  def saveToHbase(result: RDD[(String, String, String)], columnFamily1: String,column:String,
                   conf_fs: Configuration, tableName: String, conf: Configuration): Unit = {
-    val stagingFolder = s"/hbasehfile/$columnFamily1"
+    val stagingFolder = s"/hbasehfile/$columnFamily1/$column"
     //创建hbase的链接,利用默认的配置文件,实际上读取的hbase的master地址
     val hdfs = FileSystem.get(conf_fs)
     val path = new Path(stagingFolder)
@@ -240,7 +240,7 @@ trait HbaseUtil {
       .filter(x => x._2 != null && x._2 != "")
       .map(x => (x._1,x._2.toString,x._3))
 
-      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+      saveToHbase(hbaseRDD, columnFamily,x, conf_fs, tableName, conf)
     })
   }
 

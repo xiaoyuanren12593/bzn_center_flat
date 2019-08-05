@@ -402,7 +402,7 @@ object CPersonInterfaceInfoOptimizeTest extends SparkUtil with Until with HbaseU
         .filter(x => x._2 != null && x._2 != "")
         .map(x => (x._1,x._2.toString,x._3))
 
-      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+      saveToHbase(hbaseRDD, columnFamily,x,conf_fs, tableName, conf)
     })
   }
 

@@ -58,6 +58,7 @@ object CPersonHighInfoCusType extends SparkUtil with Until with HbaseUtil{
       })
       .toDF("cert_no","cus_type","last_cus_type","become_old_time","become_curr_cus_time")
       .where("cus_type in ('0','1','2','3','4','5')")
+      .cache()
     getAllInfo(hiveContext,hbaseData)
     sc.stop()
   }
