@@ -1,9 +1,9 @@
 package bzn.c_person.interfaceinfo
 
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util
-import java.util.Date
-import java.util.Collection
+import java.util.{Calendar, Collection, Date}
 
 import bzn.job.common.Until
 
@@ -31,6 +31,22 @@ object test extends Until{
     val res: String = rideTimeStep(mutable.ListBuffer[(String, String, String, String, String)](("1", "1", "01", "1", "1")))
     println("res" + res)
 
+    println("------------------------")
+    val sdf2: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val dat = sdf2.format(getNintyDaysAgo())
+    println(dat)
+
+  }
+
+  def getNintyDaysAgo(): Timestamp = {
+    val date_time = "2019-07-18 09:54:05"
+    val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sdf.parse(date_time)
+    val c: Calendar = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, -90)
+    val newDate: Date = c.getTime
+    Timestamp.valueOf(sdf.format(newDate))
   }
 
 }

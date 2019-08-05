@@ -48,8 +48,11 @@ object CPersonBaseInfo extends SparkUtil with Until {
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.base_label")
 
 //    写入hbase
-
-    toHBase2(result, "label_person", "base_info")
+//    toHBase2(result, "label_person", "base_info")
+    toHBase2(certInfo, "label_person", "base_info")
+    toHBase2(telInfo, "label_person", "base_info")
+    toHBase2(habitInfo, "label_person", "base_info")
+    toHBase2(childInfo, "label_person", "base_info")
 
     sc.stop()
 
@@ -319,13 +322,21 @@ object CPersonBaseInfo extends SparkUtil with Until {
     /**
       * 从保单表获取保单号与产品信息
       */
-    val productInfo: DataFrame = hiveContext.sql("select policy_id, product_name from odsdb.ods_policy_detail")
+    val productInfo: DataFrame = hiveContext.sql("select policy_id, product_code from odsdb.ods_policy_detail")
       .where("length(policy_id) > 0")
-      .selectExpr("policy_id as policy_id_temp", "product_name")
+      .selectExpr("policy_id as policy_id_temp", "product_code")
+
+    /**
+      * 从产品表读取产品code和name
+      */
+    val proInfo: DataFrame = hiveContext.sql("select product_code, product_name from odsdb.ods_product_detail")
+      .selectExpr("product_code as product", "product_name")
+
 
     //    将产品表与被保险人表关联
     val habitJoin: DataFrame = productInfo
       .join(insuredInfo, productInfo("policy_id_temp") === insuredInfo("policy_id"))
+      .join(proInfo, productInfo("product_code") === proInfo("product"), "leftouter")
       .selectExpr("base_cert_no", "product_name")
 
     //    计算每个被保险人的爱好
@@ -402,32 +413,18 @@ object CPersonBaseInfo extends SparkUtil with Until {
         //        结果
         (insuredCertNo, slaveCertNo)
       })
-      .groupByKey()
-      .map((value: (String, Iterable[String])) => {
-        val insuredCertNo: String = value._1
-        //        定义计数器
-        var count: Int = 0
-        //        定义Json
-        var childAge: JSONObject = new JSONObject()
-        var childAttendSch: JSONObject = new JSONObject()
-        //        读取并计算数据
-        val childernCertNo = value._2.toArray.distinct
-        count = childernCertNo.size
-        for (childCertNo <- childernCertNo) {
-          val time: Date = new Date()
-          val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-          //          计算两个字段
-          val age: String = getAgeFromBirthTime(childCertNo, sdf.format(time)).toString
-          val isAttendSch: String = isAttendSchool(age)
-          //          写入Json
-          childAge.put(childCertNo, age)
-          childAttendSch.put(childCertNo, isAttendSch)
-        }
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        (List: ListBuffer[String], value: String) => List += value,
+        (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
+      )
+      .map(line => {
+        val holderCertNo: String = line._1
+        val baseChild: String = line._2.mkString(",")
         //        结果
-        (insuredCertNo, count.toString, childAge.toString, childAttendSch.toString)
-
+        (holderCertNo, baseChild)
       })
-      .toDF("base_cert_no", "base_child_cun", "base_child_age", "base_child_attend_sch")
+      .filter(line => line._2 != null)
+      .toDF("base_cert_no", "base_child")
 
     /**
       * 读取投保人hive表
@@ -463,55 +460,43 @@ object CPersonBaseInfo extends SparkUtil with Until {
         //        结果
         (holderCertNo, insuredCertNo)
       })
-      .groupByKey()
-      .map((value: (String, Iterable[String])) => {
-        val holderCertNo: String = value._1
-        //        定义计数器
-        var count: Int = 0
-        //        定义Json
-        var childAge: JSONObject = new JSONObject()
-        var childAttendSch: JSONObject = new JSONObject()
-        //        读取并计算数据
-        val childernCertNo = value._2.toArray.distinct
-        count = childernCertNo.size
-        for (childCertNo <- childernCertNo) {
-          val time: Date = new Date()
-          val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-          //          计算两个字段
-          val age: String = getAgeFromBirthTime(childCertNo, sdf.format(time)).toString
-          val isAttendSch: String = isAttendSchool(age)
-          //          写入Json
-          childAge.put(childCertNo, age)
-          childAttendSch.put(childCertNo, isAttendSch)
-        }
+      .aggregateByKey(mutable.ListBuffer[String]())(
+        (List: ListBuffer[String], value: String) => List += value,
+        (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
+      )
+      .map(line => {
+        val holderCertNo: String = line._1
+        val baseChild: String = line._2.mkString(",")
         //        结果
-        (holderCertNo, count.toString, childAge.toString, childAttendSch.toString)
-
+        (holderCertNo, baseChild)
       })
-      .toDF("base_cert_no", "base_child_cun", "base_child_age", "base_child_attend_sch")
+      .filter(line => line._2 != null)
+      .toDF("base_cert_no", "base_child")
 
-    val childernInfoRes: DataFrame = childrenInfoOne
+//    合并数据集
+    val childrenInfoRes: DataFrame = childrenInfoOne
       .unionAll(childrenInfoTwo)
       .map(line => {
-        //        身份证号
-        val baseCertNoTemp: String = line.getAs[String]("base_cert_no")
-        val baseCertNo: String = dropEmpty(baseCertNoTemp)
-        //        子女数量
-        val baseChildCunTemp: String = line.getAs[String]("base_child_cun")
-        val baseChildCun: String = dropEmpty(baseChildCunTemp)
-        //        子女年龄
-        val baseChildAgeTemp: String = line.getAs[String]("base_child_age")
-        val baseChildAge: String = dropEmpty(baseChildAgeTemp)
-        //        子女是否上学
-        val baseChildAttendSchTemp: String = line.getAs[String]("base_child_attend_sch")
-        val baseChildAttendSch: String = dropEmpty(baseChildAttendSchTemp)
-        //        结果
-        (baseCertNo, baseChildCun, baseChildAge, baseChildAttendSch)
+        val baseCertNo: String = line.getAs[String]("base_cert_no")
+        val baseChild: String = line.getAs[String]("base_child")
+        (baseCertNo, baseChild)
       })
+      .reduceByKey((str1, str2) => str1 + "," + str2)
+      .map(line => {
+        val baseCertNo: String = line._1
+        val baseChild: List[String] = line._2.split(",").toSet.toList
+        //        计算标签
+        val childCun: String = baseChild.size.toString
+        val childAge: String = getChildAge(baseChild).toString
+        val childAttendSch: String = getChildAttendSch(baseChild).toString
+        //        结果
+        (baseCertNo, childCun, childAge, childAttendSch)
+      })
+
       .toDF("base_cert_no", "base_child_cun", "base_child_age", "base_child_attend_sch")
 
     //    结果
-    childernInfoRes
+    childrenInfoRes
 
   }
 
@@ -545,6 +530,40 @@ object CPersonBaseInfo extends SparkUtil with Until {
     //    结果
     result
 
+  }
+
+  /**
+    * 获得子女年龄
+    * @param list
+    * @return
+    */
+  def getChildAge(list: List[String]): JSONObject = {
+    val childAge: JSONObject = new JSONObject()
+    for (l <- list) {
+      val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      val age: String = getAgeFromBirthTime(l, sdf.format(new Date())).toString
+      childAge.put(l, age)
+    }
+    childAge
+  }
+
+  /**
+    * 获取子女是否上学
+    * @param list
+    * @return
+    */
+  def getChildAttendSch(list: List[String]): JSONObject = {
+    val childAttendSch: JSONObject = new JSONObject()
+    for (l <- list) {
+      val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      val age: Int = getAgeFromBirthTime(l, sdf.format(new Date()))
+      if (age >= 6 && age <= 15) {
+        childAttendSch.put(l, "上学")
+      } else {
+        childAttendSch.put(l, "未上学")
+      }
+    }
+    childAttendSch
   }
 
   /**

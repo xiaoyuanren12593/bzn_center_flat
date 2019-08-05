@@ -5,6 +5,9 @@ import java.util
 import com.alibaba.fastjson.serializer.SerializerFeature
 import com.alibaba.fastjson.{JSON, JSONArray, JSONObject}
 
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+
 object test {
 
   def main(args: Array[String]): Unit = {
@@ -42,8 +45,36 @@ object test {
     val string: String = "[{\"base_tel_name\":\"18611428597\",\"base_tel_operator\":\"联通\",\"base_tel_city\":\"北京\",\"base_tel_province\":\"北京\"}, {\"base_tel_name\":\"18611428597\",\"base_tel_operator\":\"联通\",\"base_tel_city\":\"北京\",\"base_tel_province\":\"北京\"}]"
 //    val res: Array[Map[String, String]] = parse(string)
     val res: Array[JSONObject] = parse(string)
-    res.map(x => x.get("base_te")).foreach(println)
+    val listBuffer: ListBuffer[String] = ListBuffer[(String)]()
+    println(res(0).get("base"))
+    listBuffer += (("1"))
+    listBuffer += ("2")
+    println(listBuffer.mkString("   "))
 
+    println("---------------------------------")
+
+    val str: String = "{\"游泳\":\"1\",\"篮球\":\"1\"}"
+    val sss = JSON.parseObject(str)
+    println(sss.get("游泳"))
+
+    println("---------------------------------")
+    val jsonf: JSONObject = new JSONObject()
+    jsonf.put("游泳", "1")
+    println(jsonf.toString)
+    jsonf.put("游泳", "2")
+    println(jsonf.toString)
+    jsonf.put("游泳", "0")
+    println(jsonf.toString)
+    jsonf.put("游泳", "cnm")
+    println(jsonf.toString)
+
+    println("---------------------------------")
+    println("---------------------------------")
+    val listd: ListBuffer[String] = mutable.ListBuffer[String]()
+    listd += "sjq"
+    listd += "lyj"
+    listd += "jyl"
+    println(listd.mkString(","))
 
 
   }

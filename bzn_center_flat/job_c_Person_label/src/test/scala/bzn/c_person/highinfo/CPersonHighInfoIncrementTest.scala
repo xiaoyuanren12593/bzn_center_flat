@@ -1,90 +1,43 @@
-package c_person.highinfo
+package bzn.c_person.highinfo
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
+import bzn.c_person.util.SparkUtil
 import bzn.job.common.{HbaseUtil, Until}
-import c_person.util.SparkUtil
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SaveMode}
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.hive.HiveContext
 
 /**
   * author:sangJiaQI
-  * Date:2019/7/30
+  * Date:2019/8/5
   * describe: 高级标签部分
   */
-object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
+object CPersonHighInfoIncrementTest extends SparkUtil with Until with HbaseUtil {
 
   def main(args: Array[String]): Unit = {
 
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf = sparkConfInfo(appName, "")
+    val sparkConf = sparkConfInfo(appName, "local[*]")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
 
-    //    清洗标签
-    val certNoInfo: DataFrame = getCertNoInfo(hiveContext)
-    val sportRateInfo: DataFrame = getSportRateInfo(hiveContext)
-    val travelInfo: DataFrame = getTravelInfo(hiveContext)
-    val perceiveInfo: DataFrame = getPerceiveInfo(hiveContext)
+//    更新数据
+    val peopleInfo: DataFrame = newPolicyId(hiveContext)
 
-    //    合并表
-    val result: DataFrame = getUnion(hiveContext, certNoInfo, sportRateInfo, travelInfo, perceiveInfo)
-
-    //    写到hive中
-    result.write.mode(SaveMode.Overwrite).saveAsTable("label.high_label")
-
-//    写到hbase里
-    toHBase2(result, "label_person", "high_info")
+    updateSportRateInfo(hiveContext)
+    updateTravelInfo(hiveContext)
+    updatePerceiveInfo(hiveContext, peopleInfo)
 
     sc.stop()
-
-  }
-
-  /**
-    * 获得全部身份证号
-    * @param hiveContext
-    * @return 证件号DataFrame
-    */
-  def getCertNoInfo(hiveContext: HiveContext): DataFrame = {
-    import hiveContext.implicits._
-
-    /**
-      * 读取被保险人Master的hive表
-      */
-    val insuredInfo: DataFrame = hiveContext.sql("select insured_cert_no, insured_cert_type from odsdb.ods_policy_insured_detail")
-      .where("insured_cert_type = '1' and length(insured_cert_no) = 18")
-      .selectExpr("insured_cert_no as high_cert_no")
-
-    /**
-      * 读取被保人Slave的hive表
-      */
-    val slaveInfo: DataFrame = hiveContext.sql("select slave_cert_no, slave_cert_type from odsdb.ods_policy_insured_slave_detail")
-      .where("slave_cert_type = '1' and length(slave_cert_no) = 18")
-      .selectExpr("slave_cert_no as high_cert_no")
-
-    /**
-      * 读取投保人的hive表
-      */
-    val holderInfo: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type from odsdb.ods_holder_detail")
-      .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
-      .selectExpr("holder_cert_no as high_cert_no")
-
-    //    获得全部身份信息
-    val peopleInfo: DataFrame = insuredInfo
-      .unionAll(slaveInfo)
-      .unionAll(holderInfo)
-      .dropDuplicates(Array("high_cert_no"))
-      .filter(!$"high_cert_no".contains("*"))
-
-    //    结果
-    peopleInfo
 
   }
 
@@ -93,7 +46,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     * @param hiveContext
     * @return 体育频率表
     */
-  def getSportRateInfo(hiveContext: HiveContext): DataFrame = {
+  def updateSportRateInfo(hiveContext: HiveContext): Unit = {
     import hiveContext.implicits._
 
     /**
@@ -121,7 +74,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       .join(policyInfo, insuredInfo("policy_id") === policyInfo("policy_id_temp"))
       .selectExpr("high_cert_no", "start_date", "update_time", "product_code")
 
-    val sparkInfo: DataFrame = sportInfoJoin
+    val sportInfo: DataFrame = sportInfoJoin
       .join(productInfo, sportInfoJoin("product_code") === productInfo("product_code_temp"), "leftouter")
       .selectExpr("high_cert_no", "start_date", "update_time", "one_level")
       .map(line => {
@@ -143,8 +96,8 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       .toDF("high_cert_no", "sports_rate")
 
     //    结果
-    sparkInfo
-
+//    toHBase2(sportInfo, "label_person", "high_info")
+    sportInfo.show()
   }
 
   /**
@@ -152,7 +105,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     * @param hiveContext
     * @return 获得旅游表
     */
-  def getTravelInfo(hiveContext: HiveContext): DataFrame = {
+  def updateTravelInfo(hiveContext: HiveContext): Unit = {
     import hiveContext.implicits._
 
     /**
@@ -191,34 +144,36 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
           (line._4 == "12000001" || line._4 == "12000002" || line._4 == "12000003" || line._4 == "P00001647" || line._4 == "P00001678" || line._4 == "F201700001")
       })
       .map(line => (line._1, 1))
-      .groupByKey()
+      .reduceByKey(_ + _)
       .map(line => {
         val highCertNo: String = line._1
-        val value: String = if (line._2.toArray.length >= 2) "是" else null
+        val num: Int = line._2
+        val value: String = if (num >= 2) "是" else null
         //        返回结果
         (highCertNo, value)
       })
+      .filter(line => line._2 != null)
       .toDF("high_cert_no", "love_travel")
 
     //    结果
-    travelInfo
-
+//    toHBase2(travelInfo, "label_person", "high_info")
+    travelInfo.show()
   }
 
   /**
-    * 获得有感知的人
+    * 更新是否感知标签
     * @param hiveContext
-    * @return 有感知人的表
+    * @param peopleInfo
     */
-  def getPerceiveInfo(hiveContext: HiveContext): DataFrame = {
+  def updatePerceiveInfo(hiveContext: HiveContext, peopleInfo: DataFrame): Unit = {
     import hiveContext.implicits._
 
     /**
       * 读取投保人的hive表
       */
-    val holderInfo: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type from odsdb.ods_holder_detail")
+    val holderInfo: DataFrame = hiveContext.sql("select holder_cert_no, holder_cert_type, policy_id from odsdb.ods_holder_detail")
       .where("holder_cert_type = 1 and length(holder_cert_no) = 18")
-      .selectExpr("holder_cert_no as high_cert_no")
+      .selectExpr("holder_cert_no as high_cert_no", "policy_id")
 
     /**
       * 读取理赔的hive表
@@ -227,8 +182,10 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       .where("(risk_cert_no) = 18")
       .selectExpr("risk_cert_no as high_cert_no")
 
-    //    获得感知标签
+//    合并新的投保人和理赔表
     val perceiveInfo: DataFrame = holderInfo
+      .join(peopleInfo, holderInfo("policy_id") === peopleInfo("policy_id_temp"))
+      .selectExpr("high_cert_no")
       .unionAll(claimInfo)
       .dropDuplicates(Array("high_cert_no"))
       .map(line => {
@@ -239,40 +196,38 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       })
       .toDF("high_cert_no", "is_perceive")
 
-    //    结果
-    perceiveInfo
-
+//    结果
+//    toHBase2(perceiveInfo, "label_person", "high_info")
+    perceiveInfo.show()
   }
 
+
   /**
-    * 合并表格
+    * 读取hive中新增保单的policy_id
     * @param hiveContext
-    * @param certNoInfo
-    * @param sportRateInfo
-    * @param travelInfo
-    * @param perceiveInfo
     * @return
     */
-  def getUnion(hiveContext: HiveContext, certNoInfo: DataFrame, sportRateInfo: DataFrame, travelInfo: DataFrame, perceiveInfo: DataFrame): DataFrame = {
+  def newPolicyId(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
+    hiveContext.udf.register("getEmptyString", () => "")
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
+    hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
+      val data = df.format(new Date())// new Date()为获取当前系统时间
+      (data + "")
+    })
 
-    val sportRateInfos: DataFrame = sportRateInfo.withColumnRenamed("high_cert_no", "sport_cert_no")
+    /**
+      * 读取hive中新增保单表
+      */
+    val PolicyId: DataFrame = hiveContext.sql("select policy_id, inc_type from dwdb.dw_policy_detail_inc")
+      .where("inc_type = 0")
+      .where("policy_id = '336044475333873664'")
+      .selectExpr("policy_id as policy_id_temp")
 
-    val travelInfos: DataFrame = travelInfo.withColumnRenamed("high_cert_no", "travel_cert_no")
-
-    val perceiveInfos: DataFrame = perceiveInfo.withColumnRenamed("high_cert_no", "perceive_cert_no")
-
-    //    关联表
-    val result: DataFrame = certNoInfo
-      .join(sportRateInfos, certNoInfo("high_cert_no") === sportRateInfos("sport_cert_no"), "leftouter")
-      .join(travelInfos, certNoInfo("high_cert_no") === travelInfos("travel_cert_no"), "leftouter")
-      .join(perceiveInfos, certNoInfo("high_cert_no") === perceiveInfos("perceive_cert_no"), "leftouter")
-      .selectExpr("high_cert_no", "dropEmptys(sports_rate) as sports_rate", "dropEmptys(love_travel) as love_travel",
-        "dropEmptys(is_perceive) as is_perceive")
-
-    //    结果
-    result
+    //    新增保单号
+    PolicyId
 
   }
 

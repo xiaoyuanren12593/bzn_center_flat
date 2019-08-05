@@ -51,8 +51,11 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
 
     val allData: DataFrame = unionAll(hiveContext, certInfo, coxcombry, wedding, ride, onlineCar, partTimeNums, house, amplitudeFrequenter)
 
-//    写入hbase
+//    写入hive
     allData.write.mode(SaveMode.Overwrite).saveAsTable("label.other_high_label")
+
+//    写入hbase
+    toHBase2(allData, "label_person", "high_info")
 
     sc.stop()
 
@@ -615,9 +618,9 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     val cols: Array[String] = dataFrame.columns
     //    取不等于key的列循环
 
-    cols.filter(x => x != "base_cert_no").map(x => {
+    cols.filter(x => x != "high_cert_no").map(x => {
       val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
-        val certNo = rdd.getAs[String]("base_cert_no")
+        val certNo = rdd.getAs[String]("high_cert_no")
         val clo: Any = rdd.getAs[Any](x)
         //证件号，列值 列名
         (certNo,clo,x)
