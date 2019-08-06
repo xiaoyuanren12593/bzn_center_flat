@@ -44,6 +44,9 @@ object CPersonInterfaceInfo extends SparkUtil with Until with HbaseUtil{
     //    写到hive中
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.interface_label")
 
+//    写到hbase中
+    toHBase(result, "label_person_ofo_express_off_line", "base_info", "base_cert_no")
+
     sc.stop()
 
   }

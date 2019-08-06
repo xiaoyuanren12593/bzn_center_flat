@@ -19,6 +19,7 @@ trait SparkUtil {
   def sparkConfInfo(appName:String,exceType:String): (SparkConf, SparkContext, SQLContext, HiveContext) ={
     val conf = new SparkConf()
       .setAppName(appName)
+
     if(exceType != ""){
       conf.setMaster(exceType)
     }
@@ -26,8 +27,10 @@ trait SparkUtil {
     val sc = new SparkContext(conf)
 
     val sqlContest = new SQLContext(sc)
+    sqlContest.setConf("hive.exec.dynamic.partition.mode","nonstrict")
 
     val hiveContext = new HiveContext(sc)
+    hiveContext.setConf("hive.exec.dynamic.partition.mode","nonstrict")
 
     (conf,sc,sqlContest,hiveContext)
   }

@@ -1,27 +1,25 @@
-package bzn.c_person.interfaceinfo
+package c_person.interfaceinfo
 
 import java.sql.Timestamp
-import java.util
 import java.util.Properties
 
-import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
+import c_person.util.SparkUtil
 import com.alibaba.fastjson.JSONObject
 import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-object CPersonCertAndPhoneTest extends SparkUtil with Until {
+object CPersonCertAndPhone extends SparkUtil with Until {
 
   def main(args: Array[String]): Unit = {
 
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf = sparkConfInfo(appName, "local[*]")
+    val sparkConf = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
@@ -34,10 +32,10 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
     val result: DataFrame = rinseData(hiveContext, website, inter, other)
 
 //    保存到hive
-//    hiveContext.sql("truncate table ")
-//    result.repartition(10).write.mode(SaveMode.Append).format("parquet").partitionBy("source_type").saveAsTable()
-    result.printSchema()
+    hiveContext.sql("truncate table dwdb.dw_all_cert_no_and_mobile_detail")
+    result.repartition(50).write.mode(SaveMode.Append).format("parquet").partitionBy("source_type").saveAsTable("dwdb.dw_all_cert_no_and_mobile_detail")
 
+    sc.stop()
 
   }
 
@@ -165,7 +163,6 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
     * @return
     */
   def interInfo(hiveContext: HiveContext): DataFrame = {
-    import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     hiveContext.udf.register("ofo", () => "ofo")
@@ -232,7 +229,7 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
       "month > '2019-04-01' and month <= '2019-05-01'",
       "month > '2019-05-01' and month <= '2019-06-01'",
       "month > '2019-06-01' and month <= '2019-07-01'",
-      "month > '2019-07-01' and month <= '2019-08-01;",
+      "month > '2019-07-01' and month <= '2019-08-01'",
       "month > '2019-08-01'"
     )
 
@@ -351,8 +348,9 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
     */
   def getSource(list: mutable.ListBuffer[(String, String, String)]): String = {
 //    去空、去重
-    val set: Set[(String, String, String)] = list
+    val set: Set[String] = list
       .filter(value => (value._1 != null && value._3 != null))
+      .map(line => line._3)
       .toSet
     //    循环遍历
     set.mkString(":")
