@@ -148,7 +148,7 @@ object CPersonHighInfoNewTest extends SparkUtil with Until with HbaseUtil  {
           * 易流失
           * 如果不是在保保单 30天内无复购 - 易流失
           * 如果在保保单保障期间大于30 天  而且还与30天到期的 易流失 如果保障期间小30 30天内无复购 易流失
-          * * * 如果在保情况 使用最大的开始时间作为复购条件
+          * 如果在保情况 使用最大的开始时间作为复购条件
           */
         if(cusType == "2"){
           if(policyEndDate != null && policyStartDate != null ){

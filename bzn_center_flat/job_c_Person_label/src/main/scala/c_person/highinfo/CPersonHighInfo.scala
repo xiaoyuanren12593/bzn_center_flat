@@ -41,7 +41,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.high_label")
 
 //    写到hbase里
-    toHBase2(result, "label_person", "high_info")
+    toHBase(result, "label_person", "high_info", "high_cert_no")
 
     sc.stop()
 
@@ -329,7 +329,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
         .filter(x => x._2 != null && x._2 != "")
         .map(x => (x._1,x._2.toString,x._3))
 
-      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
+      saveToHbase(hbaseRDD, columnFamily,x, conf_fs, tableName, conf)
     })
   }
 

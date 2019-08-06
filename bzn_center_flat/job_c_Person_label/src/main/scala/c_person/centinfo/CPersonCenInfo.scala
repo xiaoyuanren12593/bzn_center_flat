@@ -133,15 +133,15 @@ object CPersonCenInfo extends SparkUtil with Until with HbaseUtil {
     val holderInfoNewDetailRes = HolderInfoNewDetail(sqlContext, holderPolicy, odsPolicyDetail, odsPolicyInsuredDetail,odsAreaInfoDimension)
 
 //    putByList(sc,holderInfoNewDetailRes,"label_person_test","cent_info",rowKeyName)
-//    toHBase(holderInfoNewDetailRes,tableName,columnFamily,rowKeyName)
+    toHBase(holderInfoNewDetailRes,tableName,columnFamily,rowKeyName)
 
     val holderInfoOldDetailRes = HolderInfoOldDetail(sqlContext, holderPolicy, odsPolicyDetail, odsPolicyInsuredDetail,odsAreaInfoDimension)
-//    toHBase(holderInfoOldDetailRes,tableName,columnFamily,rowKeyName)
+    toHBase(holderInfoOldDetailRes,tableName,columnFamily,rowKeyName)
 
 //    putByList(sc,holderInfoOldDetailRes,"label_person_test","cent_info",rowKeyName)
 
     val holderInfoEasyToLossDetailRes = HolderInfoEasyToLossDetail(sqlContext, holderPolicy, odsPolicyDetail, odsPolicyInsuredDetail)
-//    toHBase(holderInfoEasyToLossDetailRes,tableName,columnFamily,rowKeyName)
+    toHBase(holderInfoEasyToLossDetailRes,tableName,columnFamily,rowKeyName)
 
 //    putByList(sc,holderInfoEasyToLossDetailRes,"label_person_test","cent_info",rowKeyName)
 
@@ -153,7 +153,7 @@ object CPersonCenInfo extends SparkUtil with Until with HbaseUtil {
 
     val tatentInsuredInfoDetailRes = tatentInsuredInfoDetail(sqlContext, holderPolicy, odsPolicyDetail, odsPolicyInsuredDetail,
       odsPolicyInsuredSlaveDetail, certNos)
-//    toHBase(tatentInsuredInfoDetailRes,tableName,columnFamily,rowKeyName)
+    toHBase(tatentInsuredInfoDetailRes,tableName,columnFamily,rowKeyName)
 //    putByList(sc,tatentInsuredInfoDetailRes,"label_person_test","cent_info",rowKeyName)
 
   }

@@ -155,8 +155,7 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
         (certNo,cusType,becomeCurrCusTime,jsonString)
       })
       .toDF("cert_no","cus_type","become_curr_cus_time","last_cus_type")
-
-    res.cache()
+      .cache()
 
     val res1 = res.selectExpr("cert_no","cus_type")
     val  rowKeyName = "cert_no"
@@ -164,9 +163,7 @@ object CPersonHighInfoSleep extends SparkUtil with Until with HbaseUtil  {
     val  columnFamily1 = "cent_info"
     val  columnFamily2 = "high_info"
     putByList(sc,res1,tableName,columnFamily1,rowKeyName)
-    val res2 = res.selectExpr("cert_no","last_cus_type")
+    val res2 = res.selectExpr("cert_no","last_cus_type","become_curr_cus_time")
     putByList(sc,res2,tableName,columnFamily2,rowKeyName)
-    val res3 = res.selectExpr("cert_no","become_curr_cus_time")
-    putByList(sc,res3,tableName,columnFamily2,rowKeyName)
   }
 }

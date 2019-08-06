@@ -55,7 +55,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     allData.write.mode(SaveMode.Overwrite).saveAsTable("label.other_high_label")
 
 //    写入hbase
-    toHBase2(allData, "label_person", "high_info")
+    toHBase(allData, "label_person", "high_info", "high_cert_no")
 
     sc.stop()
 
@@ -602,33 +602,4 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     properties
   }
 
-
-  /**
-    * 将DataFrame写入HBase
-    * @param dataFrame
-    * @param tableName
-    * @param columnFamily
-    */
-  def toHBase2(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
-    //    获取conf
-    val con: (Configuration, Configuration) = HbaseConf(tableName)
-    val conf_fs: Configuration = con._2
-    val conf: Configuration = con._1
-    //    获取列
-    val cols: Array[String] = dataFrame.columns
-    //    取不等于key的列循环
-
-    cols.filter(x => x != "high_cert_no").map(x => {
-      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
-        val certNo = rdd.getAs[String]("high_cert_no")
-        val clo: Any = rdd.getAs[Any](x)
-        //证件号，列值 列名
-        (certNo,clo,x)
-      })
-        .filter(x => x._2 != null && x._2 != "")
-        .map(x => (x._1,x._2.toString,x._3))
-
-      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
-    })
-  }
 }

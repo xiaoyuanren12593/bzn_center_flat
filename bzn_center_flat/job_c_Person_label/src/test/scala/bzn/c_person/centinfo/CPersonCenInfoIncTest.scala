@@ -195,7 +195,9 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       * 首次投保保险公司 首次投保省份  首次投保城市  首次投保城市级别  首次投保区间
       * 老客阶段--成为老客的时间
       */
-    getNewInfoDate(sqlContext,policyHolderData,hbaseData)
+    val newInfoDateTemp = getNewInfoDate(sqlContext,policyHolderData,hbaseData)
+    val newInfoDateTwo = newInfoDateTemp.drop("become_curr_cus_time")
+      .printSchema()
 
     /**
       * 新客阶段和老了阶段累计参保次数
@@ -492,7 +494,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       })
       .reduceByKey(_ + _)
       .map(x => (x._1, x._2))
-      .toDF("all_cert_no", "effect_policy_cun")
+      .toDF("cert_no", "effect_policy_cun")
     effectPolicyCun.printSchema()
     effectPolicyCun
   }
@@ -534,7 +536,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
           (x._1,0L)
         }
       })
-      .toDF("holder_cert_no","last_policy_days")
+      .toDF("cert_no","last_policy_days")
     newResOne.printSchema()
     newResOne
   }
@@ -575,7 +577,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
           (x._1,0L)
         }
       })
-      .toDF("holder_cert_no","last_policy_days")
+      .toDF("cert_no","last_policy_days")
     newResOne.printSchema()
     newResOne
   }
@@ -885,7 +887,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
       * 第一个结果是没有出现过的人或者从潜在客户变成投保人的人
       */
     val incHolderNewInfoTemp = holderNewRes.join(hbaseData,holderNewRes("holder_cert_no")===hbaseData("cert_no"),"leftouter")
-      .selectExpr("holder_cert_no",
+      .selectExpr("holder_cert_no as cert_no",
         "case when cert_no is null or cus_type = '0' then policy_start_date end as become_curr_cus_time",
         "case when cert_no is null or cus_type = '0' then policy_start_date end as first_policy_time",
         "case when cert_no is null or cus_type = '0' then product_name end as first_policy_pdt_name",
@@ -943,7 +945,7 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
           (prePremium.doubleValue(), riskCount)
         })
         .map(x => (x._1, x._2._1, x._2._2))
-        .toDF("risk_cert_no", "pre_premium_sum", "risk_cun")
+        .toDF("cert_no", "pre_premium_sum", "risk_cun")
     claimOne.printSchema()
     claimOne
   }
@@ -1067,8 +1069,8 @@ object CPersonCenInfoIncTest extends SparkUtil with Until with HbaseUtil{
         res
       })
       .map(x => (x._1, x._2, x._3))
-      .toDF("risk_cert_no", "reject_claim_cun", "withdraw_claim_cun")
-      .selectExpr("risk_cert_no", "case when reject_claim_cun = -1 then null else reject_claim_cun end as reject_claim_cun",
+      .toDF("cert_no", "reject_claim_cun", "withdraw_claim_cun")
+      .selectExpr("cert_no", "case when reject_claim_cun = -1 then null else reject_claim_cun end as reject_claim_cun",
         "case when withdraw_claim_cun = -1 then null else withdraw_claim_cun end as withdraw_claim_cun")
     claimTwo.printSchema()
     claimTwo

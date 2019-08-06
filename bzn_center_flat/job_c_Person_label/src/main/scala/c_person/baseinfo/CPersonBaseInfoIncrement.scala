@@ -240,7 +240,7 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
         "base_cons_name", "base_cons_type", "base_cons_character")
 
     //    结果
-    toHBase2(resultInfo, "label_person", "base_info")
+    toHBase(resultInfo, "label_person", "base_info", "base_cert_no")
 
   }
 
@@ -366,7 +366,7 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
       .toDF("base_cert_no", "base_tel")
 
     //    结果
-    toHBase2(result, "label_person", "base_info")
+    toHBase(result, "label_person", "base_info", "base_cert_no")
 
   }
 
@@ -507,7 +507,7 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
       .toDF("base_cert_no", "base_habit")
 
     //    结果
-    toHBase2(result, "label_person", "base_info")
+    toHBase(result, "label_person", "base_info", "base_cert_no")
 
   }
 
@@ -699,7 +699,7 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
       .toDF("base_cert_no", "base_child_cun", "base_child_age", "base_child_attend_sch")
 
     //    结果
-    toHBase2(result, "label_person", "base_info")
+    toHBase(result, "label_person", "base_info", "base_cert_no")
 
   }
 
@@ -844,35 +844,6 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
       }
     }
     childAttendSch
-  }
-
-  /**
-    * 将DataFrame写入HBase
-    * @param dataFrame
-    * @param tableName
-    * @param columnFamily
-    */
-  def toHBase2(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
-    //    获取conf
-    val con: (Configuration, Configuration) = HbaseConf(tableName)
-    val conf_fs: Configuration = con._2
-    val conf: Configuration = con._1
-    //    获取列
-    val cols: Array[String] = dataFrame.columns
-    //    取不等于key的列循环
-
-    cols.filter(x => x != "base_cert_no").map(x => {
-      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
-        val certNo = rdd.getAs[String]("base_cert_no")
-        val clo: Any = rdd.getAs[Any](x)
-        //证件号，列值 列名
-        (certNo,clo,x)
-      })
-        .filter(x => x._2 != null && x._2 != "")
-        .map(x => (x._1,x._2.toString,x._3))
-
-      saveToHbase(hbaseRDD, columnFamily, conf_fs, tableName, conf)
-    })
   }
 
 }

@@ -2,6 +2,7 @@ package bzn.c_person.highinfo
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 
@@ -40,6 +41,23 @@ object test extends SparkUtil with Until{
       println(becomeCurrCusTime)
     }
     println(currTimeFuction("2018-08-31 23:59:59.0", 30))
+
+    val arrayList = new util.ArrayList[(String, String)]
+    if(arrayList == null){
+      println("null  "+arrayList)
+    }else{
+      println("not null  "+arrayList)
+    }
+
+    if(arrayList.isEmpty){
+      println("isEmpty")
+    }
+
+    val columnFamily1 = "base_info"
+    val column = "cus_type"
+    val stagingFolder = s"/hbasehfile/$columnFamily1/$column"
+    println(stagingFolder)
+
   }
 
   /**
