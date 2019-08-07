@@ -224,16 +224,21 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       )
       .map(line => {
         val highCertNo: String = line._1
-        val rideDay: String = rideDate(line._2)
+        val rideDay: String = rideDays(line._2)
         val maxRideTimeStep: String = rideTimeStep(line._2)
         val maxRideBrand: String = rideBrand(line._2)
         val maxRideDate: String = rideDate(line._2)
         val tripRates: String = tripRate(line._2)
         val internalClocks: String = internalClock(line._2)
+        val allRideTimeSteps: String = allRideTimeStep(line._2)
+        val allRideBrands: String = allRideBrand(line._2)
+        val allRideDates: String = allRideDate(line._2)
         //        结果
-        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks)
+        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks, allRideTimeSteps,
+          allRideBrands, allRideDates)
       })
-      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate", "internal_clock")
+      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate",
+        "internal_clock", "all_ride_time_step", "all_ride_brand", "all_ride_date")
 
     //    结果
     result
@@ -454,7 +459,9 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       .selectExpr("high_cert_no", "dropEmptys(is_coxcombry) as is_coxcombry", "dropEmptys(wedding_month) as wedding_month",
         "dropEmptys(ride_days) as ride_days", "dropEmptys(max_ride_time_step) as max_ride_time_step",
         "dropEmptys(max_ride_brand) as max_ride_brand", "dropEmptys(max_ride_date) as max_ride_date",
-        "dropEmptys(trip_rate) as trip_rate", "dropEmptys(internal_clock) as internal_clock", "dropEmptys(is_online_car) as is_online_car",
+        "dropEmptys(trip_rate) as trip_rate", "dropEmptys(internal_clock) as internal_clock",
+        "dropEmptys(all_ride_time_step) as all_ride_time_step", "dropEmptys(all_ride_brand) as all_ride_brand",
+        "dropEmptys(all_ride_date) as all_ride_date", "dropEmptys(is_online_car) as is_online_car",
         "dropEmptys(part_time_nums) as part_time_nums", "dropEmptys(is_h_house) as is_h_house", "dropEmptys(amplitude_frequenter) as amplitude_frequenter")
 
     //    结果

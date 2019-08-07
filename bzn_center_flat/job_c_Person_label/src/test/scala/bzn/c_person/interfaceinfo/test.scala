@@ -5,13 +5,16 @@ import java.text.SimpleDateFormat
 import java.util
 import java.util.{Calendar, Collection, Date}
 
+import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
 import com.alibaba.fastjson.JSONObject
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.hive.HiveContext
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object test extends Until{
+object test extends SparkUtil with Until {
 
   def main(args: Array[String]): Unit = {
 
@@ -62,6 +65,7 @@ object test extends Until{
     }
 
     println(jsons.toString)
+    println(jsons.keySet().getClass.getName)
 
     println("------------------------")
     println("------------------------")
@@ -85,6 +89,32 @@ object test extends Until{
     val condition = "create_time >= '" + sevenDate + "' and create_time < '" + currDate + "'"
     println(condition)
 
+    println("------------------------")
+    println("------------------------")
+    println("------------------------")
+
+    val listsss = mutable.ListBuffer[String]()
+    listsss += "1-3"
+    listsss += "1-3"
+    listsss += "3-5"
+    listsss += "1-3"
+    listsss += "5-7"
+
+    val map = listsss.groupBy(_.toString).mapValues(_.size.toString)
+    for (m <- map) {
+      print(m._1)
+      print(m._2)
+      println()
+    }
+
+    println("------------------------")
+    println("------------------------")
+    println("------------------------")
+
+    val str1 = "sjq"
+    val str2 = "3"
+
+    println(flat(str1, str2))
 
 
 
@@ -94,6 +124,16 @@ object test extends Until{
 
 
 
+
+
+  }
+
+  def flat(str1: String, str2: String): ListBuffer[String] = {
+    var list: ListBuffer[String] = new ListBuffer[String]
+    for (s <- 1 to str2.toInt) {
+      list += str1
+    }
+    list
   }
 
   def getNintyDaysAgo(): Timestamp = {

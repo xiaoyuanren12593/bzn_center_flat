@@ -162,9 +162,4 @@ object graphTest extends SparkUtil with Until {
 
   }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> c0b25bf035e18dc0fb556402f26ee7ea70514448
 }

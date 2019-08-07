@@ -1,8 +1,9 @@
 package bzn.c_person.interfaceinfo
 
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.util
-import java.util.Properties
+import java.util.{Date, Properties}
 
 import bzn.c_person.util.SparkUtil
 import bzn.job.common.Until
@@ -54,6 +55,11 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     hiveContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
+      val date = df.format(new Date())// new Date()为获取当前系统时间
+      (date + "")
+    })
 
     val tempData: DataFrame = website
       .unionAll(inter)
@@ -85,7 +91,7 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
         (certNo, mobile, sourceType)
       })
       .toDF("cert_no", "mobile", "source_type")
-      .selectExpr("cert_no", "mobile", "source_type", "getUUID() as dw_create_time")
+      .selectExpr("getUUID() as id", "cert_no", "mobile", "getNow() as dw_create_time", "source_type")
 
 //      结果
     resultInfo
@@ -232,7 +238,7 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
       "month > '2019-04-01' and month <= '2019-05-01'",
       "month > '2019-05-01' and month <= '2019-06-01'",
       "month > '2019-06-01' and month <= '2019-07-01'",
-      "month > '2019-07-01' and month <= '2019-08-01;",
+      "month > '2019-07-01' and month <= '2019-08-01'",
       "month > '2019-08-01'"
     )
 
@@ -338,9 +344,10 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
       .reverse
 
 //    循环放入JSON
-    for (r <- result) mobileJSON.put(r._1, r._2)
+    if (!result.isEmpty) for (r <- result) mobileJSON.put(r._1, r._2)
 
-    mobileJSON.toString
+//    如果集合为空存null，否则存JSON
+    if (!result.isEmpty) mobileJSON.toString else null
 
   }
 
@@ -350,10 +357,13 @@ object CPersonCertAndPhoneTest extends SparkUtil with Until {
     * @return
     */
   def getSource(list: mutable.ListBuffer[(String, String, String)]): String = {
-//    去空、去重
-    val set: Set[(String, String, String)] = list
-      .filter(value => (value._1 != null && value._3 != null))
+    //    去空、去重
+    val set: Seq[String] = list
+      .map(line => line._3)
       .toSet
+      .toSeq
+      .sorted
+
     //    循环遍历
     set.mkString(":")
   }

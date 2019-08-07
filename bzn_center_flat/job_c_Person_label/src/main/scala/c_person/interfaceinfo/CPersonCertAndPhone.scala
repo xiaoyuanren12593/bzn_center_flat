@@ -1,7 +1,8 @@
 package c_person.interfaceinfo
 
 import java.sql.Timestamp
-import java.util.Properties
+import java.text.SimpleDateFormat
+import java.util.{Date, Properties}
 
 import bzn.job.common.Until
 import c_person.util.SparkUtil
@@ -32,8 +33,7 @@ object CPersonCertAndPhone extends SparkUtil with Until {
     val result: DataFrame = rinseData(hiveContext, website, inter, other)
 
 //    保存到hive
-    hiveContext.sql("truncate table dwdb.dw_all_cert_no_and_mobile_detail")
-    result.repartition(50).write.mode(SaveMode.Append).format("parquet").partitionBy("source_type").saveAsTable("dwdb.dw_all_cert_no_and_mobile_detail")
+    result.repartition(50).write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_all_cert_no_and_mobile_detail_temp")
 
     sc.stop()
 
@@ -52,6 +52,11 @@ object CPersonCertAndPhone extends SparkUtil with Until {
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     hiveContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
+      val date = df.format(new Date())// new Date()为获取当前系统时间
+      (date + "")
+    })
 
     val tempData: DataFrame = website
       .unionAll(inter)
@@ -83,7 +88,7 @@ object CPersonCertAndPhone extends SparkUtil with Until {
         (certNo, mobile, sourceType)
       })
       .toDF("cert_no", "mobile", "source_type")
-      .selectExpr("cert_no", "mobile", "source_type", "getUUID() as dw_create_time")
+      .selectExpr("getUUID() as id", "cert_no", "mobile", "getNow() as dw_create_time", "source_type")
 
 //      结果
     resultInfo
@@ -334,10 +339,11 @@ object CPersonCertAndPhone extends SparkUtil with Until {
       .sortBy(_._2)
       .reverse
 
-//    循环放入JSON
-    for (r <- result) mobileJSON.put(r._1, r._2)
+    //    循环放入JSON
+    if (!result.isEmpty) for (r <- result) mobileJSON.put(r._1, r._2)
 
-    mobileJSON.toString
+    //    如果集合为空存null，否则存JSON
+    if (!result.isEmpty) mobileJSON.toString else null
 
   }
 
@@ -347,11 +353,13 @@ object CPersonCertAndPhone extends SparkUtil with Until {
     * @return
     */
   def getSource(list: mutable.ListBuffer[(String, String, String)]): String = {
-//    去空、去重
-    val set: Set[String] = list
-      .filter(value => (value._1 != null && value._3 != null))
+    //    去空、去重
+    val set: Seq[String] = list
       .map(line => line._3)
       .toSet
+      .toSeq
+      .sorted
+
     //    循环遍历
     set.mkString(":")
   }

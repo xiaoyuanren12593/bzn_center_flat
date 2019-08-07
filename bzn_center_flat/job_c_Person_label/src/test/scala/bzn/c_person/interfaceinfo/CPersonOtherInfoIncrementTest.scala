@@ -7,7 +7,7 @@ import java.util.{Date, Properties}
 import bzn.c_person.util.SparkUtil
 import bzn.job.common.{HbaseUtil, Until}
 import com.alibaba.fastjson.serializer.SerializerFeature
-import com.alibaba.fastjson.{JSON, JSONObject}
+import com.alibaba.fastjson.{JSON, JSONArray, JSONObject}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.hive.HiveContext
@@ -424,7 +424,7 @@ object CPersonOtherInfoIncrementTest extends SparkUtil with Until with HbaseUtil
     * @return
     */
   def parse(string: String): Array[JSONObject] = {
-    val parseRes = JSON.parseArray(string)
+    val parseRes: JSONArray = JSON.parseArray(string)
     parseRes.toArray().map(x => JSON.parseObject(x.toString))
   }
 

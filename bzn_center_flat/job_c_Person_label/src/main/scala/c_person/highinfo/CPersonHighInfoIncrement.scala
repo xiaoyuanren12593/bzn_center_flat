@@ -8,7 +8,7 @@ import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 /**

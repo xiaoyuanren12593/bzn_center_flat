@@ -12,7 +12,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 import scala.collection.mutable
@@ -339,7 +339,7 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
         val oldTelArr: Array[JSONObject] = if (oldTel == null) null else parse(oldTel)
         val newTelArr: Array[JSONObject] = if (newTel == null) null else parse(newTel)
         val telInfo: ListBuffer[(String, String, String, String)] = ListBuffer[(String, String, String, String)]()
-        val ifInfo: mutable.Set[String] = mutable.Set()
+        val ifInfo: mutable.Set[String] = mutable.HashSet()
 
         //        重构的逻辑
         if (oldTelArr == null) {
@@ -677,12 +677,12 @@ object CPersonBaseInfoIncrement extends SparkUtil with Until with HbaseUtil{
         } else {
           //          如果旧的数据不为空且新的数据不为空，则获取新旧的子女身份证号并合并
           if (newChildCun != null) {
-            val set: util.Set[String] = oldChildAgeJSON.keySet()
-            set.addAll(newChildAgeJSON.keySet())
-            for (s <- set.toArray()) list += s.toString
-            childCun = list.size.toString
-            childAgeJSON = getChildAge(list.toList)
-            childAttendSchJSON = getChildAttendSch(list.toList)
+            val set: mutable.Set[String] = new mutable.HashSet[String]
+            for (a <- oldChildAgeJSON.keySet().toArray()) set.add(a.toString)
+            for (b <- newChildAgeJSON.keySet().toArray()) set.add(b.toString)
+            childCun = set.toList.size.toString
+            childAgeJSON = getChildAge(set.toList)
+            childAttendSchJSON = getChildAttendSch(set.toList)
           } else {
             //            如果接的数据不为空且新的数据为空，则将旧的数据放入临时变量
             childCun = oldChildCun
