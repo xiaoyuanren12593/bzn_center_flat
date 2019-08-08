@@ -605,7 +605,7 @@ trait Until {
     for (l <- list) {
       if (l._2 > l._5) lists += l._2
     }
-    if (lists.isEmpty) null else lists.size.toString
+    if (lists.isEmpty) 0.toString else lists.size.toString
   }
 
   /**

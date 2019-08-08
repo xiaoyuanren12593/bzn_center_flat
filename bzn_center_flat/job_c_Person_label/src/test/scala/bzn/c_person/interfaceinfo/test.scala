@@ -117,6 +117,23 @@ object test extends SparkUtil with Until {
     println(flat(str1, str2))
 
 
+    println("1990/01/01 00:00:00.000000".split("\\.")(0).replaceAll("/", "-"))
+    println("1990/01/01 00:00:00.000000".contains("."))
+
+    println("------------------------")
+    println("------------------------")
+    println("------------------------")
+
+    val list5: ListBuffer[(String, String)] = new ListBuffer[(String, String)]
+    list5 += (("1-3", "1"))
+    list5 += (("1-3", "1"))
+    list5 += (("3-5", "1"))
+
+    println(list5.map(v => (v._1, v._2.toInt)).groupBy(_._1).mapValues(x => x.map(_._2).reduce(_ + _)))
+
+
+
+
 
 
 

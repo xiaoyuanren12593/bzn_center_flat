@@ -1,29 +1,29 @@
-package bzn.c_person.interfaceinfo
+package c_person.interfaceinfo
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
-import bzn.c_person.util.SparkUtil
 import bzn.job.common.{HbaseUtil, Until}
+import c_person.util.SparkUtil
 import com.alibaba.fastjson.JSON
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-object CPersonHighInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
+object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
   def main(args: Array[String]): Unit = {
 
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName: String = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc: SparkContext = sparkConf._2
     val hiveContext: HiveContext = sparkConf._4
@@ -251,14 +251,14 @@ object CPersonHighInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
         val allRideTimeStep: ListBuffer[String] = new ListBuffer[String]
         val allRideBrand: ListBuffer[String] = new ListBuffer[String]
         val allRideDate: ListBuffer[String] = new ListBuffer[String]
-        //        循环放入数据
+//        循环放入数据
         for (a <- JSON.parseObject(oldAllRideTimeStep).keySet().toArray()) allRideTimeStep ++= flat(a.toString, JSON.parseObject(oldAllRideTimeStep).get(a).toString)
         for (a <- JSON.parseObject(newAllRideTimeStep).keySet().toArray()) allRideTimeStep ++= flat(a.toString, JSON.parseObject(newAllRideTimeStep).get(a).toString)
         for (a <- JSON.parseObject(oldAllRideBrand).keySet().toArray()) allRideBrand ++= flat(a.toString, JSON.parseObject(oldAllRideBrand).get(a).toString)
         for (a <- JSON.parseObject(newAllRideBrand).keySet().toArray()) allRideBrand ++= flat(a.toString, JSON.parseObject(newAllRideBrand).get(a).toString)
         for (a <- JSON.parseObject(oldAllRideDate).keySet().toArray()) allRideDate ++= flat(a.toString, JSON.parseObject(oldAllRideDate).get(a).toString)
         for (a <- JSON.parseObject(newAllRideDate).keySet().toArray()) allRideDate ++= flat(a.toString, JSON.parseObject(newAllRideDate).get(a).toString)
-        //        系标签
+//        系标签
         val rideDay: String = (newRideDays.toInt + oldRideDays.toInt).toString
         val maxRideTimeStep: String = rideTimeSteps(allRideTimeStep)
         val maxRideBrand: String = rideBrands(allRideBrand)
@@ -621,7 +621,6 @@ object CPersonHighInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlOthersTable(sqlContext: SQLContext): DataFrame = {
-    import sqlContext.implicits._
     sqlContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     sqlContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     val properties: Properties = getProPerties()
@@ -656,7 +655,6 @@ object CPersonHighInfoIncrementTest extends SparkUtil with Until with HbaseUtil{
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlProTable(sqlContext: SQLContext): DataFrame = {
-    import sqlContext.implicits._
     sqlContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     sqlContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
 

@@ -422,7 +422,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       )
       .map(line => {
         val highCertNo: String = line._1
-        val amplitudeFrequenter: String = if (line._2.size >= 12) "是" else null
+        val amplitudeFrequenter: String = if (line._2.size >= 12) "是" else "否"
         //        结果
         (highCertNo, amplitudeFrequenter)
       })

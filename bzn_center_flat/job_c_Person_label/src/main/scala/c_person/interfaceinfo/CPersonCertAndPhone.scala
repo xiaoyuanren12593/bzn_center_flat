@@ -168,6 +168,7 @@ object CPersonCertAndPhone extends SparkUtil with Until {
     * @return
     */
   def interInfo(hiveContext: HiveContext): DataFrame = {
+    import hiveContext.implicits._
     hiveContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     hiveContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     hiveContext.udf.register("ofo", () => "ofo")
@@ -190,6 +191,27 @@ object CPersonCertAndPhone extends SparkUtil with Until {
 //    合并表格
     val inter: DataFrame = ofoTelInfo
       .unionAll(suyunTelInfo)
+      .map(line => {
+        val certNo: String = line.getAs[String]("cert_no")
+        val mobile: String = line.getAs[String]("mobile")
+        val startDate: String = line.getAs[String]("start_date")
+        val endDate: String = line.getAs[String]("end_date")
+        val sourceType: String = line.getAs[String]("source_type")
+        //        清洗时间
+        val startClear: String = if (startDate != null) {
+          if (startDate.contains(".")) {
+            startDate.split("\\.")(0).replaceAll("/", "-")
+          } else startDate
+        } else null
+        val endClear: String = if (endDate != null) {
+          if (endDate.contains(".")) {
+            endDate.split("\\.")(0).replaceAll("/", "-")
+          } else endDate
+        } else null
+        //        结果
+        (certNo, mobile, startClear, endClear, sourceType)
+      })
+      .toDF("cert_no", "mobile", "start_date", "end_date", "source_type")
       .selectExpr("dropNull(cert_no) as cert_no", "dropNull(mobile) as mobile", "dropNull(start_date) as start_date",
         "dropNull(end_date) as end_date", "source_type")
 

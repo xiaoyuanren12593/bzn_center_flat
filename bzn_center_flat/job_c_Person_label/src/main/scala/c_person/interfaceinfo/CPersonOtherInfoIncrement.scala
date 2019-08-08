@@ -10,7 +10,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature
 import com.alibaba.fastjson.{JSON, JSONObject}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
@@ -182,12 +182,13 @@ object CPersonOtherInfoIncrement extends SparkUtil with Until with HbaseUtil {
       .join(areaInfoDimension, certInfoTemp("native_place_id") === areaInfoDimension("code"), "leftouter")
       .join(constellationDimension, certInfoTemp("constellatory_id") === constellationDimension("id"), "leftouter")
       .selectExpr("base_cert_no", "base_name", "base_gender", "base_birthday", "base_age", "base_age_time", "base_age_section",
-        "base_is_retire", "base_province", "base_city", "base_area", "base_coastal", "base_city_type", "base_weather_feature",
-        "base_city_weather", "base_city_deit", "base_cons_name", "base_cons_type", "base_cons_character")
+        "base_is_retire",  "province as base_province", "short_name as base_city", "city_region as base_area",
+        "is_coastal as base_coastal", "city_type as base_city_type", "weather_feature as base_weather_feature",
+        "weather_type as base_city_weather", "city_deit as base_city_deit", "base_cons_name", "base_cons_type", "base_cons_character")
 
     //    结果
-    toHBase(resultInfo, "label_person", "base_info", "base_cert_no")
-
+//    toHBase(resultInfo, "label_person", "base_info", "base_cert_no")
+    resultInfo.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_other_cert")
   }
 
   def updateTel(hiveContext: HiveContext, other: DataFrame, hbase: DataFrame): Unit = {
@@ -278,8 +279,8 @@ object CPersonOtherInfoIncrement extends SparkUtil with Until with HbaseUtil {
       .toDF("base_cert_no", "base_tel")
 
     //    结果
-    toHBase(result, "label_person", "base_info", "base_cert_no")
-
+//    toHBase(result, "label_person", "base_info", "base_cert_no")
+    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_other_tel")
   }
 
   /**
@@ -292,13 +293,13 @@ object CPersonOtherInfoIncrement extends SparkUtil with Until with HbaseUtil {
 
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 //    计算当前时间和七日前时间
-    val currDate = sdf.format(new Date()).split(" ")(0) + "00:00:00"
+    val currDate = sdf.format(new Date()).split(" ")(0) + " 00:00:00"
     val sevenDate = currTimeFuction(currDate, -7)
 //    计算当前月份和上个月份
     val currMonth = currDate.substring(0, 8) + "01"
     val lastMonth = currMonth.substring(0, 6) + (currMonth.substring(6, 7).toInt - 1).toString + currMonth.substring(7)
 
-    val table = "select * from open_other_policy where month = '" + lastMonth + "' or month = '" + currMonth + "'"
+    val table = "(select * from open_other_policy where month = '" + lastMonth + "' or month = '" + currMonth + "') as T"
     val condition = "create_time >= '" + sevenDate + "' and create_time < '" + currDate + "'"
 
     val otherTemp: DataFrame = sqlContext
