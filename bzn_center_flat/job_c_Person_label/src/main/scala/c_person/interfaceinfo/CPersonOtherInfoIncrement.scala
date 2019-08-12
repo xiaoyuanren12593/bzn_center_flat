@@ -187,8 +187,8 @@ object CPersonOtherInfoIncrement extends SparkUtil with Until with HbaseUtil {
         "weather_type as base_city_weather", "city_deit as base_city_deit", "base_cons_name", "base_cons_type", "base_cons_character")
 
     //    结果
-//    toHBase(resultInfo, "label_person", "base_info", "base_cert_no")
-    resultInfo.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_other_cert")
+    toHBase(resultInfo, "label_person", "base_info", "base_cert_no")
+//    resultInfo.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_other_cert")
   }
 
   def updateTel(hiveContext: HiveContext, other: DataFrame, hbase: DataFrame): Unit = {
@@ -279,8 +279,8 @@ object CPersonOtherInfoIncrement extends SparkUtil with Until with HbaseUtil {
       .toDF("base_cert_no", "base_tel")
 
     //    结果
-//    toHBase(result, "label_person", "base_info", "base_cert_no")
-    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_other_tel")
+    toHBase(result, "label_person", "base_info", "base_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_other_tel")
   }
 
   /**

@@ -593,7 +593,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
     val currMonth = currDate.substring(0, 8) + "01"
     val lastMonth = currMonth.substring(0, 6) + (currMonth.substring(6, 7).toInt - 1).toString + currMonth.substring(7)
 
-    val table = "select * from open_other_policy where month = '" + lastMonth + "' or month = '" + currMonth + "'"
+    val table = "(select * from open_other_policy where month = '" + lastMonth + "' or month = '" + currMonth + "') as T"
     val condition = "create_time >= '" + sevenDate + "' and create_time < '" + currDate + "'"
 
     val otherTemp: DataFrame = sqlContext
