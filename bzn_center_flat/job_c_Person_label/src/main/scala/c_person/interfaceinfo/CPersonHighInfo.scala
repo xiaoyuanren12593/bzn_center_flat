@@ -415,7 +415,11 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
         //        结果
         (highCertNo, productDesc)
       })
-      .filter(line => line._2.contains("青芒果方案1"))
+      .filter(line => {
+        if (line._2 != null) {
+          if (line._2.contains("青芒果方案1")) true else false
+        } else false
+      })
       .aggregateByKey(mutable.ListBuffer[String]())(
         (List: ListBuffer[String], value: String) => List += value,
         (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2

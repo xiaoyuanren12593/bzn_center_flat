@@ -6,10 +6,10 @@ import java.util.{Date, Properties}
 
 import bzn.job.common.{HbaseUtil, Until}
 import c_person.util.SparkUtil
-import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.{JSON, JSONObject}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
@@ -110,6 +110,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
 //      结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_coxcombry")
 
   }
 
@@ -169,6 +170,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
 //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_wedding")
 
   }
 
@@ -251,27 +253,33 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
         val allRideTimeStep: ListBuffer[String] = new ListBuffer[String]
         val allRideBrand: ListBuffer[String] = new ListBuffer[String]
         val allRideDate: ListBuffer[String] = new ListBuffer[String]
-//        循环放入数据
-        for (a <- JSON.parseObject(oldAllRideTimeStep).keySet().toArray()) allRideTimeStep ++= flat(a.toString, JSON.parseObject(oldAllRideTimeStep).get(a).toString)
+        //        循环放入数据
         for (a <- JSON.parseObject(newAllRideTimeStep).keySet().toArray()) allRideTimeStep ++= flat(a.toString, JSON.parseObject(newAllRideTimeStep).get(a).toString)
-        for (a <- JSON.parseObject(oldAllRideBrand).keySet().toArray()) allRideBrand ++= flat(a.toString, JSON.parseObject(oldAllRideBrand).get(a).toString)
         for (a <- JSON.parseObject(newAllRideBrand).keySet().toArray()) allRideBrand ++= flat(a.toString, JSON.parseObject(newAllRideBrand).get(a).toString)
-        for (a <- JSON.parseObject(oldAllRideDate).keySet().toArray()) allRideDate ++= flat(a.toString, JSON.parseObject(oldAllRideDate).get(a).toString)
         for (a <- JSON.parseObject(newAllRideDate).keySet().toArray()) allRideDate ++= flat(a.toString, JSON.parseObject(newAllRideDate).get(a).toString)
-//        系标签
-        val rideDay: String = (newRideDays.toInt + oldRideDays.toInt).toString
+        if (oldAllRideTimeStep != null) for (a <- JSON.parseObject(oldAllRideTimeStep).keySet().toArray()) allRideTimeStep ++= flat(a.toString, JSON.parseObject(oldAllRideTimeStep).get(a).toString)
+        if (oldAllRideBrand != null) for (a <- JSON.parseObject(oldAllRideBrand).keySet().toArray()) allRideBrand ++= flat(a.toString, JSON.parseObject(oldAllRideBrand).get(a).toString)
+        if (oldAllRideDate != null) for (a <- JSON.parseObject(oldAllRideDate).keySet().toArray()) allRideDate ++= flat(a.toString, JSON.parseObject(oldAllRideDate).get(a).toString)
+        //        系标签
+        val rideDay: String = (newRideDays.toInt + (if (oldRideDays == null) 0 else oldRideDays.toInt)).toString
         val maxRideTimeStep: String = rideTimeSteps(allRideTimeStep)
         val maxRideBrand: String = rideBrands(allRideBrand)
         val maxRideDate: String = rideDates(allRideDate)
         val internalClock: String = internalClocks(allRideTimeStep)
-//        结果
-        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, internalClock)
+        val allRideTimeStepInc: String = allRideTimeSteps(allRideTimeStep)
+        val allRideBrandInc: String = allRideBrands(allRideBrand)
+        val allRideDateInc: String = allRideDates(allRideDate)
+        //        结果
+        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, internalClock, allRideTimeStepInc, allRideBrandInc,
+          allRideDateInc)
 
       })
-      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "internal_clock")
+      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "internal_clock",
+        "all_ride_time_step", "all_ride_brand", "all_ride_date")
 
 //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_ride")
 
   }
 
@@ -333,6 +341,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
 //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_online")
 
   }
 
@@ -411,6 +420,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
 //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_partTime")
 
   }
 
@@ -472,6 +482,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
 //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_house")
 
   }
 
@@ -506,7 +517,11 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
         //        结果
         (highCertNo, productDesc)
       })
-      .filter(line => line._2.contains("青芒果方案1"))
+      .filter(line => {
+        if (line._2 != null) {
+          if (line._2.contains("青芒果方案1")) true else false
+        } else false
+      })
       .aggregateByKey(mutable.ListBuffer[String]())(
         (List: ListBuffer[String], value: String) => List += value,
         (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
@@ -521,6 +536,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
     //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_amplitude")
 
   }
 
@@ -574,6 +590,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
     //    结果
     toHBase(result, "label_person", "high_info", "high_cert_no")
+//    result.write.mode(SaveMode.Overwrite).saveAsTable("label.inc_high_rideTrip")
 
   }
 
@@ -587,7 +604,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
 
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     //    计算当前时间和七日前时间
-    val currDate = sdf.format(new Date()).split(" ")(0) + "00:00:00"
+    val currDate = sdf.format(new Date()).split(" ")(0) + " 00:00:00"
     val sevenDate = currTimeFuction(currDate, -7)
     //    计算当前月份和上个月份
     val currMonth = currDate.substring(0, 8) + "01"
@@ -621,6 +638,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlOthersTable(sqlContext: SQLContext): DataFrame = {
+    import sqlContext.implicits._
     sqlContext.udf.register("dropEmptys", (line: String) => dropEmpty(line))
     sqlContext.udf.register("dropSpecial", (line: String) => dropSpecial(line))
     val properties: Properties = getProPerties()
@@ -642,8 +660,17 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
     val result: DataFrame = sqlContext
       .read
       .jdbc(url, "open_other_policy", predicates, properties)
-      .where("insured_cert_type = 2 and length(insured_cert_no) = 18")
-      .selectExpr("insured_cert_no as high_cert_no", "product_code", "start_date")
+      .selectExpr("insured_cert_no as high_cert_no", "insured_cert_type", "product_code", "start_date")
+      .where("insured_cert_type = 2 and length(high_cert_no) = 18")
+      .map(line => {
+        val highCertNo: String = line.getAs[String]("high_cert_no")
+        val productCode: String = line.getAs[String]("product_code")
+        val startDate: Timestamp = line.getAs[java.sql.Timestamp]("start_date")
+        //        结果
+        (highCertNo, productCode, startDate)
+      })
+      .filter(line => {dropSpecial(line._1) && line._3 != null})
+      .toDF("high_cert_no", "product_code", "start_date")
 
     result
 
@@ -741,22 +768,7 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
     * @return
     */
   def rideTimeSteps(list: mutable.ListBuffer[String]): String = {
-    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
-    for (l <- list) {
-      lists += (if (l.toInt >= 1 && l.toInt < 3) "1-3时"
-      else if (l.toInt >= 3 && l.toInt < 5) "3-5时"
-      else if (l.toInt >= 5 && l.toInt < 7) "5-7时"
-      else if (l.toInt >= 7 && l.toInt < 9) "7-9时"
-      else if (l.toInt >= 9 && l.toInt < 11) "9-11时"
-      else if (l.toInt >= 11 && l.toInt < 13) "11-13时"
-      else if (l.toInt >= 13 && l.toInt < 15) "13-15时"
-      else if (l.toInt >= 15 && l.toInt < 17) "15-17时"
-      else if (l.toInt >= 17 && l.toInt < 19) "17-19时"
-      else if (l.toInt >= 19 && l.toInt < 21) "19-21时"
-      else if (l.toInt >= 21 && l.toInt < 23) "21-23时"
-      else "23-1时")
-    }
-    if (lists.isEmpty) null else lists.max
+    if (list.isEmpty) null else list.max
   }
 
   /**
@@ -796,6 +808,60 @@ object CPersonHighInfoIncrement extends SparkUtil with Until with HbaseUtil{
     else if (time == "23-1时" || time == "1-3时" || time == "3-5时") "夜猫子"
     else null
     internal
+  }
+
+  /**
+    * 获得骑行时间段
+    * @param list
+    * @return
+    */
+  def allRideTimeSteps(list: mutable.ListBuffer[String]): String = {
+    //    分组聚合
+    val map: Map[String, String] = list.map((_, 1)).groupBy(_._1).mapValues(_.size.toString)
+    //    创建JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+    //    返回JSON的String
+    JSON.toString
+
+  }
+
+  /**
+    * 获得骑行品牌
+    * @param list
+    * @return
+    */
+  def allRideBrands(list: mutable.ListBuffer[String]): String = {
+    //    分组聚合
+    val map: Map[String, String] = list.map((_, 1)).groupBy(_._1).mapValues(_.size.toString)
+    //    循环放入JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+    //    返回JSON的String
+    JSON.toString
+
+  }
+
+  /**
+    * 获得骑行日期
+    * @param list
+    * @return
+    */
+  def allRideDates(list: mutable.ListBuffer[String]): String = {
+    //    分组聚合
+    val map: Map[String, String] = list.map((_, 1)).groupBy(_._1).mapValues(_.size.toString)
+    //    创建JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+    //    返回字符串
+    JSON.toString
+
   }
 
 }

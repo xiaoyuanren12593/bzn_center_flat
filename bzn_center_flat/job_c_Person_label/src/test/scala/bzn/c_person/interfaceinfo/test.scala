@@ -131,6 +131,17 @@ object test extends SparkUtil with Until {
 
     println(list5.map(v => (v._1, v._2.toInt)).groupBy(_._1).mapValues(x => x.map(_._2).reduce(_ + _)))
 
+    println("------------------------")
+    println("------------------------")
+    println("------------------------")
+
+    val list6: ListBuffer[String] = new ListBuffer[String]
+    list6 += "1-3"
+    list6 += "1-3"
+    list6 += "3-5"
+
+    println(list6.map((_, 1)).groupBy(_._1).mapValues(_.size.toString))
+
 
 
 

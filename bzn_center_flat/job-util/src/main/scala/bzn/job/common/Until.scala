@@ -451,7 +451,7 @@ trait Until {
   def get_current_date(current: Long): String = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     //这个是你要转成后的时间的格式, 时间戳转换成时间
-    val sd = sdf.format(new Date(current));
+    val sd = sdf.format(new Date(current))
     sd
   }
 

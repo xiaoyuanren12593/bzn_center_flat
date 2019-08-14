@@ -235,7 +235,7 @@ object CPersonInterfaceInfoOptimizeTest extends SparkUtil with Until with HbaseU
     //    获得信息RDD
     val telRdd: RDD[(String, String)] = telInfo
       .map(line => (line.getAs[String]("base_mobile"), line.getAs[String]("base_cert_no")))
-      .partitionBy(new HashPartitioner((20)))
+      .partitionBy(new HashPartitioner(20))
 
     //    获得手机信息RDD
     val mobileRdd: RDD[(String, (String, String, String))] = mobileInfo
