@@ -203,6 +203,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","master_id","preserve_id","insured_name","case when gender = 2 then 0 else 1 end as gender","case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type",
         "insured_cert_no","birthday","industry","work_type","company_name","company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "pre_start_date","pre_end_date","insured_status","age","getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+    println("2.0")
     res.printSchema()
     res
   }
@@ -339,6 +340,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         "pre_start_date","pre_end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
         "case when insured_cert_type ='1' and pre_start_date is not null then getAgeFromBirthTime(insured_cert_no,pre_start_date) else null end as age",
         "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+    println("1.0")
     res.printSchema()
     res
   }

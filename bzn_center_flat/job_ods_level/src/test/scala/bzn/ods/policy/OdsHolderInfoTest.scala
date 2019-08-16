@@ -102,6 +102,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       .selectExpr("policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
         "case when gender = 2 then 0 else 1 end as gender","mobile","email","bank_card_no","bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+    println("2.0")
     odsHolderRes.printSchema()
     odsHolderRes
   }
@@ -136,6 +137,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       .selectExpr("id as policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
         "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email","bank_card_no","bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+    println("1.0")
     odsHolderRes.printSchema()
     odsHolderRes
   }

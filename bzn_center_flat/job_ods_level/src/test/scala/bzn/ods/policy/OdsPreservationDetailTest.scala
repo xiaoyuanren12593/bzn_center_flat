@@ -195,6 +195,7 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","preserve_id","policy_id","policy_code","'1' as preserve_status","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
         "del_person_count","preserve_effect_date","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "case when pay_status = 1 then 1 when pay_status = 2 then 0 else -1 end pay_status","create_time","update_time","getNow() as dw_create_time")
+    println("2.0")
     res.printSchema()
     res
   }
@@ -367,6 +368,7 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
         "add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
         "case when getDefault() = '' then -1 end as pay_status","create_time","update_time","getNow() as dw_create_time")
+    println("1.0")
     res.printSchema()
     res
   }

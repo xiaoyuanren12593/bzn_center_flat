@@ -78,6 +78,9 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
         (x._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._1)
       })
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+    println("1.0")
+    entEnterpriseInfoBznprd.printSchema()
+
 
      /**
       * 读取2.0投保企业信息
@@ -107,6 +110,9 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
         (x._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._1)
       })
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+    println("2.0")
+    bPolicyHolderCompanyBzncen.printSchema()
+
 
     /**
       * 1.0和2.0的企业信息进行合并如果有相同企业的话就用2.0的信息

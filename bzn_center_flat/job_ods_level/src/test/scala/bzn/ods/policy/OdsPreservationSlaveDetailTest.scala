@@ -56,9 +56,10 @@ object OdsPreservationSlaveDetailTest extends SparkUtil with Until{
 
     val res = resTemp
       .selectExpr("getUUID() as id","master_id","child_name","case when child_gender = 2 then 0 else 1 end as child_gender",
-        "case when child_cert_type = 1 then 1 else -1 end aschild_cert_type ","child_cert_no",
+        "case when child_cert_type = 1 then 1 else -1 end as child_cert_type ","child_cert_no",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "start_date","end_date","case when insured_status = 1 then 0 else 1 end as insured_status","age","create_time","update_time","getNow() as dw_create_time")
+    println("2.0")
     res.printSchema()
     res
   }
@@ -99,6 +100,7 @@ object OdsPreservationSlaveDetailTest extends SparkUtil with Until{
         "case when child_cert_type = 1 then 1 else -1 end as child_cert_type","child_cert_no","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
         "start_date","end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
         "age","create_time","update_time","getNow() as dw_create_time")
+    println("1.0")
     res.printSchema()
     res
   }

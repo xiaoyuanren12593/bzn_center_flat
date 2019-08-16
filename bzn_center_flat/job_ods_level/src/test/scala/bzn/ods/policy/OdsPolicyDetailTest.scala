@@ -266,6 +266,9 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "belongs_regional","belongs_industry","channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
         "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 
+    println("2.0")
+    res.printSchema()
+
     res
 
   }
@@ -470,7 +473,11 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "belongs_regional","belongs_industry","channelId as channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
         "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 
+    println("1.0")
+    resEnd.printSchema()
+
     resEnd
+
   }
   /**
     * 获取 Mysql 表的数据
