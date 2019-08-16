@@ -28,7 +28,45 @@ object OdsPolicyDetail extends SparkUtil with Until{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val odsPolicyDetail = oneOdsPolicyDetail(hiveContext).unionAll( twoOdsPolicyDetail(hiveContext))
-    odsPolicyDetail.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_detail")
+      .selectExpr(
+        "id",
+        "order_id",
+        "order_code",
+        "user_id",
+        "product_code",
+        "product_name",
+        "policy_id ",
+        "policy_code",
+        "cast (first_premium as decimal(14,4))",
+        "cast (sum_premium as decimal(14,4))",
+        "holder_name",
+        "insured_subject",
+        "policy_start_date",
+        "policy_end_date",
+        "pay_way",
+        "commission_discount_percent",
+        "policy_status",
+        "preserve_policy_no",
+        "insure_company_name",
+        "belongs_regional",
+        "belongs_industry",
+        "channel_id",
+        "channel_name",
+        "sku_id",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "cast (sku_price as decimal(14,4))",
+        "sku_charge_type",
+        "tech_service_rate",
+        "economic_rate",
+        "num_of_preson_first_policy",
+        "policy_create_time",
+        "policy_update_time",
+        "dw_create_time"
+      )
+    odsPolicyDetail.repartition(1).write.mode(SaveMode.Overwrite).parquet("/azkaban/clickhouse/data/ods/ods_policy_detail.parquet")
+//    odsPolicyDetail.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_detail")
     sc.stop()
   }
 
@@ -258,6 +296,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "holder_name","insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status","preserve_policy_no","insure_company_name",
         "belongs_regional","belongs_industry","channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
         "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
+      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
 
     res
 

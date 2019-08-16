@@ -28,7 +28,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneData = odsPolicyInsuredDetail(hiveContext)
     val twoData = twoOdsPolicyInsuredDetail(hiveContext)
-    oneData.unionAll(twoData).printSchema()
+
 //    oneDate.write.format("parquet").mode("overwrite").save("/xing/data/odsPolicyInsuredDetail")
     sc.stop()
   }

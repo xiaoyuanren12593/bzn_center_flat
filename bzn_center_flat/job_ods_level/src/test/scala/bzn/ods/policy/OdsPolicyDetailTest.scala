@@ -32,16 +32,52 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
 
     val one = oneOdsPolicyDetail(hiveContext)
     val two = twoOdsPolicyDetail(hiveContext)
-    val all = one.unionAll(two)
-    all.printSchema()
-
+    val oneAndTwoRes = one.unionAll(two)
+      .selectExpr(
+        "id",
+        "order_id",
+        "order_code",
+        "user_id",
+        "product_code",
+        "product_name",
+        "policy_id ",
+        "policy_code",
+        "cast (first_premium as decimal(14,4))",
+        "cast (sum_premium as decimal(14,4))",
+        "holder_name",
+        "insured_subject",
+        "policy_start_date",
+        "policy_end_date",
+        "pay_way",
+        "commission_discount_percent",
+        "policy_status",
+        "preserve_policy_no",
+        "insure_company_name",
+        "belongs_regional",
+        "belongs_industry",
+        "channel_id",
+        "channel_name",
+        "sku_id",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "cast (sku_price as decimal(14,4))",
+        "sku_charge_type",
+        "tech_service_rate",
+        "economic_rate",
+        "num_of_preson_first_policy",
+        "policy_create_time",
+        "policy_update_time",
+        "dw_create_time"
+      )
+    oneAndTwoRes.printSchema()
+//    oneAndTwoRes.write.mode(SaveMode.Overwrite).parquet("/azkaban/clickhouse/data/ods/ods_policy_detail.parquet")
     sc.stop()
-
   }
 
   /**
     * 2.0系统保单明细表
-    * @param sqlContext
+    * @param sqlContext //上下文
     */
   def twoOdsPolicyDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
@@ -266,6 +302,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "belongs_regional","belongs_industry","channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
         "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 
+    res.printSchema()
     res
 
   }
@@ -469,7 +506,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "holder_name","insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status","preserve_policy_no","insure_company_name",
         "belongs_regional","belongs_industry","channelId as channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
         "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
-
+      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
+    resEnd.printSchema()
     resEnd
   }
   /**
@@ -512,31 +550,5 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     }
     properties
   }
-
-  /**
-    *
-    * 创建dataframe
-    val bPolicyHolderCompanyProductNewSchema = bPolicyHolderCompanyProductNew.schema.map(x=> x.name):+"holder_name_new"
-
-    /**
-    * 如果投保人名称为空就把保单的后保人信息给它
-    */
-    val bPolicyHolderCompanyProductNewRes = bPolicyHolderCompanyProductNew.map(x=>{
-      val holderName = x.getAs[String]("holder_name")
-      var holderCompanyPersonName = x.getAs[String]("holder_company_person_name")
-      if(holderCompanyPersonName == null ){
-        holderCompanyPersonName = holderName
-      }
-      x.toSeq:+holderCompanyPersonName
-    })
-
-    /**
-    * 创建dataframe
-    */
-    val value = bPolicyHolderCompanyProductNewRes.map(r => Row(r: _*))
-    val schema = StructType(bPolicyHolderCompanyProductNewSchema.map(fieldName => StructField(fieldName, StringType, nullable = true)))
-    val res = sqlContext.createDataFrame(value,schema)
-    */
-
-}
+  }
 
