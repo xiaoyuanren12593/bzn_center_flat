@@ -674,4 +674,9 @@ trait Until {
     isAttendSch
   }
 
+  def clean(str: String): String = {
+    if (str == "" || str == " " || str == "NULL" || str == "null" || str == null) null
+    else str.replaceAll(" ", "")
+  }
+
 }

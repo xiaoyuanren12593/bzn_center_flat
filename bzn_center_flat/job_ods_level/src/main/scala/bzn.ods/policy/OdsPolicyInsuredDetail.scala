@@ -28,8 +28,10 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneDate = oneOdsPolicyInsuredDetail(hiveContext)
     val twoData = twoOdsPolicyInsuredDetail(hiveContext)
-    val res = oneDate.unionAll(twoData)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_insured_detail")
+    val res = oneDate.unionAll(twoData).repartition(1)
+//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_insured_detail")
+    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsPolicyInsuredDetail")
+
     sc.stop()
   }
 
@@ -38,6 +40,7 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
     * @param sqlContext
     */
   def twoOdsPolicyInsuredDetail(sqlContext:HiveContext) ={
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getDate", (time:String) => timeSubstring(time))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
@@ -92,12 +95,15 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       .selectExpr("id as policy_id","policy_no","insurance_policy_no")
 
     val res = InsuredData.join(bPolicyBzncen,InsuredData("master_policy_no") ===bPolicyBzncen("policy_no"),"leftouter")
-      .selectExpr("getUUID() as id","master_id as insured_id","policy_id","insurance_policy_no as policy_code","name_new as insured_name",
-        "case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ","insured_cert_no","birthday","is_married",
-        "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","email","industry","work_type_new as work_type",
-        "company_name","company_phone","insured_status","insure_policy_status as policy_status","getDate(insured_start_date) as start_date",
-        "getDate(insured_end_date) as end_date", "case when insured_cert_type ='1' and insured_start_date is not null then getAgeFromBirthTime(insured_cert_no,insured_start_date) else null end as age",
-        "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","clean(master_id) as insured_id","clean(cast(policy_id as String)) as policy_id","clean(insurance_policy_no) as policy_code",
+        "clean(name_new) as insured_name",
+        "case when insured_cert_type = '1' then 1 else -1 end as insured_cert_type ","clean(insured_cert_no) as insured_cert_no","birthday","cast(clean(is_married) as int) as is_married",
+        "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender","clean(insured_mobile) as insured_mobile","clean(email) as email","clean(industry) as industry",
+        "clean(work_type_new) as work_type", "clean(company_name) as company_name","clean(company_phone) as company_phone","cast(clean(insured_status) as int) as insured_status",
+        "cast(clean(insure_policy_status) as int) as policy_status","cast(getDate(insured_start_date) as timestamp) as start_date",
+        "cast(getDate(insured_end_date) as timestamp) as end_date", "case when insured_cert_type ='1' and insured_start_date is not null then getAgeFromBirthTime(insured_cert_no,insured_start_date) else null end as age",
+        "cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
+
     res
   }
 
@@ -106,6 +112,7 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
     * @param sqlContext
     */
   def oneOdsPolicyInsuredDetail(sqlContext:HiveContext) ={
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
@@ -169,12 +176,15 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       * one 和 Two 数据合并
       */
     val resTemp = insuredDataPolicyOne.unionAll(insuredDataPolicyTwo)
-      .selectExpr("getUUID() as id","master_id as insured_id","policy_id","policy_code","name_new as insured_name ","case when insured_cert_type = '1' then '1' else '-1' end as insured_cert_type ",
-        "insured_cert_no","birthday","is_married","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender","insured_mobile","email","industry",
-        "work_type_new as work_type","company_name","company_phone","case when status = '0' then '0' else '1' end as insured_status",
-        "case when insure_policy_status = '1' then '1' else '0' end  as policy_status",
-        "getDate(start_date) as start_date", "getDate(end_date) as end_date","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
-        "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","clean(master_id) as insured_id","clean(policy_id) as policy_id","clean(policy_code) as policy_code","clean(name_new) as insured_name ",
+        "case when insured_cert_type = '1' then 1 else -1 end as insured_cert_type ", "clean(insured_cert_no) as insured_cert_no","clean(birthday) as birthday",
+        "cast(clean(is_married) as int) as is_married","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender",
+        "clean(insured_mobile) as insured_mobile","clean(email) as email","clean(industry) as industry", "clean(work_type_new) as work_type",
+        "clean(company_name) as company_name","clean(company_phone) as company_phone","case when status = '0' then 0 else 1 end as insured_status",
+        "case when insure_policy_status = '1' then 1 else 0 end  as policy_status","cast(getDate(start_date) as timestamp) as start_date",
+        "cast(getDate(end_date) as timestamp) as end_date",
+        "case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
+        "cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
 
     resTemp
   }

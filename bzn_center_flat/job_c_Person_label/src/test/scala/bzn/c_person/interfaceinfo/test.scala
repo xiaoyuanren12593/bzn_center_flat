@@ -142,8 +142,13 @@ object test extends SparkUtil with Until {
 
     println(list6.map((_, 1)).groupBy(_._1).mapValues(_.size.toString))
 
+    println("------------------------")
 
+    val strs: ListBuffer[String] = ListBuffer("sangjiaqi", " sangjiaqi", "sangjiaqi ", "sang jia qi", null, "", " ")
 
+    println("start")
+    strs.map(x => clean(x)).foreach(println)
+    println("end")
 
 
 
