@@ -27,8 +27,10 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until {
     val hiveContext = sparkConf._4
     val twoRes = twoEnterpriseContactorDetail(hiveContext)
     val oneRes = oneEnterpriseContactorDetail(hiveContext)
-    val res = oneRes.unionAll(twoRes)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_enterprise_contactor_detail")
+    val res = oneRes.unionAll(twoRes).repartition(1)
+//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_enterprise_contactor_detail")
+    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsEnterpriseContactorDetail")
+
     sc.stop()
   }
 

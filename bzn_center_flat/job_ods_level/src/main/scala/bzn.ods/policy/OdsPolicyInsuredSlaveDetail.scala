@@ -27,8 +27,10 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneDate = oneOdsPolicyInsuredSlaveDetail(hiveContext)
     val twoDate = twoOdsPolicyInsuredSlaveDetail(hiveContext)
-    val res = oneDate.unionAll(twoDate)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_insured_slave_detail")
+    val res = oneDate.unionAll(twoDate).repartition(1)
+//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_insured_slave_detail")
+    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsPolicyInsuredSlaveDetail")
+
     sc.stop()
   }
 
@@ -47,7 +49,7 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
     sqlContext.udf.register("getEmptyString", () => "")
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("timeToString", (time: java.sql.Timestamp) => {
-      val str: String = time.toString.split("\\.")(0)
+      val str: String = if (time != null) time.toString.split("\\.")(0) else null
       str
     })
 
@@ -76,7 +78,7 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
     sqlContext.udf.register("getAgeFromBirthTime", (cert_no: String, end: String) => getAgeFromBirthTime(cert_no, end))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("timeToString", (time: java.sql.Timestamp) => {
-      val str: String = time.toString.split("\\.")(0)
+      val str: String = if (time != null) time.toString.split("\\.")(0) else null
       str
     })
 

@@ -27,8 +27,10 @@ object OdsPreservationSlaveDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneRes = onePreservationSlaveDetail(hiveContext)
     val twoRes = twoPreservationSlaveDetail(hiveContext)
-    val res = oneRes.unionAll(twoRes)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_preservation_slave_detail")
+    val res = oneRes.unionAll(twoRes).repartition(1)
+//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_preservation_slave_detail")
+    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsPreservationSlaveDetail")
+
     sc.stop()
   }
 
@@ -56,10 +58,11 @@ object OdsPreservationSlaveDetail extends SparkUtil with Until{
       .distinct()
 
     val res = resTemp
-      .selectExpr("getUUID() as id","master_id","child_name","case when child_gender = 2 then 0 else 1 end as child_gender",
-        "case when child_cert_type = 1 then 1 else -1 end as child_cert_type ","child_cert_no",
+      .selectExpr("getUUID() as id","clean(cast(master_id as String)) as master_id","clean(child_name) as child_name","case when child_gender = 2 then 0 else 1 end as child_gender",
+        "case when child_cert_type = 1 then 1 else -1 end as child_cert_type ","clean(child_cert_no) as child_cert_no",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "start_date","end_date","case when insured_status = 1 then 0 else 1 end as insured_status","age","create_time","update_time","getNow() as dw_create_time")
+
     res
   }
 
@@ -95,10 +98,11 @@ object OdsPreservationSlaveDetail extends SparkUtil with Until{
       .selectExpr("insured_id as master_id","master_preserve_id as preserve_id","child_name","child_gender","insured_cert_no as child_cert_type","child_cert_no","preserve_type","start_date","end_date","insured_status",
         "case when child_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age","create_time","update_time")
       .distinct()
-      .selectExpr("getUUID() as id","master_id","child_name","case when child_gender = 0 then 0 when child_gender = 1 then 1 else null end as child_gender",
-        "case when child_cert_type = 1 then 1 else -1 end as child_cert_type","child_cert_no","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
+      .selectExpr("getUUID() as id","clean(master_id) as master_id","clean(child_name) as child_name","case when child_gender = 0 then 0 when child_gender = 1 then 1 else null end as child_gender",
+        "case when child_cert_type = 1 then 1 else -1 end as child_cert_type","clean(child_cert_no) as child_cert_no","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
         "start_date","end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
         "age","create_time","update_time","getNow() as dw_create_time")
+
     res
   }
 
@@ -109,6 +113,7 @@ object OdsPreservationSlaveDetail extends SparkUtil with Until{
     */
   def udfUtil(sqlContext:HiveContext) ={
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getDefault", () => {
       val str = ""
       str
