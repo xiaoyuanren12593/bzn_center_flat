@@ -296,9 +296,10 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
 
 
     val res = resEnd.join(policyFirstPremiumBznprd,resEnd("policy_id") === policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
-      .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id ",
+      .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id",
         "policy_code","case when policy_id_premium is not null then pay_amount else first_premium end as first_premium","sum_premium",
-        "holder_name","insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status","preserve_policy_no","insure_company_name",
+        "holder_name","insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
+        "commission_discount_percent","policy_status","preserve_policy_no","insure_company_name",
         "belongs_regional","belongs_industry","channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
         "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 

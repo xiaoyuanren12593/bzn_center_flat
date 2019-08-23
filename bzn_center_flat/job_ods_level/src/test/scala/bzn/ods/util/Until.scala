@@ -8,6 +8,7 @@ import org.joda.time.{DateTime, Months}
 import org.joda.time.format.DateTimeFormat
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Exception
 
 /**
   * author:xiaoYuanRen
@@ -16,6 +17,29 @@ import scala.collection.mutable.ArrayBuffer
   * describe: this is new class
   **/
 trait Until {
+  /**
+    * 校验时间
+    * @param datevalue
+    * @return
+    */
+  def verifyData(datevalue:String):Boolean = {
+    if (datevalue== null) {
+      false
+    }
+    try {
+      val fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      val dd = fmt.parse(datevalue)
+      if (datevalue.equals(fmt.format(dd))) {
+        true
+      } else {
+        false
+      }
+    } catch {
+      case ex: Exception => {
+        false
+      }
+    }
+  }
 
   //将日期+8小时(24小时制)
   def eight_date(date_time: String): String = {
