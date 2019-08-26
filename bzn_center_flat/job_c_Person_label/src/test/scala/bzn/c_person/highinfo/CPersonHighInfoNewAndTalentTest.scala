@@ -258,6 +258,6 @@ object CPersonHighInfoNewAndTalentTest extends SparkUtil with Until with HbaseUt
 //    toHBase(res1,tableName,columnFamily1,rowKeyName)
 //    val res2 = res.selectExpr("cert_no","become_curr_cus_time","last_cus_type")
 //    toHBase(res2,tableName,columnFamily2,rowKeyName)
-//    toHBase(resOne,tableName,columnFamily1,rowKeyName)
+//    toHBase(resOne,tableName,columnFamily2,rowKeyName)
   }
 }

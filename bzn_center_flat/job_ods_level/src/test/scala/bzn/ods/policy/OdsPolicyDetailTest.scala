@@ -86,7 +86,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         val cityCode = x.getAs[String]("city_code")
         val countyCode = x.getAs[String]("county_code")
         var belongArea = ""
-        if((provinceCode!=null && cityCode != null && countyCode != null)){
+        if(provinceCode!=null && cityCode != null && countyCode != null){
           if(provinceCode.length == 6 && cityCode.length == 6 && countyCode.length == 6)
             belongArea = provinceCode.substring(0,2)+cityCode.substring(2,4)+countyCode.substring(4,6)
         }
@@ -109,7 +109,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         val cityCode = x.getAs[String]("city_code")
         val countyCode = x.getAs[String]("county_code")
         var belongArea = ""
-        if((provinceCode!=null && cityCode != null && countyCode != null)){
+        if(provinceCode!=null && cityCode != null && countyCode != null){
           if(provinceCode.length == 6 && cityCode.length == 6 && countyCode.length == 6)
             belongArea = provinceCode.substring(0,2)+cityCode.substring(2,4)+countyCode.substring(4,6)
         }
@@ -290,7 +290,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
     sqlContext.udf.register("getNull", (line: String) => {
       if (line == "" || line == null || line == "NULL") 9 else line.toInt
@@ -328,7 +328,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         val city = x.getAs[String]("city")
         val district = x.getAs[String]("district")
         var belongArea = ""
-        if((province!=null && city != null && district != null)){
+        if(province!=null && city != null && district != null){
           if(province.length == 6 && city.length == 6 && district.length == 6)
             belongArea = province.substring(0,2)+city.substring(2,4)+district.substring(4,6)
         }
@@ -358,6 +358,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val odrPolicyBznprdTemp = readMysqlTable(sqlContext,"odr_policy_bznprd")
       .selectExpr("id","sku_id")
+
     /**
       * 读取产品方案表
       */
@@ -369,56 +370,56 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val policyRes = odrPolicyBznprdTemp.join(pdtProductSkuBznprd,odrPolicyBznprdTemp("sku_id") ===pdtProductSkuBznprd("sku_id_slave"),"leftouter")
       .selectExpr("id as policy_id_sku","sku_id","term_one","term_three","price")
-      .map(x => {
-        val policyIdSku = x.getAs[String]("policy_id_sku")
-        val skuId = x.getAs[String]("sku_id")
-        val termOne = x.getAs[Int]("term_one")
-        val termThree = x.getAs[Int]("term_three")
-        var price = x.getAs[java.math.BigDecimal]("price")
-        if(price != null){
-          price = price.setScale(4,RoundingMode(3)).bigDecimal
+      .map(f = x => {
+        val policyIdSku = x.getAs [String]("policy_id_sku")
+        val skuId = x.getAs [String]("sku_id")
+        val termOne = x.getAs [Int]("term_one")
+        val termThree = x.getAs [Int]("term_three")
+        var price = x.getAs [java.math.BigDecimal]("price")
+        if( price != null ) {
+          price = price.setScale (4, RoundingMode (3)).bigDecimal
         }
 
         var skuCoverage = "" //保费
         var skuAppend = "" //特约
         var sku_charge_type = "" //保费类型  年缴或者月缴
         var sku_ratio = "" //伤残赔付比例
-        if(termThree != null && termThree.toString.length==5){
-          skuCoverage = termThree.toString.substring(0,2)
-        }else{
-          if(termOne != null){
+        if( termThree != null && termThree.toString.length == 5 ) {
+          skuCoverage = termThree.toString.substring (0, 2)
+        } else {
+          if( termOne != null ) {
             skuCoverage = termOne.toString
-          }else{
+          } else {
             skuCoverage = null
           }
         }
 
-        if(termThree != null && termThree.toString.length==5){
-          skuAppend = termThree.toString.substring(2,3)
-        }else{
+        if( termThree != null && termThree.toString.length == 5 ) {
+          skuAppend = termThree.toString.substring (2, 3)
+        } else {
           skuAppend = null
         }
 
-        if(termThree != null && termThree.toString.length==5){
-          sku_charge_type = termThree.toString.substring(3,4)
-        }else{
+        if( termThree != null && termThree.toString.length == 5 ) {
+          sku_charge_type = termThree.toString.substring (3, 4)
+        } else {
           sku_charge_type = null
         }
 
-        if(termThree != null && termThree.toString.length==5){
-          sku_ratio = termThree.toString.substring(4,5)
-        }else{
+        if( termThree != null && termThree.toString.length == 5 ) {
+          sku_ratio = termThree.toString.substring (4, 5)
+        } else {
           sku_ratio = null
         }
         var tech_service_rate = ""
         var economic_rate = ""
 
-        if(tech_service_rate == "" && economic_rate == ""){
+        if( tech_service_rate == "" && economic_rate == "" ) {
           tech_service_rate = null
           economic_rate = null
         }
 
-        (policyIdSku,skuId,skuCoverage,skuAppend,sku_ratio,price,sku_charge_type,tech_service_rate,economic_rate)
+        (policyIdSku, skuId, skuCoverage, skuAppend, sku_ratio, price, sku_charge_type, tech_service_rate, economic_rate)
       })
       .toDF("policy_id_sku","sku_id","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate")
       .distinct()
