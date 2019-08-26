@@ -79,5 +79,4 @@ object test extends SparkUtil with Until{
     println(sdf.format(newDate))
     Timestamp.valueOf(sdf.format(newDate))
   }
-
 }

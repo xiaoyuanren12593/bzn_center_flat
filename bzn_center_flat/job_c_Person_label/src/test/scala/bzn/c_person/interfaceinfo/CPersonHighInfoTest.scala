@@ -115,6 +115,7 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
 //        结果
         (highCertNo, isCoxcombry)
       })
+      .filter(line => line._2 != null)
       .toDF("high_cert_no", "is_coxcombry")
 
 //    结果
@@ -184,7 +185,7 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
     val peopleInfos: DataFrame = peopleInfo
       .selectExpr("high_cert_no", "product_code", "start_date")
 
-    //    清洗wedding_month标签
+    //    清洗ride标签
     val result: DataFrame = peopleInfos
       .join(productInfo, peopleInfos("product_code") === productInfo("product_codes"), "leftouter")
       .selectExpr("high_cert_no", "product_desc", "start_date")
@@ -221,10 +222,15 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
         val maxRideDate: String = rideDate(line._2)
         val tripRates: String = tripRate(line._2)
         val internalClocks: String = internalClock(line._2)
+        val allRideTimeSteps: String = allRideTimeStep(line._2)
+        val allRideBrands: String = allRideBrand(line._2)
+        val allRideDates: String = allRideDate(line._2)
 //        结果
-        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks)
+        (highCertNo, rideDay, maxRideTimeStep, maxRideBrand, maxRideDate, tripRates, internalClocks, allRideTimeSteps,
+        allRideBrands, allRideDates)
       })
-      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate", "internal_clock")
+      .toDF("high_cert_no", "ride_days", "max_ride_time_step", "max_ride_brand", "max_ride_date", "trip_rate",
+        "internal_clock", "all_ride_time_step", "all_ride_brand", "all_ride_date")
 
 //    结果
     result
@@ -401,7 +407,11 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
         //        结果
         (highCertNo, productDesc)
       })
-      .filter(line => line._2.contains("青芒果方案1"))
+      .filter(line => {
+        if (line._2 != null) {
+          if (line._2.contains("青芒果方案1")) true else false
+        } else false
+      })
       .aggregateByKey(mutable.ListBuffer[String]())(
         (List: ListBuffer[String], value: String) => List += value,
         (List1: ListBuffer[String], List2: ListBuffer[String]) => List1 ++= List2
@@ -445,7 +455,9 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       .selectExpr("high_cert_no", "dropEmptys(is_coxcombry) as is_coxcombry", "dropEmptys(wedding_month) as wedding_month",
       "dropEmptys(ride_days) as ride_days", "dropEmptys(max_ride_time_step) as max_ride_time_step",
       "dropEmptys(max_ride_brand) as max_ride_brand", "dropEmptys(max_ride_date) as max_ride_date",
-      "dropEmptys(trip_rate) as trip_rate", "dropEmptys(internal_clock) as internal_clock", "dropEmptys(is_online_car) as is_online_car",
+      "dropEmptys(trip_rate) as trip_rate", "dropEmptys(internal_clock) as internal_clock",
+      "dropEmptys(all_ride_time_step) as all_ride_time_step", "dropEmptys(all_ride_brand) as all_ride_brand",
+      "dropEmptys(all_ride_date) as all_ride_date", "dropEmptys(is_online_car) as is_online_car",
       "dropEmptys(part_time_nums) as part_time_nums", "dropEmptys(is_h_house) as is_h_house", "dropEmptys(amplitude_frequenter) as amplitude_frequenter")
 
 //    结果
@@ -591,35 +603,6 @@ object CPersonHighInfoTest extends SparkUtil with Until with HbaseUtil{
       properties.setProperty(key,value)
     }
     properties
-  }
-
-  /**
-    * 将DataFrame写入HBase
-    * @param dataFrame
-    * @param tableName
-    * @param columnFamily
-    */
-  def toHBase2(dataFrame: DataFrame, tableName: String, columnFamily: String): Unit = {
-    //    获取conf
-    val con: (Configuration, Configuration) = HbaseConf(tableName)
-    val conf_fs: Configuration = con._2
-    val conf: Configuration = con._1
-    //    获取列
-    val cols: Array[String] = dataFrame.columns
-    //    取不等于key的列循环
-
-    cols.filter(x => x != "base_cert_no").map(x => {
-      val hbaseRDD: RDD[(String, String, String)] = dataFrame.map(rdd => {
-        val certNo = rdd.getAs[String]("base_cert_no")
-        val clo: Any = rdd.getAs[Any](x)
-        //证件号，列值 列名
-        (certNo,clo,x)
-      })
-        .filter(x => x._2 != null && x._2 != "")
-        .map(x => (x._1,x._2.toString,x._3))
-
-      saveToHbase(hbaseRDD, columnFamily,x, conf_fs, tableName, conf)
-    })
   }
 
 }

@@ -41,7 +41,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     result.write.mode(SaveMode.Overwrite).saveAsTable("label.high_label")
 
 //    写到hbase里
-    toHBase2(result, "label_person", "high_info")
+    toHBase(result, "label_person", "high_info", "high_cert_no")
 
     sc.stop()
 
@@ -194,7 +194,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
       .groupByKey()
       .map(line => {
         val highCertNo: String = line._1
-        val value: String = if (line._2.toArray.length >= 2) "是" else "否"
+        val value: String = if (line._2.toArray.length >= 2) "是" else null
         //        返回结果
         (highCertNo, value)
       })
@@ -282,8 +282,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     */
   def getNintyDaysAgo(): Timestamp = {
     val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val dateStr: String = sdf.format(new Date())
-    val date: Date = sdf.parse(dateStr)
+    val date: Date = new Date()
     val c: Calendar = Calendar.getInstance
     c.setTime(date)
     c.add(Calendar.DATE, -90)
@@ -297,8 +296,7 @@ object CPersonHighInfo extends SparkUtil with Until with HbaseUtil{
     */
   def getHalfYearDaysAgo(): Timestamp = {
     val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val dateStr: String = sdf.format(new Date())
-    val date: Date = sdf.parse(dateStr)
+    val date: Date = new Date()
     val c: Calendar = Calendar.getInstance
     c.setTime(date)
     c.add(Calendar.DATE, -180)

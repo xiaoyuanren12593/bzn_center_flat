@@ -27,46 +27,10 @@ object OdsPolicyDetail extends SparkUtil with Until{
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    val odsPolicyDetail = oneOdsPolicyDetail(hiveContext).unionAll( twoOdsPolicyDetail(hiveContext))
-      .selectExpr(
-        "id",
-        "order_id",
-        "order_code",
-        "user_id",
-        "product_code",
-        "product_name",
-        "policy_id ",
-        "policy_code",
-        "cast (first_premium as decimal(14,4))",
-        "cast (sum_premium as decimal(14,4))",
-        "holder_name",
-        "insured_subject",
-        "policy_start_date",
-        "policy_end_date",
-        "pay_way",
-        "commission_discount_percent",
-        "policy_status",
-        "preserve_policy_no",
-        "insure_company_name",
-        "belongs_regional",
-        "belongs_industry",
-        "channel_id",
-        "channel_name",
-        "sku_id",
-        "sku_coverage",
-        "sku_append",
-        "sku_ratio",
-        "cast (sku_price as decimal(14,4))",
-        "sku_charge_type",
-        "tech_service_rate",
-        "economic_rate",
-        "num_of_preson_first_policy",
-        "policy_create_time",
-        "policy_update_time",
-        "dw_create_time"
-      )
-    odsPolicyDetail.repartition(1).write.mode(SaveMode.Overwrite).parquet("/azkaban/clickhouse/data/ods/ods_policy_detail.parquet")
+    val odsPolicyDetail = oneOdsPolicyDetail(hiveContext).unionAll(twoOdsPolicyDetail(hiveContext)).repartition(1)
 //    odsPolicyDetail.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_detail")
+    odsPolicyDetail.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsPolicyDetail")
+
     sc.stop()
   }
 
@@ -76,6 +40,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
     */
   def twoOdsPolicyDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
@@ -291,12 +256,16 @@ object OdsPolicyDetail extends SparkUtil with Until{
 
 
     val res = resEnd.join(policyFirstPremiumBznprd,resEnd("policy_id") === policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
-      .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id ",
-        "policy_code","case when policy_id_premium is not null then pay_amount else first_premium end as first_premium","sum_premium",
-        "holder_name","insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status","preserve_policy_no","insure_company_name",
-        "belongs_regional","belongs_industry","channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
-        "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
-      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
+      .selectExpr("clean(id) as id","clean(order_id) as order_id","clean(order_code) as order_code","clean(user_id) as user_id",
+        "clean(product_code) as product_code","clean(product_name) as product_name","clean(cast(policy_id as String)) as policy_id",
+        "clean(policy_code) as policy_code","case when policy_id_premium is not null then cast(pay_amount as decimal(14,4)) else cast(first_premium as decimal(14,4)) end as first_premium",
+        "cast(sum_premium as decimal(14,4)) as sum_premium", "clean(holder_name) as holder_name","clean(insured_subject) as insured_subject",
+        "policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status",
+        "clean(preserve_policy_no) as preserve_policy_no","clean(insure_company_name) as insure_company_name", "clean(belongs_regional) as belongs_regional","clean(belongs_industry) as belongs_industry",
+        "clean(channel_id) as channel_id","clean(channel_name) as channel_name","clean(sku_id) as sku_id","clean(cast(sku_coverage as String)) as sku_coverage",
+        "clean(sku_append) as sku_append","clean(sku_ratio) as sku_ratio", "cast(sku_price as decimal(14,4)) as sku_price", "clean(sku_charge_type) as sku_charge_type",
+        "cast(tech_service_rate as decimal(14,4)) as tech_service_rate","cast(economic_rate as decimal(14,4)) as economic_rate",
+        "num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 
     res
 
@@ -308,6 +277,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
     */
   def oneOdsPolicyDetail(sqlContext:HiveContext)={
     import sqlContext.implicits._
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
@@ -496,11 +466,15 @@ object OdsPolicyDetail extends SparkUtil with Until{
       .where("one_level_pdt_cate <> '蓝领外包'")
 
     val resEnd = res.join(odsProductDetail,res("product_code")===odsProductDetail("product_code_slave"),"leftouter")
-      .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id ",
-        "policy_code","case when product_code_slave is not null then sum_premium else first_premium end first_premium","sum_premium",
-        "holder_name","insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status","preserve_policy_no","insure_company_name",
-        "belongs_regional","belongs_industry","channelId as channel_id","channel_name","sku_id","sku_coverage","sku_append","sku_ratio","sku_price",
-        "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
+      .selectExpr("clean(id) as id","clean(order_id) as order_id","clean(order_code) as order_code","clean(user_id) as user_id",
+        "clean(product_code) as product_code","clean(product_name) as product_name","clean(policy_id) as policy_id", "clean(policy_code) as policy_code",
+        "case when product_code_slave is not null then sum_premium else first_premium end first_premium","sum_premium", "clean(holder_name) as holder_name",
+        "clean(insured_subject) as insured_subject","policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
+        "commission_discount_percent","policy_status","clean(preserve_policy_no) as preserve_policy_no","clean(insure_company_name) as insure_company_name",
+        "clean(belongs_regional) as belongs_regional","clean(belongs_industry) as belongs_industry","clean(channelId) as channel_id","clean(channel_name) as channel_name",
+        "clean(sku_id) as sku_id","clean(sku_coverage) as sku_coverage","clean(sku_append) as sku_append","clean(sku_ratio) as sku_ratio","cast(sku_price as decimal(14,4)) as sku_price",
+        "clean(sku_charge_type) as sku_charge_type","cast(clean(tech_service_rate) as decimal(14,4)) as tech_service_rate","cast(clean(economic_rate) as decimal(14,4)) as economic_rate",
+        "num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 
     resEnd
   }
@@ -570,6 +544,4 @@ object OdsPolicyDetail extends SparkUtil with Until{
     val schema = StructType(bPolicyHolderCompanyProductNewSchema.map(fieldName => StructField(fieldName, StringType, nullable = true)))
     val res = sqlContext.createDataFrame(value,schema)
     */
-
 }
-

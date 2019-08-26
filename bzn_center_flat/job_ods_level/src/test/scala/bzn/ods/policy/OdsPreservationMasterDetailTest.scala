@@ -30,6 +30,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     val oneRes = onePreservetionMasterDetail(hiveContext)
     val twoRes = twoPreservetionMasterDetail(hiveContext)
     val res = oneRes.unionAll(twoRes)
+    res.printSchema()
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_holder_detail")
 
     sc.stop()
@@ -200,9 +201,14 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
     val resTempTwo = sqlContext.sql("select *  from res_temp")
     val res = resTempTwo.join(bPolicyPreserveTempRes,resTempTwo("inc_dec_order_no")===bPolicyPreserveTempRes("temp_inc_dec_order_no"),"leftouter")
-      .selectExpr("getUUID() as id","master_id","preserve_id","insured_name","case when gender = 2 then 0 else 1 end as gender","case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type",
-        "insured_cert_no","birthday","industry","work_type","company_name","company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
-        "pre_start_date","pre_end_date","insured_status","age","getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","clean(master_id) as master_id","clean(cast(preserve_id as String)) as preserve_id","clean(insured_name) as insured_name",
+        "case when gender = 2 then 0 else 1 end as gender","case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type",
+        "clean(insured_cert_no) as insured_cert_no","clean(birthday) as birthday","clean(industry) as industry","clean(work_type) as work_type","clean(company_name) as company_name",
+        "clean(company_phone) as company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
+        "cast(clean(pre_start_date) as timestamp) as pre_start_date","cast(clean(pre_end_date) as timestamp) as pre_end_date","cast(clean(insured_status) as int) as insured_status",
+        "age","cast(clean(getDate(create_time)) as timestamp) as create_time","cast(clean(getDate(update_time)) as timestamp) as update_time","getNow() as dw_create_time")
+
+    println("2.0")
     res.printSchema()
     res
   }
@@ -334,11 +340,14 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       .toDF("preserve_id_temp","preserve_type","pre_start_date","pre_end_date")
 
     val res = plcPolicyPreserveInsuredBznprd.join(temp,plcPolicyPreserveInsuredBznprd("preserve_id")===temp("preserve_id_temp") ,"leftouter")
-      .selectExpr("getUUID() as id","master_id","preserve_id","name as insured_name","gender","case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type","insured_cert_no","birthday","industry","work_type_new as work_type",
-        "company_name","company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
-        "pre_start_date","pre_end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
+      .selectExpr("getUUID() as id","clean(master_id) as master_id","clean(preserve_id) as preserve_id","clean(name) as insured_name","cast(clean(gender) as int) as gender",
+        "case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type","clean(insured_cert_no) as insured_cert_no","clean(birthday) as birthday","clean(industry) as industry",
+        "clean(work_type_new) as work_type", "clean(company_name) as company_name","clean(company_phone) as company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
+        "cast(clean(pre_start_date) as timestamp) as pre_start_date","cast(clean(pre_end_date) as timestamp) as pre_end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
         "case when insured_cert_type ='1' and pre_start_date is not null then getAgeFromBirthTime(insured_cert_no,pre_start_date) else null end as age",
-        "getDate(create_time) as create_time","getDate(update_time) as update_time","getNow() as dw_create_time")
+        "cast(clean(getDate(create_time)) as timestamp) as create_time","cast(clean(getDate(update_time)) as timestamp) as update_time","getNow() as dw_create_time")
+
+    println("1.0")
     res.printSchema()
     res
   }
@@ -350,6 +359,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     */
   def udfUtil(sqlContext:HiveContext) ={
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getDate", (time:String) => timeSubstring(time))
     sqlContext.udf.register("getDefault", () => {
       val str = ""

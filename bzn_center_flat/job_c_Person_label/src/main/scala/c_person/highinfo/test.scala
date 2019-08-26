@@ -7,11 +7,11 @@ import java.util.{Calendar, Date}
 
 import bzn.job.common.Until
 
-object test {
+object test extends Until {
 
   def main(args: Array[String]): Unit = {
 
-
+    println(dateDelNintyDay("2019-07-18 00:00:00"))
 
     if (getNintyDaysAgo().compareTo(Timestamp.valueOf("2019-05-18 18:23:11")) < 0) {
       print("1234567")
@@ -34,11 +34,6 @@ object test {
     c.add(Calendar.DATE, -90)
     val newDate: Date = c.getTime
     Timestamp.valueOf(sdf.format(newDate))
-  }
-
-  def dropSpecial(Temp: String): Boolean = {
-    val pattern = Pattern.compile("^[\\dxX]*$")
-    pattern.matcher(Temp).matches()
   }
 
 }

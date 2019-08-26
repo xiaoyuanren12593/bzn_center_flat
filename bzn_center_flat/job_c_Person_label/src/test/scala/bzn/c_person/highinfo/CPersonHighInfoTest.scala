@@ -190,7 +190,7 @@ object CPersonHighInfoTest extends SparkUtil with Until{
       .groupByKey()
       .map(line => {
         val highCertNo: String = line._1
-        val value: String = if (line._2.toArray.length >= 6) "是" else "否"
+        val value: String = if (line._2.toArray.length >= 6) "是" else null
 //        返回结果
         (highCertNo, value)
       })

@@ -493,5 +493,4 @@ object CPersonHighInfoCusType extends SparkUtil with Until with HbaseUtil{
 //    incInsuredResult.rdd.repartition(1).saveAsTextFile("/xing/data/2019-8-1/incInsuredResult")
     incInsuredResult
   }
-
 }

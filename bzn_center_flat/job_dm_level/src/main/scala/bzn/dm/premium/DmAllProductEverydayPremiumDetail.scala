@@ -1,3 +1,4 @@
+
 package bzn.dm.premium
 
 import java.sql.{Connection, DriverManager}
@@ -155,3 +156,4 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
     properties
   }
 }
+

@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 
+import com.alibaba.fastjson.JSONObject
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, Months}
 
@@ -450,7 +451,7 @@ trait Until {
   def get_current_date(current: Long): String = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     //这个是你要转成后的时间的格式, 时间戳转换成时间
-    val sd = sdf.format(new Date(current));
+    val sd = sdf.format(new Date(current))
     sd
   }
 
@@ -492,6 +493,39 @@ trait Until {
   }
 
   /**
+    * 获得骑行时间段
+    * @param list
+    * @return
+    */
+  def allRideTimeStep(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += (if (l._3.toInt >= 1 && l._3.toInt < 3) "1-3时"
+      else if (l._3.toInt >= 3 && l._3.toInt < 5) "3-5时"
+      else if (l._3.toInt >= 5 && l._3.toInt < 7) "5-7时"
+      else if (l._3.toInt >= 7 && l._3.toInt < 9) "7-9时"
+      else if (l._3.toInt >= 9 && l._3.toInt < 11) "9-11时"
+      else if (l._3.toInt >= 11 && l._3.toInt < 13) "11-13时"
+      else if (l._3.toInt >= 13 && l._3.toInt < 15) "13-15时"
+      else if (l._3.toInt >= 15 && l._3.toInt < 17) "15-17时"
+      else if (l._3.toInt >= 17 && l._3.toInt < 19) "17-19时"
+      else if (l._3.toInt >= 19 && l._3.toInt < 21) "19-21时"
+      else if (l._3.toInt >= 21 && l._3.toInt < 23) "21-23时"
+      else "23-1时")
+    }
+//    分组聚合
+    val map: Map[String, String] = lists.groupBy(_.toString).mapValues(_.size.toString)
+//    创建JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+//    返回JSON的String
+    JSON.toString
+
+  }
+
+  /**
     * 获得最多骑行品牌
     * @param list
     * @return
@@ -505,6 +539,28 @@ trait Until {
   }
 
   /**
+    * 获得骑行品牌
+    * @param list
+    * @return
+    */
+  def allRideBrand(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += l._1
+    }
+//    分组聚合
+    val map: Map[String, String] = lists.groupBy(_.toString).mapValues(_.size.toString)
+//    循环放入JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+//    返回JSON的String
+    JSON.toString
+
+  }
+
+  /**
     * 获得最多骑行日期
     * @param list
     * @return
@@ -514,9 +570,29 @@ trait Until {
     for (l <- list) {
       lists += l._4
     }
-    println("qaz")
-    lists.foreach(println)
     if (lists.isEmpty) null else lists.max
+  }
+
+  /**
+    * 获得骑行日期
+    * @param list
+    * @return
+    */
+  def allRideDate(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += l._4
+    }
+//    分组聚合
+    val map: Map[String, String] = lists.groupBy(_.toString).mapValues(_.size.toString)
+//    创建JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+//    返回字符串
+    JSON.toString
+
   }
 
   /**
@@ -529,7 +605,7 @@ trait Until {
     for (l <- list) {
       if (l._2 > l._5) lists += l._2
     }
-    if (lists.isEmpty) null else lists.size.toString
+    if (lists.isEmpty) 0.toString else lists.size.toString
   }
 
   /**
@@ -596,6 +672,11 @@ trait Until {
       isAttendSch =  "未上学"
     }
     isAttendSch
+  }
+
+  def clean(str: String): String = {
+    if (str == "" || str == " " || str == "NULL" || str == "null" || str == null) null
+    else str.replaceAll(" ", "")
   }
 
 }
