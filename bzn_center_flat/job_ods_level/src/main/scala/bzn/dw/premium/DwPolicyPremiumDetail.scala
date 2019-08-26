@@ -6,7 +6,7 @@ import java.util.Date
 
 import bzn.job.common.Until
 import bzn.ods.util.SparkUtil
-import org.apache.spark.sql.{SQLContext, SaveMode}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -76,7 +76,7 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
     /**
       * 保单新投保费和续投保费
       */
-    val newPolicy = odsPolicyDetail
+    val newPolicy: DataFrame = odsPolicyDetail
       .where("policy_status in (0,1,-1) and preserve_policy_no is null")
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
@@ -240,11 +240,11 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
     /**
       * 读取方案表
       */
-    val odsPolicyProductPlan = sqlContext.sql("select policy_code as policy_code_plan,product_code,product_name,one_level_pdt_cate," +
+    val odsPolicyProductPlan: DataFrame = sqlContext.sql("select policy_code as policy_code_plan,product_code,product_name,one_level_pdt_cate," +
       "two_level_pdt_cate,business_line,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type,tech_service_rate,economic_rate" +
       ",commession_rate from odsdb.ods_policy_product_plan")
 
-    val resPlan = res.join(odsPolicyProductPlan,res("policy_code")===odsPolicyProductPlan("policy_code_plan"),"leftouter")
+    val resPlan: DataFrame = res.join(odsPolicyProductPlan,res("policy_code")===odsPolicyProductPlan("policy_code_plan"),"leftouter")
       .selectExpr("policy_id","policy_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "product_code","product_name","one_level_pdt_cate","two_level_pdt_cate","business_line","add_batch_code","del_batch_code",
         "preserve_id","premium_type","holder_name","insured_subject","belongs_regional","commession_rate","tech_service_rate","economic_rate",
@@ -253,7 +253,7 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
     /**
       * 读取销售数据
       */
-    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
+    val odsSalesmanDetail: DataFrame = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
 
     /**
       * 读取销售渠道表

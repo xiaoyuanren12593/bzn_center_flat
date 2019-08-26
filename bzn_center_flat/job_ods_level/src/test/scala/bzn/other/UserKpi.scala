@@ -3,12 +3,11 @@ package bzn.other
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.collection.immutable.StringOps
-import scala.util.matching.Regex
 
 object UserKpi {
   def main(args: Array[String]): Unit = {
     //读取数据
+
      val conf = new SparkConf().setAppName("UserKpi").setMaster("local[*]")
      val sc: SparkContext = new SparkContext(conf)
      val data: RDD[String] = sc.textFile("D:\\testdata\\log\\baozhunniu-victory-user-log\\*.gz")
@@ -27,6 +26,11 @@ object UserKpi {
 
       (data, lines)
     })
+
+
+
+
+
    //  dataAndurl.foreach(println)
 
 
@@ -40,11 +44,12 @@ object UserKpi {
     //filterdataAndlogin.foreach(println)
 
     //按日期分组聚合
-      val dataAndloginreduce: RDD[(String, Int)] = dataAndlogin
-        .map(t=>(t._1,1)).reduceByKey(_+_)
+      val dataAndloginreduce: RDD[(String, Int)] = dataAndlogin.map(t=>(t._1,1)).reduceByKey(_+_)
      dataAndloginreduce.foreach(t=>println("每天的总登陆人数:"+t._1+":"+t._2))
+
+
     //总登陆人数
-    val lonincounts: Int = dataAndloginreduce.map(_._2).sum().toInt
+    val lonincounts: Int = dataAndloginreduce.map(_._2).collect().sum
     println("总登陆人数："+lonincounts)
 
     //过滤出注册人数
@@ -57,9 +62,11 @@ object UserKpi {
 
     //按照日期分组聚合
     val dataAndregreduce: RDD[(String, Int)] = dataAndreg.map(t=>(t._1,1)).reduceByKey(_+_)
-    dataAndregreduce.foreach(t=>println("每天注册的总人数："+t._1+":"+t._2))
+
+
+    dataAndregreduce.coalesce(1,shuffle = true).saveAsTextFile("e://data//a.txt")
     // 总注册人数
-    val rescounts: Int = dataAndregreduce.map(_._2).sum().toInt
+    val rescounts: Int = dataAndregreduce.map(_._2).collect().sum
     println("总注册人数："+rescounts)
 
 

@@ -149,7 +149,7 @@ object DwEmployerPolicyPremiumDetail extends SparkUtil with Until{
       * 保全中的增减员
       */
     val preserveAddAndDelPremiumTemp = odsPolicyDetail.join(odsPreseveDetail,odsPolicyDetail("policy_id") ===odsPreseveDetail("policy_id_preserve"))
-      .where("preserve_status = 1 and preserve_type = 1")
+      .where( "preserve_status = 1 and preserve_type = 1")
       .selectExpr("policy_id","policy_code","preserve_id","add_premium","add_person_count","del_premium","del_person_count",
         "product_code","preserve_effect_date","preserve_type")
 

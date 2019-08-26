@@ -53,7 +53,7 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
     /**
       * 读取保费表 计算不同产品的保费
       */
-    val productPremiumOne = sqlContext.sql("select one_level_pdt_cate,premium_type,sum_premium,day_id from dwdb.dw_policy_premium_detail")
+    val productPremiumOne: DataFrame = sqlContext.sql("select one_level_pdt_cate,premium_type,sum_premium,day_id from dwdb.dw_policy_premium_detail")
       .map(x => {
         val oneLevelPdtCate = x.getAs[String]("one_level_pdt_cate")
         val premiumType = x.getAs[Int]("premium_type")
