@@ -78,7 +78,11 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
       .map(x => {
         (x._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._1)
       })
-      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
+        "office_street","create_time","update_time")
+      .selectExpr("clean(ent_name_temp) as ent_name_temp","clean(license_code) as license_code","clean(org_code) as org_code","clean(tax_code) as tax_code",
+        "clean(office_address) as office_address","office_province","office_city","office_district","clean(office_street) as office_street",
+        "cast(clean(create_time) as timestamp) as create_time","cast(clean(update_time) as timestamp) as update_time")
 
     println("1.0")
     entEnterpriseInfoBznprd.printSchema()
@@ -111,7 +115,13 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
       .map(x => {
         (x._1,x._2._2,x._2._3,x._2._4,x._2._5,x._2._6,x._2._7,x._2._8,x._2._9,x._2._10,x._2._1)
       })
-      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
+      .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
+        "office_street","create_time","update_time")
+      .selectExpr("clean(ent_name_temp) as ent_name_temp","clean(license_code) as license_code","clean(org_code) as org_code","clean(tax_code) as tax_code",
+        "clean(office_address) as office_address","cast(clean(office_province) as int) as office_province","cast(clean(office_city) as int) as office_city",
+        "cast(clean(office_district) as int) as office_district","clean(office_street) as office_street",
+        "cast(clean(create_time) as timestamp) as create_time","cast(clean(update_time) as timestamp) as update_time")
+
     println("2.0")
     bPolicyHolderCompanyBzncen.printSchema()
 
@@ -126,12 +136,12 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
         val orgCode = x.getAs[String]("org_code")
         val taxCode = x.getAs[String]("tax_code")
         val officeAddress = x.getAs[String]("office_address")
-        val officeProvince = x.getAs[String]("office_province")
-        val officeCity = x.getAs[String]("office_city")
-        val officeDistrict = x.getAs[String]("office_district")
+        val officeProvince = x.getAs[Integer]("office_province")
+        val officeCity = x.getAs[Integer]("office_city")
+        val officeDistrict = x.getAs[Integer]("office_district")
         val officeStreet = x.getAs[String]("office_street")
-        val createTime = x.getAs[String]("create_time")
-        val updateTime = x.getAs[String]("update_time")
+        val createTime = x.getAs[java.sql.Timestamp]("create_time")
+        val updateTime = x.getAs[java.sql.Timestamp]("update_time")
         (entNameTemp,(updateTime,licenseCode,orgCode,taxCode,officeAddress,officeProvince,officeCity,officeDistrict,officeStreet,createTime))
       })
       .reduceByKey((x1,x2)=>{
@@ -144,10 +154,12 @@ object OdsEnterpriseDetailTest extends SparkUtil with Until{
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
     println(res.count())
     val twoRes = oneAndTwoEmpData.join(res,oneAndTwoEmpData("ent_name") === res("ent_name_temp"),"leftouter")
-      .selectExpr("getUUID() as id","ent_id","ent_name","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","getDefault() as curr_count","getDefault() as first_policy_time","create_time","update_time","getNow() as dw_create_time")
-    twoRes.show(3000)
+      .selectExpr("getUUID() as id","ent_id","ent_name","license_code","org_code","tax_code","office_address","office_province","office_city",
+        "office_district","office_street","cast(clean(getDefault()) as int) as curr_count","cast(clean(getDefault()) as timestamp) as first_policy_time","create_time","update_time","getNow() as dw_create_time")
 
+    twoRes.printSchema()
     twoRes
+
   }
 
   /**

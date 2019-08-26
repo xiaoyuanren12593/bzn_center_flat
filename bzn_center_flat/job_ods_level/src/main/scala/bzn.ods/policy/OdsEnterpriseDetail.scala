@@ -26,9 +26,11 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    val res = updataEnterprise(hiveContext)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_enterprise_detail")
-    res.repartition(20).write.mode(SaveMode.Overwrite)
+    val res = updataEnterprise(hiveContext).repartition(1)
+//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_enterprise_detail")
+//    res.repartition(20).write.mode(SaveMode.Overwrite)
+    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsEnterpriseDetail")
+
     sc.stop()
   }
 
@@ -39,6 +41,7 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
   def updataEnterprise(sqlContext:HiveContext) ={
     import sqlContext.implicits._
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
@@ -81,6 +84,9 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       })
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
         "office_street","create_time","update_time")
+      .selectExpr("clean(ent_name_temp) as ent_name_temp","clean(license_code) as license_code","clean(org_code) as org_code","clean(tax_code) as tax_code",
+        "clean(office_address) as office_address","office_province","office_city","office_district","clean(office_street) as office_street",
+        "cast(clean(create_time) as timestamp) as create_time","cast(clean(update_time) as timestamp) as update_time")
 
      /**
       * 读取2.0投保企业信息
@@ -113,6 +119,10 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       })
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district",
         "office_street","create_time","update_time")
+      .selectExpr("clean(ent_name_temp) as ent_name_temp","clean(license_code) as license_code","clean(org_code) as org_code","clean(tax_code) as tax_code",
+        "clean(office_address) as office_address","cast(clean(office_province) as int) as office_province","cast(clean(office_city) as int) as office_city",
+        "cast(clean(office_district) as int) as office_district","clean(office_street) as office_street",
+        "cast(clean(create_time) as timestamp) as create_time","cast(clean(update_time) as timestamp) as update_time")
 
     /**
       * 1.0和2.0的企业信息进行合并如果有相同企业的话就用2.0的信息
@@ -124,12 +134,12 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
         val orgCode = x.getAs[String]("org_code")
         val taxCode = x.getAs[String]("tax_code")
         val officeAddress = x.getAs[String]("office_address")
-        val officeProvince = x.getAs[String]("office_province")
-        val officeCity = x.getAs[String]("office_city")
-        val officeDistrict = x.getAs[String]("office_district")
+        val officeProvince = x.getAs[Integer]("office_province")
+        val officeCity = x.getAs[Integer]("office_city")
+        val officeDistrict = x.getAs[Integer]("office_district")
         val officeStreet = x.getAs[String]("office_street")
-        val createTime = x.getAs[String]("create_time")
-        val updateTime = x.getAs[String]("update_time")
+        val createTime = x.getAs[java.sql.Timestamp]("create_time")
+        val updateTime = x.getAs[java.sql.Timestamp]("update_time")
         ((entNameTemp),(updateTime,licenseCode,orgCode,taxCode,officeAddress,officeProvince,officeCity,officeDistrict,officeStreet,createTime))
       })
       .reduceByKey((x1,x2)=>{
@@ -142,7 +152,8 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
       .toDF("ent_name_temp","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","create_time","update_time")
 
     val twoRes = oneAndTwoEmpData.join(res,oneAndTwoEmpData("ent_name") === res("ent_name_temp"),"leftouter")
-      .selectExpr("getUUID() as id","ent_id","ent_name","license_code","org_code","tax_code","office_address","office_province","office_city","office_district","office_street","getDefault() as curr_count","getDefault() as first_policy_time","create_time","update_time","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","ent_id","ent_name","license_code","org_code","tax_code","office_address","office_province","office_city",
+        "office_district","office_street","cast(clean(getDefault()) as int) as curr_count","cast(clean(getDefault()) as timestamp) as first_policy_time","create_time","update_time","getNow() as dw_create_time")
 
     twoRes
   }

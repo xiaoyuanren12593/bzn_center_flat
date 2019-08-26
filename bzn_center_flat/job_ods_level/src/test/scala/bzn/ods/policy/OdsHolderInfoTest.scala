@@ -60,6 +60,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
   def twoHolderInfoDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
@@ -99,12 +100,15 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       .toDF("policy_no","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","bank_card_no","bank_name")
 
     val odsHolderRes = bPolicyBznprd.join(bpolicyHolderPersonBzncen,bPolicyBznprd("master_policy_no")===bpolicyHolderPersonBzncen("policy_no"))
-      .selectExpr("policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
-        "case when gender = 2 then 0 else 1 end as gender","mobile","email","bank_card_no","bank_name")
+      .selectExpr("clean(cast(policy_id as String)) as policy_id","clean(holder_name) as holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type",
+        "clean(holder_cert_no) as holder_cert_no","clean(birthday) as birthday", "case when gender = 2 then 0 else 1 end as gender",
+        "clean(mobile) as mobile","clean(email) as email","clean(bank_card_no) as bank_card_no","clean(bank_name) as bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+
     println("2.0")
     odsHolderRes.printSchema()
     odsHolderRes
+
   }
 
   /**
@@ -113,6 +117,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
     */
   def oneHolderInfoDetail(sqlContext:HiveContext) ={
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
@@ -134,12 +139,15 @@ object OdsHolderInfoTest extends SparkUtil with Until{
         "gender","mobile","email","ent_bank_account as bank_card_no","ent_bank_name as bank_name")
 
     val odsHolderRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"))
-      .selectExpr("id as policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
-        "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email","bank_card_no","bank_name")
+      .selectExpr("clean(id) as policy_id","clean(holder_name) as holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type",
+        "clean(holder_cert_no) as holder_cert_no","clean(birthday) as birthday", "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender",
+        "clean(mobile) as mobile","clean(email) as email","clean(bank_card_no) as bank_card_no","clean(bank_name) as bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+
     println("1.0")
     odsHolderRes.printSchema()
     odsHolderRes
+
   }
 
   /**
