@@ -6,9 +6,9 @@ import java.util.{Date, Properties}
 
 import bzn.job.common.Until
 import bzn.ods.util.SparkUtil
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 
@@ -27,8 +27,9 @@ object OdsHolderInfoTest extends SparkUtil with Until{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val oneRes: DataFrame = oneHolderInfoDetail(hiveContext)
-//    val twoRes: DataFrame = twoHolderInfoDetail(hiveContext)
-//    val res = unionOneAndTwo(hiveContext,oneRes,twoRes).show()
+    val twoRes: DataFrame = twoHolderInfoDetail(hiveContext)
+    val res = unionOneAndTwo(hiveContext,oneRes,twoRes)
+    res.printSchema()
 //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_holder_detail")
     sc.stop()
   }
@@ -47,7 +48,8 @@ object OdsHolderInfoTest extends SparkUtil with Until{
     })
     val res = one.unionAll(two)
       .distinct()
-      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","policy_id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email",
+        "bank_card_no","bank_name","getNow() as dw_create_time")
     res
   }
 
@@ -68,7 +70,7 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       * 读取保单表
       */
     val bPolicyBznprd = readMysqlTable(sqlContext,"b_policy_bzncen")
-      .selectExpr("policy_no as master_policy_no")
+      .selectExpr("id as policy_id","policy_no as master_policy_no")
 
     /**
       * 读取投保人
@@ -76,7 +78,8 @@ object OdsHolderInfoTest extends SparkUtil with Until{
 
     val bpolicyHolderPersonBzncen = readMysqlTable(sqlContext,"b_policy_holder_person_bzncen")
       .where("length(name) > 0")
-      .selectExpr("policy_no","name as holder_name","cert_type as holder_cert_type","cert_no as holder_cert_no","birthday","sex as gender","tel as mobile","email")
+      .selectExpr("policy_no","name as holder_name","cert_type as holder_cert_type","cert_no as holder_cert_no","birthday",
+        "sex as gender","tel as mobile","email","bank_account as bank_card_no","bank_name")
       .map(x => {
         val policyNo = x.getAs[String]("policy_no")
         val holderName = x.getAs[String]("holder_name")
@@ -89,14 +92,17 @@ object OdsHolderInfoTest extends SparkUtil with Until{
         val gender = x.getAs[Int]("gender")
         val mobile = x.getAs[String]("mobile")
         val email = x.getAs[String]("email")
-        (policyNo,holderName,holderCertType,holderCertNo,birthday,gender,mobile,email)
+        val bankAccount = x.getAs[String]("bank_card_no")
+        val bankName = x.getAs[String]("bank_name")
+        (policyNo,holderName,holderCertType,holderCertNo,birthday,gender,mobile,email,bankAccount,bankName)
       })
-      .toDF("policy_no","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email")
+      .toDF("policy_no","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","bank_card_no","bank_name")
 
     val odsHolderRes = bPolicyBznprd.join(bpolicyHolderPersonBzncen,bPolicyBznprd("master_policy_no")===bpolicyHolderPersonBzncen("policy_no"))
-      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
-        "case when gender = 2 then 0 else 1 end as gender","mobile","email")
+      .selectExpr("policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+        "case when gender = 2 then 0 else 1 end as gender","mobile","email","bank_card_no","bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+    println("2.0")
     odsHolderRes.printSchema()
     odsHolderRes
   }
@@ -124,12 +130,15 @@ object OdsHolderInfoTest extends SparkUtil with Until{
       */
     val odrPolicyHolderBznprd = readMysqlTable(sqlContext,"odr_policy_holder_bznprd")
       .where("holder_type = 2 and length(name) > 0")
-      .selectExpr("policy_id","name as holder_name","cert_type as holder_cert_type","cert_no as holder_cert_no","birthday","gender","mobile","email")
+      .selectExpr("policy_id","name as holder_name","cert_type as holder_cert_type","cert_no as holder_cert_no","birthday",
+        "gender","mobile","email","ent_bank_account as bank_card_no","ent_bank_name as bank_name")
 
     val odsHolderRes = odrPolicyBznprd.join(odrPolicyHolderBznprd,odrPolicyBznprd("id")===odrPolicyHolderBznprd("policy_id"))
-      .selectExpr("holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
-        "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email")
+      .selectExpr("id as policy_id","holder_name","case when holder_cert_type = 1 then 1 else -1 end as holder_cert_type","holder_cert_no","birthday",
+        "case when gender = 0 then 0 when gender = 1 then 1 else null end as gender","mobile","email","bank_card_no","bank_name")
 //      .selectExpr("getUUID() as id","holder_name","holder_cert_type","holder_cert_no","birthday","gender","mobile","email","getNow() as dw_create_time")
+    println("1.0")
+    odsHolderRes.printSchema()
     odsHolderRes
   }
 

@@ -5,10 +5,13 @@ import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 
+import com.alibaba.fastjson.JSONObject
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, Months}
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 /**
   * Created by a2589 on 2018/4/2.
@@ -83,6 +86,41 @@ trait Until {
     sim.format(newDate)
   }
 
+  //当前日期+90天
+  def dateAddNintyDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, 90)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
+  //当前日期-90天
+  def dateDelNintyDay(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, -90)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
+  //当前日期前n天和后n天
+  def currTimeFuction(date_time: String,d:Int): String = {
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, d)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
 
   //将日期+8小时(24小时制)只有时间
   def eight_date_only_hour(date_time: String): String = {
@@ -105,7 +143,7 @@ trait Until {
   //得到当前的时间
   def getNowTime(): String = {
     //得到当前的日期
-    val now: Date = new Date()
+    val now: Date = new Date
     val dateFormatOne: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd 00:00:00")
     val now_Date: String = dateFormatOne.format(now)
     now_Date
@@ -260,6 +298,21 @@ trait Until {
   }
 
   //得到2个日期之间的所有天数
+  def getBeg_End_one_two_new(mon3: String, day_time: String): Long = {
+
+    val sdf: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd")
+    //跨年不会出现问题
+    //如果时间为：2016-03-18 11:59:59 和 2016-03-19 00:00:01的话差值为 0
+    val fDate = sdf.parse(mon3)
+    val oDate = sdf.parse(day_time)
+    var days: Long = (oDate.getTime - fDate.getTime) / (1000 * 3600 * 24)
+    if(days == 0){
+      days = days+1
+    }
+    days
+  }
+
+  //得到2个日期之间的所有天数
   def getBeg_End_one_two(mon3: String, day_time: String): ArrayBuffer[String] = {
     val sdf = new SimpleDateFormat("yyyyMMdd")
 
@@ -322,13 +375,18 @@ trait Until {
 
   //精准的获取年龄
   def getAgeFromBirthTime(cert_no: String, time: String): Int = {
-    if (cert_no.length == 18) {
+    if (
+      cert_no.length == 18 &&
+        (cert_no.substring(6, 10).toInt >= 1919) &&
+        (cert_no.substring(10, 12).toInt >= 1 && cert_no.substring(10, 12).toInt <= 12) &&
+        (cert_no.substring(12, 14).toInt >= 1 && cert_no.substring(12, 14).toInt <= 31)
+    ) {
       if (time == null || "".equals(time) || "null".equals(time)) {
         0
       } else {
-        val formatter = DateTimeFormat.forPattern("YYYYMMdd")
+        val formatter = DateTimeFormat.forPattern("yyyyMMdd")
         var time_new = time.substring(0, 19)
-        val formatter1 = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss")
+        val formatter1 = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
         val birthTime = formatter.parseLocalDate(cert_no.substring(6, 14))
         val selectYear = birthTime.getYear.toInt
         val selectMonth = birthTime.getMonthOfYear.toInt
@@ -393,8 +451,232 @@ trait Until {
   def get_current_date(current: Long): String = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     //这个是你要转成后的时间的格式, 时间戳转换成时间
-    val sd = sdf.format(new Date(current));
+    val sd = sdf.format(new Date(current))
     sd
+  }
+
+  /**
+    * 获得骑行天数
+    * @param list
+    * @return
+    */
+  def rideDays(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val set: mutable.Set[String] = mutable.Set[String]()
+    for (l <- list) {
+      set.add(l._2)
+    }
+    if (set.isEmpty) null else set.size.toString
+  }
+
+  /**
+    * 获得最多骑行时间段
+    * @param list
+    * @return
+    */
+  def rideTimeStep(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += (if (l._3.toInt >= 1 && l._3.toInt < 3) "1-3时"
+      else if (l._3.toInt >= 3 && l._3.toInt < 5) "3-5时"
+      else if (l._3.toInt >= 5 && l._3.toInt < 7) "5-7时"
+      else if (l._3.toInt >= 7 && l._3.toInt < 9) "7-9时"
+      else if (l._3.toInt >= 9 && l._3.toInt < 11) "9-11时"
+      else if (l._3.toInt >= 11 && l._3.toInt < 13) "11-13时"
+      else if (l._3.toInt >= 13 && l._3.toInt < 15) "13-15时"
+      else if (l._3.toInt >= 15 && l._3.toInt < 17) "15-17时"
+      else if (l._3.toInt >= 17 && l._3.toInt < 19) "17-19时"
+      else if (l._3.toInt >= 19 && l._3.toInt < 21) "19-21时"
+      else if (l._3.toInt >= 21 && l._3.toInt < 23) "21-23时"
+      else "23-1时")
+    }
+    if (lists.isEmpty) null else lists.max
+  }
+
+  /**
+    * 获得骑行时间段
+    * @param list
+    * @return
+    */
+  def allRideTimeStep(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += (if (l._3.toInt >= 1 && l._3.toInt < 3) "1-3时"
+      else if (l._3.toInt >= 3 && l._3.toInt < 5) "3-5时"
+      else if (l._3.toInt >= 5 && l._3.toInt < 7) "5-7时"
+      else if (l._3.toInt >= 7 && l._3.toInt < 9) "7-9时"
+      else if (l._3.toInt >= 9 && l._3.toInt < 11) "9-11时"
+      else if (l._3.toInt >= 11 && l._3.toInt < 13) "11-13时"
+      else if (l._3.toInt >= 13 && l._3.toInt < 15) "13-15时"
+      else if (l._3.toInt >= 15 && l._3.toInt < 17) "15-17时"
+      else if (l._3.toInt >= 17 && l._3.toInt < 19) "17-19时"
+      else if (l._3.toInt >= 19 && l._3.toInt < 21) "19-21时"
+      else if (l._3.toInt >= 21 && l._3.toInt < 23) "21-23时"
+      else "23-1时")
+    }
+//    分组聚合
+    val map: Map[String, String] = lists.groupBy(_.toString).mapValues(_.size.toString)
+//    创建JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+//    返回JSON的String
+    JSON.toString
+
+  }
+
+  /**
+    * 获得最多骑行品牌
+    * @param list
+    * @return
+    */
+  def rideBrand(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += l._1
+    }
+    if (lists.isEmpty) null else lists.max
+  }
+
+  /**
+    * 获得骑行品牌
+    * @param list
+    * @return
+    */
+  def allRideBrand(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += l._1
+    }
+//    分组聚合
+    val map: Map[String, String] = lists.groupBy(_.toString).mapValues(_.size.toString)
+//    循环放入JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+//    返回JSON的String
+    JSON.toString
+
+  }
+
+  /**
+    * 获得最多骑行日期
+    * @param list
+    * @return
+    */
+  def rideDate(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += l._4
+    }
+    if (lists.isEmpty) null else lists.max
+  }
+
+  /**
+    * 获得骑行日期
+    * @param list
+    * @return
+    */
+  def allRideDate(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      lists += l._4
+    }
+//    分组聚合
+    val map: Map[String, String] = lists.groupBy(_.toString).mapValues(_.size.toString)
+//    创建JSON
+    val JSON: JSONObject = new JSONObject()
+    for (m <- map) {
+      JSON.put(m._1, m._2)
+    }
+//    返回字符串
+    JSON.toString
+
+  }
+
+  /**
+    * 获得近90天骑行频率
+    * @param list
+    * @return
+    */
+  def tripRate(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val lists: ListBuffer[String] = mutable.ListBuffer[String]()
+    for (l <- list) {
+      if (l._2 > l._5) lists += l._2
+    }
+    if (lists.isEmpty) 0.toString else lists.size.toString
+  }
+
+  /**
+    * 获得生物钟
+    * @param list
+    * @return
+    */
+  def internalClock(list: mutable.ListBuffer[(String, String, String, String, String)]): String = {
+    val time: String = rideTimeStep(list)
+    val internal: String = if (time == "5-7时") "早期族"
+    else if (time == "23-1时" || time == "1-3时" || time == "3-5时") "夜猫子"
+    else null
+    internal
+  }
+
+  /**
+    * 将空字符串、空值转换为NULL
+    * @param Temp
+    * @return
+    */
+  def dropEmpty(Temp: String): String = {
+    if (Temp == "" || Temp == "NULL" || Temp == null) null else Temp
+  }
+
+  /**
+    * 身份证匹配
+    * @param Temp
+    * @return
+    */
+  def dropSpecial(Temp: String): Boolean = {
+    if (Temp != null) {
+      val pattern = Pattern.compile("^[\\d]{17}[\\dxX]{1}$")
+      pattern.matcher(Temp).matches
+    } else false
+  }
+
+  /**
+    * 根据生日月日获取星座id
+    * @param month
+    * @param day
+    * @return
+    */
+  def getConstellation(month: String, day: String): String = {
+    val dayArr = Array[Int](20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22)
+    val constellationArr = Array[Int](10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    return if (day.toInt < dayArr(month.toInt - 1)) {
+      constellationArr(month.toInt - 1).toString
+    } else {
+      constellationArr(month.toInt).toString
+    }
+  }
+
+  /**
+    * 自定义函数是否上学
+    * @param age
+    * @return
+    */
+  def isAttendSchool(age: String): String = {
+    val ageInt: Int = age.toInt
+    var isAttendSch: String = null
+    if (ageInt >= 6 && ageInt <= 15) {
+      isAttendSch =  "上学"
+    } else {
+      isAttendSch =  "未上学"
+    }
+    isAttendSch
+  }
+
+  def clean(str: String): String = {
+    if (str == "" || str == " " || str == "NULL" || str == "null" || str == null) null
+    else str.replaceAll(" ", "")
   }
 
 }

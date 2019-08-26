@@ -1,4 +1,4 @@
-package bzn.ods.policy
+package bzn.dm.premium
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat

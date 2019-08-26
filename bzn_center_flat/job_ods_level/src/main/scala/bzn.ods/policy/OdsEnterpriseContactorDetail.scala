@@ -17,7 +17,7 @@ import scala.io.Source
   * Time:17:33
   * describe: this is new class
   **/
-object OdsEnterpriseContactorDetail extends SparkUtil with Until{
+object OdsEnterpriseContactorDetail extends SparkUtil with Until {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -37,6 +37,7 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until{
     * @param sqlContext
     */
   def twoEnterpriseContactorDetail(sqlContext:HiveContext) ={
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getMD5", (ent_name: String) => MD5(ent_name))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
@@ -57,7 +58,9 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until{
       .selectExpr("policy_no","contact_name","contact_tel","contact_telephone","contact_email","contact_address")
 
     val res = bPolicyBzncen.join(bPolicyHolderCompanyBzncen,bPolicyBzncen("master_policy_no")===bPolicyHolderCompanyBzncen("policy_no"),"leftouter")
-      .selectExpr("getUUID() as id","ent_id","policy_id","contact_name","contact_tel as contact_mobile","contact_telephone as contact_tel","contact_email","contact_address","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","clean(ent_id) as ent_id","clean(cast(policy_id as String)) as policy_id",
+        "clean(contact_name) as contact_name", "clean(contact_tel) as contact_mobile","clean(contact_telephone) as contact_tel",
+        "clean(contact_email) as contact_email", "clean(contact_address) as contact_address","getNow() as dw_create_time")
     res
   }
 
@@ -67,6 +70,7 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until{
     */
   def oneEnterpriseContactorDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
@@ -107,7 +111,9 @@ object OdsEnterpriseContactorDetail extends SparkUtil with Until{
       }).toDF("ent_id","policy_id","contact_name","contact_mobile","contact_tel","contact_email","contact_address")
       .distinct()
     val res = resTemp
-      .selectExpr("getUUID() as id","ent_id","policy_id","contact_name","contact_mobile","contact_tel","contact_email","contact_address","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","clean(ent_id) as ent_id","clean(policy_id) as policy_id","clean(contact_name) as contact_name",
+        "clean(contact_mobile) as contact_mobile","clean(contact_tel) as contact_tel","clean(contact_email) as contact_email",
+        "clean(contact_address) as contact_address","getNow() as dw_create_time")
 
     res
   }

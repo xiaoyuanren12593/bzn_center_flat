@@ -61,7 +61,11 @@ lazy val bznSparkNeed = (project in file("."))
 // 事例项目
 lazy val jobUtil = (project in file("job-util"))
   .settings(
-    libraryDependencies ++= utilDeps)
+    libraryDependencies ++= utilDeps.map(
+    _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
   .settings(commonSettings)
   .settings(commonAssemblySettings)
   .settings(
@@ -130,5 +134,22 @@ lazy val bznCPersonLabel = (project in file("job_c_Person_label"))
   .settings(commonAssemblySettings)
   .settings(
     //定义jar包的名字
-    assemblyJarName in assembly := "bznDmLevel.jar"
+    assemblyJarName in assembly := "bznCPerson.jar"
   )
+
+// 机器学习模块
+lazy val bznMLLibGraphX = (project in file("job_mllib_graphx"))
+  .dependsOn(jobUtil)
+  .settings(
+    libraryDependencies ++= bznMLLibGraphXDepsProvided.map(
+      _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
+  .settings(commonSettings)
+  .settings(commonAssemblySettings)
+  .settings(
+    //定义jar包的名字
+    assemblyJarName in assembly := "bznMLLibGraphX.jar"
+  )
+

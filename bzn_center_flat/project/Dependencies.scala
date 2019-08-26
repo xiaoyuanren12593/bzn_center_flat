@@ -29,6 +29,7 @@ object Dependencies {
   val hbaseCommonProvided = "org.apache.hbase" % "hbase-common" % "1.2.0" % "provided"
   val hbaseServerProvided = "org.apache.hbase" % "hbase-server" % "1.2.0" % "provided"
   val hbaseHadoopCompatProvided = "org.apache.hbase" % "hbase-hadoop-compat" % "1.2.0" % "provided"
+  val sparkGraphXProvided = "org.apache.spark" % "spark-graphx_2.10" % "1.6.1" % "provided"
 //  val hiveHbaseHandlerProvied = "org.apache.hive" % "hive-hbase-handler" % "1.2.0" % "provided"
 
 
@@ -48,6 +49,8 @@ object Dependencies {
   val hbaseCommon = "org.apache.hbase" % "hbase-common" % "1.2.0"
   val hbaseServer = "org.apache.hbase" % "hbase-server" % "1.2.0"
   val hbaseHadoopCompat = "org.apache.hbase" % "hbase-hadoop-compat" % "1.2.0"
+  //  graphx
+  val sparkGraphX = "org.apache.spark" % "spark-graphx_2.10" % "1.6.1"
 //  val hiveHbaseHandler = "org.apache.hive" % "hive-hbase-handler" % "1.2.0"
 
 
@@ -63,19 +66,25 @@ object Dependencies {
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------工具模块----------------------------------------------------------------
-  val utilDeps = Seq(jodaTime)
+  val utilDeps = Seq(jodaTime,mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 
   //--------------------------------------------ods层----------------------------------------------------------------
   val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------dw层----------------------------------------------------------------
-  val bznDwLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided)
+  val bznDwLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 
   //--------------------------------------------dm层----------------------------------------------------------------
   val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
 
+  //--------------------------------------------c端标签层----------------------------------------------------------------
   val bznCPersonLabelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
+
+  //--------------------------------------------机器学习+图计算----------------------------------------------------------------
+  val bznMLLibGraphXDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided, sparkMllib, sparkGraphX)
 }
