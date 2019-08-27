@@ -287,9 +287,6 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "policy_create_time",
         "policy_update_time",
         "dw_create_time")
-
-    println("2.0")
-    res.printSchema()
     res
   }
 
@@ -472,12 +469,9 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "policy_create_time",
         "policy_update_time",
         "dw_create_time")
-
-    println("1.0")
-    resEnd.printSchema()
+      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
 
     resEnd
-
   }
   /**
     * 获取 Mysql 表的数据

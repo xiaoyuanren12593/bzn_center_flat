@@ -536,6 +536,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "policy_create_time",
         "policy_update_time",
         "dw_create_time")
+      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
 
     println("1.0")
     resEnd.printSchema()
