@@ -28,9 +28,12 @@ object OdsPreservationDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneRes = onePreservationDetail(hiveContext)
     val twoRes = twoPreservationDetail(hiveContext)
-    val res = oneRes.unionAll(twoRes).repartition(1)
-//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_preservation_detail")
-    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsPreservationDetail")
+    val res = oneRes.unionAll(twoRes)
+    res.cache()
+
+    hiveContext.sql("truncate table odsdb.ods_preservation_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_preservation_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsPolicyDetail/OdsPreservationDetail")
 
     sc.stop()
   }
