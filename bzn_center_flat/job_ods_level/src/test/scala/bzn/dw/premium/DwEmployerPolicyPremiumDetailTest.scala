@@ -24,7 +24,7 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     DwPolicyPremiumDetail(hiveContext)
-//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_preservation_detail")
+//    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
     sc.stop()
   }
 
@@ -71,7 +71,7 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         val policyCode = x.getAs[String]("policy_code")
-        val firstPremium = x.getAs[Double]("first_premium")
+        val firstPremium = x.getAs[java.math.BigDecimal]("first_premium")
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
         var policyStartDate = x.getAs[Timestamp]("policy_start_date")
         var policyStartDateRes = ""
@@ -82,7 +82,7 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
         }
         val numOfPresonFirstPolicy = x.getAs[Int]("num_of_preson_first_policy")
 
-        (policyId,policyCode,preservePolicyNo,4,firstPremium,numOfPresonFirstPolicy,0.0,0,policyStartDateRes)
+        (policyId,policyCode,preservePolicyNo,4,firstPremium,numOfPresonFirstPolicy,new java.math.BigDecimal(0),0,policyStartDateRes)
       })
       .toDF("policy_id","policy_code","preserve_id","premium_type","add_premium","add_person_count","del_premium","del_person_count","day_id")
 
@@ -94,7 +94,7 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         val policyCode = x.getAs[String]("policy_code")
-        val firstPremium = x.getAs[Double]("first_premium")
+        val firstPremium = x.getAs[java.math.BigDecimal]("first_premium")
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
         val numOfPresonFirstPolicy = x.getAs[Int]("num_of_preson_first_policy")
         var policyStartDate = x.getAs[Timestamp]("policy_start_date")
@@ -104,7 +104,7 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
         }else{
           policyStartDateRes = null
         }
-        (policyId,policyCode,preservePolicyNo,2,firstPremium,numOfPresonFirstPolicy,0.0,0,policyStartDateRes)
+        (policyId,policyCode,preservePolicyNo,2,firstPremium,numOfPresonFirstPolicy,new java.math.BigDecimal(0),0,policyStartDateRes)
       })
       .toDF("policy_id","policy_code","preserve_id","premium_type","add_premium","add_person_count","del_premium","del_person_count","day_id")
 
@@ -116,9 +116,9 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         val policyCode = x.getAs[String]("policy_code")
-        var delPremium = x.getAs[Double]("first_premium")
+        var delPremium = x.getAs[java.math.BigDecimal]("first_premium")
         if(delPremium != null){
-          delPremium = 0.0-delPremium
+          delPremium = new java.math.BigDecimal(0).subtract(delPremium)
         }
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
         val numOfPresonFirstPolicy = x.getAs[Int]("num_of_preson_first_policy")
@@ -129,7 +129,7 @@ object DwEmployerPolicyPremiumDetailTest extends SparkUtil with Until{
         }else{
           policyStartDateRes = null
         }
-        (policyId,policyCode,preservePolicyNo,3,0.0,0,delPremium,numOfPresonFirstPolicy,policyStartDateRes)
+        (policyId,policyCode,preservePolicyNo,3,new java.math.BigDecimal(0),0,delPremium,numOfPresonFirstPolicy,policyStartDateRes)
       })
       .toDF("policy_id","policy_code","preserve_id","premium_type","add_premium","add_person_count","del_premium","del_person_count","day_id")
 

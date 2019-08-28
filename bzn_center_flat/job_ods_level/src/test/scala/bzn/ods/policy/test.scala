@@ -106,6 +106,13 @@ object test {
     val strr: String = time.toString.split("\\.")(0)
     println(strr)
 
+    println("------------------------")
+    println("------------------------")
+    val strs: String = "20.12"
+    val strs1: String = null
+    println(new java.math.BigDecimal(strs))
+//    println(new java.math.BigDecimal(strs1))
+
 
   }
 
