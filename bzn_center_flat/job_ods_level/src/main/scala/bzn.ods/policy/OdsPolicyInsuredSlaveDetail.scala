@@ -89,9 +89,12 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
       .selectExpr("getUUID() as id","id as insured_slave_id","master_id","name as slave_name","sex as gender","cert_type as slave_cert_type",
         "","birthday","is_married","email","status","start_date","end_date",
         "case when cert_type ='1' and start_date is not null then getAgeFromBirthTime(cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
-        .registerTempTable("bPolicySubjectPersonSlaveBzncenTemp")ve_id","clean(cast(master_id as String)) as master_id","clean(slave_name) as slave_name",
+        .registerTempTable("bPolicySubjectPersonSlaveBzncenTemp")
+
+    val res = sqlContext.sql("select *,case when a.`status`='1' then '0' else '1' end as policy_status from bPolicySubjectPersonSlaveBzncenTemp a")
+      .selectExpr("id","clean(cast(insured_slave_id as String)) as insured_slave_id","clean(cast(master_id as String)) as master_id","clean(slave_name) as slave_name",
         "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender", "slave_cert_type","clean(slave_cert_no) as slave_cert_no",
-        "clean(timeToString(birthday)) as birthday","is_married","clean(email) as emai\n\n    val res = sqlContext.sql(\"select *,case when a.`status`='1' then '0' else '1' end as policy_status from bPolicySubjectPersonSlaveBzncenTemp a\")\n      .selectExpr(\"id\",\"clean(cast(insured_slave_id as String)) as insured_slal","cast(clean(policy_status) as int) as policy_status",
+        "clean(timeToString(birthday)) as birthday","is_married","clean(email) as email","cast(clean(policy_status) as int) as policy_status",
         "start_date","end_date","age","create_time","update_time","getNow() as dw_create_time")
 
     res
