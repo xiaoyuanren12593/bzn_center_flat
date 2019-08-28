@@ -64,7 +64,7 @@ object OdsPreservationSlaveDetail extends SparkUtil with Until{
       .selectExpr("getUUID() as id","clean(cast(master_id as String)) as master_id","clean(child_name) as child_name","case when child_gender = 2 then 0 else 1 end as child_gender",
         "case when child_cert_type = 1 then 1 else -1 end as child_cert_type ","clean(child_cert_no) as child_cert_no",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
-        "start_date","end_date","case when insured_status = 1 then 0 else 1 end as insured_status","age","create_time","update_time","getNow() as dw_create_time")
+          "start_date","end_date","case when insured_status = 1 then 0 else 1 end as insured_status","age","create_time","update_time","getNow() as dw_create_time")
 
     res
   }

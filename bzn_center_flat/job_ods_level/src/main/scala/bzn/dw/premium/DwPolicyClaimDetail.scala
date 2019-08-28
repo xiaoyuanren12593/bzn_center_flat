@@ -1,5 +1,6 @@
 package bzn.dw.premium
 
+import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.regex.Pattern
@@ -49,32 +50,27 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     /**
       * 读取理赔表
       */
-    val odsClaimDetailOne = sqlContext.sql("select id,case_no,policy_no,risk_date,report_date,risk_name,risk_cert_no,mobile,insured_company" +
-      ",pre_com,disable_level,scene,case_type,case_status,case_close_date,hos_benefits,medical_coverage,delay_payment,disable_death_payment," +
-      "final_payment from odsdb.ods_claims_detail")
+    val odsClaimDetailOne = sqlContext.sql("select id, clean(case_no) as case_no, clean(policy_no) as policy_no, cast(clean(risk_date) as timestamp) as risk_date, " +
+      "cast(clean(report_date) as timestamp) as report_date, clean(risk_name) as risk_name, clean(risk_cert_no) as risk_cert_no, clean(mobile) as mobile, clean(insured_company) as insured_company, " +
+      "cast(clean(pre_com) as decimal(14,4)) as pre_com, clean(disable_level) as disable_level, clean(scene) as scene, clean(case_type) as case_type, clean(case_status) as case_status, " +
+      "cast(clean(case_close_date) as timestamp) as case_close_date, cast(clean(hos_benefits) as decimal(14,4)) as hos_benefits, cast(clean(medical_coverage) as decimal(14,4)) as medical_coverage, " +
+      "cast(clean(delay_payment) as decimal(14,4)) as delay_payment, cast(clean(disable_death_payment) as decimal(14,4)) as disable_death_payment, cast(clean(final_payment) as decimal(14,4)) as final_payment " +
+      "from odsdb.ods_claims_detail")
 
     /**
       * 如果最终赔付有值就用最终赔付，如果没有值就用预估赔付
       */
     val odsClaimDetailTwo = sqlContext.sql("select id,pre_com,final_payment from odsdb.ods_claims_detail")
       .map(x => {
-        val id = x.getAs[Long]("id")
-        var preCom = x.getAs[String]("pre_com")
-        var preComRes = 0.0
-        var finalPayment = x.getAs[String]("final_payment")
-        var finalPaymentRes = 0.0
-        var resPay = 0.0
-        if(preCom != null && preCom != ""){
-          preComRes = preCom.toDouble
-        }
-        if(finalPayment != null && finalPayment!= ""){
-          finalPaymentRes = finalPayment.toDouble
-        }
-        if(finalPaymentRes > 0){
-          resPay = finalPaymentRes
-        }else{
-          resPay = preComRes
-        }
+        val id: String = clean(x.getAs[Long]("id").toString)
+
+        val preCom: String = clean(x.getAs[String]("pre_com"))
+        val preComRes: BigDecimal = if (preCom == null) new BigDecimal(0) else new BigDecimal(preCom)
+
+        val finalPayment: String = clean(x.getAs[String]("final_payment"))
+        val finalPaymentRes = if (finalPayment == null) new BigDecimal(0) else new BigDecimal(finalPayment)
+
+        val resPay = if (finalPaymentRes.compareTo(new BigDecimal(0)) > 0) finalPaymentRes else preComRes
         //保单号  预估赔付   最终赔付        赔付
         (id,preComRes,finalPaymentRes,resPay)
       })
@@ -95,6 +91,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
         "final_payment_new as final_payment","res_pay","getNow() as dw_create_time")
 
     res
+
   }
 
   /**

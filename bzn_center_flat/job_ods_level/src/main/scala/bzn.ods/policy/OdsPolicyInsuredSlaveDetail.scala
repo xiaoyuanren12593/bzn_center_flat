@@ -87,7 +87,7 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
 
     val bPolicySubjectPersonSlaveBzncen = readMysqlTable(sqlContext,"b_policy_subject_person_slave_bzncen")
       .selectExpr("getUUID() as id","id as insured_slave_id","master_id","name as slave_name","sex as gender","cert_type as slave_cert_type",
-        "cert_no as slave_cert_no","birthday","is_married","email","status","start_date","end_date",
+        "","birthday","is_married","email","status","start_date","end_date",
         "case when cert_type ='1' and start_date is not null then getAgeFromBirthTime(cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
         .registerTempTable("bPolicySubjectPersonSlaveBzncenTemp")
 

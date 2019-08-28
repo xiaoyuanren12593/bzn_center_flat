@@ -33,7 +33,7 @@ object CPersonCertAndPhone extends SparkUtil with Until {
     val result: DataFrame = rinseData(hiveContext, website, inter, other)
 
 //    保存到hive
-    result.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_all_cert_no_and_mobile_detail_temp")
+    result.repartition(200).write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_all_cert_no_and_mobile_detail_temp")
 
     sc.stop()
 
