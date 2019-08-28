@@ -55,7 +55,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
       * 读取保单表
       */
     val bPolicyBzncen: DataFrame = readMysqlTable(sqlContext,"b_policy_bzncen")
-      .selectExpr("id as policy_id","holder_name","policy_no as master_policy_no","insurance_policy_no as policy_code","proposal_no as order_id","product_code",
+        .selectExpr("id as policy_id","holder_name","policy_no as master_policy_no","insurance_policy_no as policy_code","proposal_no as order_id","product_code",
         "proposal_no as order_code","user_code as user_id","first_insure_premium as first_premium","sum_premium as premium","status","sell_channel_code as channel_id",
         "sell_channel_name as channel_name","start_date","end_date","continued_policy_no","insurance_name","premium_price",
         "first_insure_master_num","create_time","update_time","commission_discount_percent")
@@ -119,7 +119,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
     /**
       * 读取产品表
       */
-    val bsProductBzncen: DataFrame = readMysqlTable(sqlContext,"bs_product_bzncen")
+      val bsProductBzncen: DataFrame = readMysqlTable(sqlContext,"bs_product_bzncen")
       .selectExpr("product_code as product_code_2","product_name")
 
     /**
@@ -248,20 +248,20 @@ object OdsPolicyDetail extends SparkUtil with Until{
           "sku_charge_type","tech_service_rate","economic_rate","num_of_preson_first_policy","policy_create_time","policy_update_time","dw_create_time")
 
     /**
-      * 读取初投保费表
-      */
-    val policyFirstPremiumBznprd: DataFrame = readMysqlTable(sqlContext,"policy_first_premium_bznprd")
-      .where("id in ('121212','121213','121214','121215')")
-      .selectExpr("policy_id as policy_id_premium","pay_amount")
+        * 读取初投保费表
+        */
+      val policyFirstPremiumBznprd: DataFrame = readMysqlTable(sqlContext,"policy_first_premium_bznprd")
+        .where("id in ('121212','121213','121214','121215')")
+        .selectExpr("policy_id as policy_id_premium","pay_amount")
 
 
-    val res = resEnd.join(policyFirstPremiumBznprd,resEnd("policy_id") === policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
-      .selectExpr("clean(id) as id","clean(order_id) as order_id","clean(order_code) as order_code","clean(user_id) as user_id",
-        "clean(product_code) as product_code","clean(product_name) as product_name","clean(cast(policy_id as String)) as policy_id",
-        "clean(policy_code) as policy_code","case when policy_id_premium is not null then cast(pay_amount as decimal(14,4)) else cast(first_premium as decimal(14,4)) end as first_premium",
-        "cast(sum_premium as decimal(14,4)) as sum_premium", "clean(holder_name) as holder_name","clean(insured_subject) as insured_subject",
-        "policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status",
-        "clean(preserve_policy_no) as preserve_policy_no","clean(insure_company_name) as insure_company_name", "clean(belongs_regional) as belongs_regional","clean(belongs_industry) as belongs_industry",
+      val res = resEnd.join(policyFirstPremiumBznprd,resEnd("policy_id") === policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
+        .selectExpr("clean(id) as id","clean(order_id) as order_id","clean(order_code) as order_code","clean(user_id) as user_id",
+          "clean(product_code) as product_code","clean(product_name) as product_name","clean(cast(policy_id as String)) as policy_id",
+          "clean(policy_code) as policy_code","case when policy_id_premium is not null then cast(pay_am ount as decimal(14,4)) else cast(first_premium as decimal(14,4)) end as first_premium",
+          "cast(sum_premium as decimal(14,4)) as sum_premium", "clean(holder_name) as holder_name","clean(insured_subject) as insured_subject",
+          "policy_start_date","policy_end_date","case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way","commission_discount_percent","policy_status",
+          "clean(preserve_policy_no) as preserve_policy_no","clean(insure_company_name) as insure_company_name", "clean(belongs_regional) as belongs_regional","clean(belongs_industry) as belongs_industry",
         "clean(channel_id) as channel_id","clean(channel_name) as channel_name","clean(sku_id) as sku_id","clean(cast(sku_coverage as String)) as sku_coverage",
         "clean(sku_append) as sku_append","clean(sku_ratio) as sku_ratio", "cast(sku_price as decimal(14,4)) as sku_price", "clean(sku_charge_type) as sku_charge_type",
         "cast(tech_service_rate as decimal(14,4)) as tech_service_rate","cast(economic_rate as decimal(14,4)) as economic_rate",

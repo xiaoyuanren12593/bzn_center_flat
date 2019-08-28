@@ -40,6 +40,7 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
     * @param sqlContext
     */
   def twoOdsPolicyInsuredDetail(sqlContext:HiveContext) ={
+
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getDate", (time:String) => timeSubstring(time))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -74,6 +75,8 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
       "  END as insured_status, " +
       "case when (a.`status`='1' and insured_end_date > now() and insured_start_date< now() ) then '1' else '0' end as insure_policy_status " +
       "from bPolicySubjectPersonMasterBzncenTemp as a")
+
+
 
     val bPolicySubjectPersonMasterBzncenTempSchema = bPolicySubjectPersonMasterBzncenTemp.schema.map(x=> x.name):+"work_type_new" :+ "name_new"
     val bPolicySubjectPersonMasterBzncenValue = bPolicySubjectPersonMasterBzncenTemp.map(x => {
