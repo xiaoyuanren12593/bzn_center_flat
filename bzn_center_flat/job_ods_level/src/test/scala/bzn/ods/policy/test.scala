@@ -23,6 +23,13 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   **/
 object test {
   def main(args: Array[String]): Unit = {
+    var z = 0
+    var i = Integer.valueOf(0)
+    if(i.equals(null)){
+      z = Integer.valueOf(0).toInt
+    }
+
+    println(i)
 //    println(MD5("132")+"4654")
     println("123")
 

@@ -28,9 +28,12 @@ object OdsPolicyInsuredDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneDate = oneOdsPolicyInsuredDetail(hiveContext)
     val twoData = twoOdsPolicyInsuredDetail(hiveContext)
-    val res = oneDate.unionAll(twoData).repartition(1)
-//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_policy_insured_detail")
-    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsPolicyInsuredDetail")
+    val res = oneDate.unionAll(twoData)
+    res.cache()
+
+    hiveContext.sql("truncate table odsdb.ods_policy_insured_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_insured_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsPolicyInsuredDetail")
 
     sc.stop()
   }

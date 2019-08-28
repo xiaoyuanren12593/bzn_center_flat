@@ -14,6 +14,10 @@ object test extends SparkUtil with Until{
 
   def main(args: Array[String]): Unit = {
 
+    val str = "我说一个30岁拥有100万的男人"
+    val reg = "[^\u4e00-\u9fa5]"
+    val reg1 = "[^0-9]"
+    println (reg1.replaceAll (reg, "-"))
     //    初始化设置
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -75,5 +79,4 @@ object test extends SparkUtil with Until{
     println(sdf.format(newDate))
     Timestamp.valueOf(sdf.format(newDate))
   }
-
 }

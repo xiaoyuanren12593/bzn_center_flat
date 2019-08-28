@@ -473,7 +473,7 @@ object CPersonHighInfoCusType extends SparkUtil with Until with HbaseUtil{
     val incHolderResultCent = incHolderResult.selectExpr("cert_no","cus_type","is_redeem","is_awaken","redeem_time","awaken_time")
 //    incHolderResult.rdd.repartition(1).saveAsTextFile("/xing/data/2019-8-1/incHolderResult")
     toHBase(incHolderResultCent,tableName,columnFamily,rowKeyName)
-    val incHolderResultHigh = incHolderResult.selectExpr("cert_no","become_curr_cus_time")
+    val incHolderResultHigh = incHolderResult.selectExpr("cert_no","last_cus_type","become_curr_cus_time")
     toHBase(incHolderResultHigh,tableName,columnFamily1,rowKeyName)
     /**
       * 被保人客户类型
@@ -493,5 +493,4 @@ object CPersonHighInfoCusType extends SparkUtil with Until with HbaseUtil{
 //    incInsuredResult.rdd.repartition(1).saveAsTextFile("/xing/data/2019-8-1/incInsuredResult")
     incInsuredResult
   }
-
 }
