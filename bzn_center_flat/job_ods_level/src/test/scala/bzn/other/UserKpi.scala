@@ -70,7 +70,6 @@ object UserKpi {
     println("总注册人数："+rescounts)
 
 
-
   }
 
 }
