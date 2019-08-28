@@ -5,9 +5,9 @@ import java.util.{Date, Properties}
 
 import bzn.job.common.Until
 import bzn.ods.util.SparkUtil
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io.Source
 import scala.math.BigDecimal.RoundingMode
@@ -18,15 +18,18 @@ import scala.math.BigDecimal.RoundingMode
   * Time:17:13
   * describe: this is new class
   **/
-object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
+object OdsPolicyProductPlanDetail extends SparkUtil with Until{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = oneProductPlan(hiveContext)
+    hiveContext.sql("truncate table odsdb.ods_policy_product_plan_detail")
+    res.repartition(1).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_product_plan_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/ods_policy_product_plan_detail")
     sc.stop()
   }
 
@@ -97,7 +100,7 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
       * 如果policy_code_master不是null：以policy_product_plan_his_105他的值为准
       */
     val resTemp = unionRes.join(policy_product_plan_his_105,unionRes("policy_code") === policy_product_plan_his_105("policy_code_master"),"leftouter")
-      .selectExpr("getUUID() as id","policy_code","product_code",
+        .selectExpr("getUUID() as id","policy_code","product_code",
         "case when policy_code_master is not null then sku_coverage_master else sku_coverage end as sku_coverage",
         "case when policy_code_master is not null then sku_append_master else sku_append end as sku_append",
         "case when policy_code_master is not null then sku_ratio_master else sku_ratio end as sku_ratio",
@@ -139,7 +142,6 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
         "cast(clean(economic_rate) as decimal(14,4)) as economic_rate",
         "cast(clean(commission_rate) as decimal(14,4)) as commission_rate",
         "dw_create_time")
-    res.printSchema()
     res
   }
 
