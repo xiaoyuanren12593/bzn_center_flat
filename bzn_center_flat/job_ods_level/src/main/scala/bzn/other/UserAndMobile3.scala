@@ -3,7 +3,7 @@ package bzn.other
 import java.util.Properties
 
 import bzn.job.common.Until
-import bzn.ods.util.SparkUtil
+import bzn.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}

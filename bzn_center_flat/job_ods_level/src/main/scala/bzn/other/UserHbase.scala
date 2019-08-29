@@ -4,7 +4,7 @@ import java.sql.{Connection, DriverManager}
 import java.util.Properties
 
 import bzn.job.common.Until
-import bzn.ods.util.SparkUtil
+import bzn.util.SparkUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Result
