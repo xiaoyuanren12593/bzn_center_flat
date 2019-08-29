@@ -4,7 +4,13 @@ object Dependencies {
 
   // 数据库连接 Jar
   val neo4jJavaDriver = "org.neo4j.driver" % "neo4j-java-driver" % "1.0.4"
+
   val mysqlConnectorJava = "mysql" % "mysql-connector-java" % "5.1.36"
+
+  val clickhouseConnector = "ru.yandex.clickhouse" % "clickhouse-jdbc" % "0.1.54"
+
+  val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.4.4"
+
   val jedis = "redis.clients" % "jedis" % "2.9.0"
   //  Alibaba-json
   val fastjson = "com.alibaba" % "fastjson" % "1.2.24"
@@ -70,7 +76,7 @@ object Dependencies {
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------ods层----------------------------------------------------------------
-  val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+  val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava,clickhouseConnector,fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------dw层----------------------------------------------------------------
