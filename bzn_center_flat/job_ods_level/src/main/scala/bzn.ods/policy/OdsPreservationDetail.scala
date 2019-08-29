@@ -57,7 +57,8 @@ object OdsPreservationDetail extends SparkUtil with Until{
       * 读取保全表
       */
     val bPolicyPreserveBznprdOne: DataFrame = readMysqlTable(sqlContext,"b_policy_preservation_bzncen")
-      .selectExpr("id as preserve_id","policy_no","effective_date","inc_dec_order_no" ,"b_policy_preservation_bzncen","inc_revise_premium as add_premium","inc_revise_sum as add_person_count","dec_revise_no as del_batch_code","dec_revise_premium as del_premium","dec_revise_sum as del_person_count","preservation_type as preserve_type","pay_status","create_time","update_time")
+      .selectExpr("id as preserve_id","policy_no","effective_date","inc_dec_order_no" ,"inc_revise_no as add_batch_code","inc_revise_premium as add_premium","inc_revise_sum as add_person_count",
+        "dec_revise_no as del_batch_code","dec_revise_premium as del_premium","dec_revise_sum as del_person_count","preservation_type as preserve_type","pay_status","create_time","update_time")
 
     /**
       * 增加两个关联字段
@@ -186,13 +187,12 @@ object OdsPreservationDetail extends SparkUtil with Until{
     .toDF("temp_inc_dec_order_no", "preserve_effect_date")
 
     val resTemp = sqlContext.sql("select * from bPolicyInfoMasterInfoTemp")
-      .selectExpr("preserve_id","" +
-        "" +
-        "","policy_id","inc_dec_order_no" ,"add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
+      .selectExpr("preserve_id","insurance_policy_no as policy_code","policy_id","inc_dec_order_no" ,"add_batch_code",
+        "add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
 
     val res = resTemp.join(tep_five,resTemp("inc_dec_order_no") ===tep_five("temp_inc_dec_order_no"),"leftouter")
       .selectExpr("preserve_id","policy_id","policy_code","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
-          "del_person_count","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
+        "del_person_count","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
       .distinct()
       .selectExpr("getUUID() as id","clean(cast(preserve_id as String)) as preserve_id","clean(cast(policy_id as String)) as policy_id","policy_code","1 as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","del_batch_code","cast(del_premium as decimal(14,4)) as del_premium",

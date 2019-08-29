@@ -31,7 +31,7 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
     res.cache()
 
     hiveContext.sql("truncate table odsdb.ods_policy_insured_slave_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_insured_slave_detail")
+    res.repartition(1).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_insured_slave_detail")
     res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsPolicyInsuredSlaveDetail")
 
     sc.stop()
@@ -87,7 +87,7 @@ object OdsPolicyInsuredSlaveDetail extends SparkUtil with Until{
 
     val bPolicySubjectPersonSlaveBzncen = readMysqlTable(sqlContext,"b_policy_subject_person_slave_bzncen")
       .selectExpr("getUUID() as id","id as insured_slave_id","master_id","name as slave_name","sex as gender","cert_type as slave_cert_type",
-        "","birthday","is_married","email","status","start_date","end_date",
+        "cert_no as slave_cert_no","birthday","is_married","email","status","start_date","end_date",
         "case when cert_type ='1' and start_date is not null then getAgeFromBirthTime(cert_no,start_date) else null end as age","create_time","update_time","getNow() as dw_create_time")
         .registerTempTable("bPolicySubjectPersonSlaveBzncenTemp")
 

@@ -31,7 +31,7 @@ object OdsPreservationSlaveDetail extends SparkUtil with Until{
     res.cache()
 
     hiveContext.sql("truncate table odsdb.ods_preservation_slave_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_preservation_slave_detail")
+    res.repartition(1).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_preservation_slave_detail")
     res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsPreservationSlaveDetail")
 
     sc.stop()

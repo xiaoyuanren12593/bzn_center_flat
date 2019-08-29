@@ -36,6 +36,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     */
   def dwPolicyClaimDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID",()=>(java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式

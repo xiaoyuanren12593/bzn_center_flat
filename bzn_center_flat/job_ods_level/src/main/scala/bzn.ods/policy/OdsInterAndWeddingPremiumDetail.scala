@@ -28,7 +28,12 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = getInterAndWeddingPremiumDEtail(hiveContext)
-    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_inter_hdj_premium_detail")
+    res.cache()
+
+    hiveContext.sql("truncate table odsdb.ods_inter_hdj_premium_detail")
+    res.repartition(1).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_inter_hdj_premium_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsInterAndWeddingPremiumDetail")
+
     sc.stop()
   }
 
@@ -38,21 +43,14 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
     */
   def getInterAndWeddingPremiumDEtail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
       (date + "")
     })
-    sqlContext.udf.register("getDouble",(d:Double)=>{
-      if(d != null){
-        val decimal = BigDecimal.apply(d)
-        val res = decimal.setScale(4,BigDecimal.RoundingMode.HALF_UP).doubleValue()
-        res
-      }else{
-        d
-      }
-    })
+
     /**
       * 计算接口的数据
       */
@@ -126,7 +124,7 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
       .toDF("product_code","product_name","premium_type","policy_count","sum_premium","day_id")
 
     val unionRes  = interDate.unionAll(weddingDate)
-      .selectExpr("product_code","product_name","premium_type","policy_count","getDouble(sum_premium) as sum_premium","day_id")
+      .selectExpr("product_code","product_name","premium_type","policy_count","sum_premium","day_id")
 
     /**
       * 读取产品维度表
@@ -134,8 +132,8 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
     val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,one_level_pdt_cate from odsdb.ods_product_detail")
 
     val res = unionRes.join(odsProductDetail,unionRes("product_code")===odsProductDetail("product_code_slave"))
-      .selectExpr("getUUID() as id","product_code","product_name","one_level_pdt_cate","premium_type","policy_count",
-        "getDouble(sum_premium) as sum_premium","day_id","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","clean(product_code) as product_code","clean(product_name) as product_name","clean(one_level_pdt_cate) as one_level_pdt_cate",
+        "premium_type","policy_count", "cast(sum_premium as decimal(14,4)) as sum_premium","day_id","getNow() as dw_create_time")
     res
   }
   /**
