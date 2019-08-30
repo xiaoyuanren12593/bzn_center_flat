@@ -26,10 +26,12 @@ object OdsEnterpriseDetail extends SparkUtil with Until{
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    val res = updataEnterprise(hiveContext).repartition(1)
-//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_enterprise_detail")
-//    res.repartition(20).write.mode(SaveMode.Overwrite)
-    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsEnterpriseDetail")
+    val res = updataEnterprise(hiveContext)
+    res.cache()
+
+    hiveContext.sql("truncate table odsdb.ods_enterprise_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_enterprise_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsEnterpriseDetail")
 
     sc.stop()
   }

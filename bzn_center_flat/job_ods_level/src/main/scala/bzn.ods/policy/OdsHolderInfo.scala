@@ -28,9 +28,12 @@ object OdsHolderInfo extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneRes: DataFrame = oneHolderInfoDetail(hiveContext)
     val twoRes: DataFrame = twoHolderInfoDetail(hiveContext)
-    val res = unionOneAndTwo(hiveContext,oneRes,twoRes).repartition(1)
-//    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_holder_detail")
-    res.write.mode(SaveMode.Overwrite).parquet("/xing/data/OdsPolicyDetail/OdsHolderInfo")
+    val res = unionOneAndTwo(hiveContext,oneRes,twoRes)
+    res.cache()
+
+    hiveContext.sql("truncate table odsdb.ods_holder_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_holder_detail")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsHolderInfo")
 
     sc.stop()
   }
