@@ -34,6 +34,7 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
       */
     res.write.mode(SaveMode.Overwrite).saveAsTable("dmdb.dm_products_everyday_premium_detail")
     saveASMysqlTable(res,"dm_products_everyday_premium_detail",SaveMode.Overwrite)
+
     sc.stop()
   }
 
@@ -43,12 +44,11 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
     */
   def DmAllProductEverydayPremium(sqlContext:HiveContext) = {
     import sqlContext.implicits._
-
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
 
     /**
@@ -58,19 +58,18 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
       .map(x => {
         val oneLevelPdtCate = x.getAs[String]("one_level_pdt_cate")
         val premiumType = x.getAs[Int]("premium_type")
-        val sumPremium = x.getAs[Double]("sum_premium")
-        val premiumDecimal =  BigDecimal.valueOf(sumPremium)
+        val sumPremium = x.getAs[java.math.BigDecimal]("sum_premium")
         val dayId = x.getAs[String]("day_id")
-        ((oneLevelPdtCate,dayId,premiumType),(1,premiumDecimal))
+        ((oneLevelPdtCate,dayId,premiumType),(1,sumPremium))
       })
       .reduceByKey((x1,x2) => {
         val policyCount = x1._1+x2._1
-        val sumPremium = x1._2.+(x2._2)
+        val sumPremium = x1._2.add(x2._2)
         (policyCount,sumPremium)
       })
       .map(x => {
         //业务条线，day_id,所有类型的保单数量，总保费
-        (x._1._1,x._1._2,x._1._3,x._2._1,x._2._2.setScale(4,RoundingMode.HALF_UP).doubleValue(),"官网")
+        (x._1._1,x._1._2,x._1._3,x._2._1,x._2._2,"官网")
       })
       .toDF("business_line","day_id","premium_type","policy_count","sum_premium","source")
 
@@ -81,28 +80,27 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
       .map(x => {
         val oneLevelPdtCate = x.getAs[String]("one_level_pdt_cate")
         val premiumType = x.getAs[Int]("premium_type")
-        val policyCount = x.getAs[Int]("policy_count")
-        val sumPremium = x.getAs[Double]("sum_premium")
-        val premiumDecimal =  BigDecimal.valueOf(sumPremium)
+        val sumPremium = x.getAs[java.math.BigDecimal]("sum_premium")
         val dayId = x.getAs[String]("day_id")
-        ((oneLevelPdtCate,dayId,premiumType),(1,premiumDecimal))
+        ((oneLevelPdtCate,dayId,premiumType),(1,sumPremium))
       })
       .reduceByKey((x1,x2) => {
         val policyCount = x1._1+x2._1
-        val sumPremium = x1._2.+(x2._2)
+        val sumPremium = x1._2.add(x2._2)
         (policyCount,sumPremium)
       })
       .map(x => {
         //业务条线，day_id,所有类型的保单数量，总保费
-        (x._1._1,x._1._2,x._1._3,x._2._1,x._2._2.setScale(4,RoundingMode.HALF_UP).doubleValue(),"接口")
+        (x._1._1,x._1._2,x._1._3,x._2._1,x._2._2,"接口")
       })
       .toDF("business_line","day_id","premium_type","policy_count","sum_premium","source")
 
     val res = productPremiumOne.unionAll(hljRes)
-      .selectExpr("getUUID() as id","business_line","day_id","premium_type","policy_count","sum_premium","source","getNow() as dw_create_time")
+      .selectExpr("getUUID() as id","business_line","day_id","premium_type","policy_count","cast(sum_premium as decimal(14,4))","source","getNow() as dw_create_time")
 
     res
   }
+
   /**
     * 将DataFrame保存为Mysql表
     *
