@@ -142,7 +142,7 @@ trait HbaseUtil {
     //检查是否存在
     if (!hdfs.exists(path)) {
       //不存在就执行存储
-      deToHbase(result,columnFamily1,conf_fs,conf,tableName,stagingFolder)
+h      deToHbase(result,columnFamily1,conf_fs,conf,tableName,stagingFolder)
     } else if (hdfs.exists(path)) {
       //存在即删除后执行存储
       deleteFile(conf_fs, stagingFolder)
