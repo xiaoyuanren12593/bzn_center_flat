@@ -437,7 +437,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
     val orderPolicyProductHolderInsurantItemOrderTwo = orderPolicyProductHolderInsurantItemOrder
       .where("product_code in ('15000001') and (user_id not in ('10100080492') or user_id is null)")
     val res = orderPolicyProductHolderInsurantItemOrderone.unionAll(orderPolicyProductHolderInsurantItemOrderTwo)
-
+      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
     /**
       * 读取产品明细表,将蓝领外包以外的数据进行处理，用总保费替换初投保费
       */
@@ -446,7 +446,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
 
     val resEnd = res.join(odsProductDetail,res("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .selectExpr(
-        "clean(id) as id",
+        "id",
         "clean(order_id) as order_id",
         "clean(order_code) as order_code",
         "clean(user_id) as user_id",
@@ -471,7 +471,6 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "policy_create_time",
         "policy_update_time",
         "dw_create_time")
-      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
 
     resEnd
   }

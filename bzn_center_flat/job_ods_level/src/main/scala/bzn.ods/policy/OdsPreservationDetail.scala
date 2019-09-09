@@ -196,7 +196,7 @@ object OdsPreservationDetail extends SparkUtil with Until{
       .distinct()
       .selectExpr("getUUID() as id","clean(cast(preserve_id as String)) as preserve_id","clean(cast(policy_id as String)) as policy_id","policy_code","1 as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","del_batch_code","cast(del_premium as decimal(14,4)) as del_premium",
-        "del_person_count","cast(clean(preserve_effect_date) as timestamp) as preserve_effect_date","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
+        "del_person_count","preserve_effect_date","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "case when pay_status = 1 then 1 when pay_status = 2 then 0 else -1 end pay_status","create_time","update_time","getNow() as dw_create_time")
 
     res
@@ -372,7 +372,7 @@ object OdsPreservationDetail extends SparkUtil with Until{
       .selectExpr("getUUID() as id","clean(preserve_id) as preserve_id","case when id is null then clean(policy_id) else clean(id) end as policy_id","clean(policy_code) as policy_code",
         "case when status in (4,5) then 1 when status = 6 then 0 else -1 end as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","clean(del_batch_code) as del_batch_code",
-        "cast(del_premium as decimal(14,4)) as del_premium","del_person_count","cast(clean(preserve_effect_date) as timestamp) as preserve_effect_date",
+        "cast(del_premium as decimal(14,4)) as del_premium","del_person_count","preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
         "case when getDefault() = '' then -1 end as pay_status","create_time","update_time","getNow() as dw_create_time")
 

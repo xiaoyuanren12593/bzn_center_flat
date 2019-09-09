@@ -205,7 +205,7 @@ object DwYearAndMonthInsuredPremiumDetailTest extends SparkUtil with Until{
 
         res
       })
-    }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
+      }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
       "day_id","sku_price","holder_name")
     res.printSchema()
     res
