@@ -113,6 +113,15 @@ object test {
     println(new java.math.BigDecimal(strs))
 //    println(new java.math.BigDecimal(strs1))
 
+    println("------------------------")
+    val array: Array[String] = Array("201711", "201712", "201801", "201802", "201803", "201804", "201805", "201806")
+    for (i <- array) {
+      print(i)
+    }
+    for (i <- array) {
+      println("create_time < '" + i.substring(0, 4) + "-" + i.substring(4) + "-05 00:00:00'")
+    }
+
 
   }
 
