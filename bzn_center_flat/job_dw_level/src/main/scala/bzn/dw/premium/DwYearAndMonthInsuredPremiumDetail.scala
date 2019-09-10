@@ -28,8 +28,8 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val res = DwYearAndMonthInsuredPremium(hiveContext)
     hiveContext.sql("truncate table dwdb.dw_year_and_month_insured_premium_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_year_and_month_insured_premium_detail")
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_year_and_month_insured_premium_detail")
+    res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_year_and_month_insured_premium_detail")
+    //res.repartition(200).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_year_and_month_insured_premium_detail")
     sc.stop()
   }
 
@@ -50,7 +50,7 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
       */
     val odsPolicyDetail = sqlContext.sql("select policy_id,policy_code,policy_start_date,policy_end_date,policy_status,holder_name " +
       "from odsdb.ods_policy_detail")
-      .where("policy_status in (1,0)")
+      .where("policy_status in (1,0,-1)")
       .cache()
 
     /**

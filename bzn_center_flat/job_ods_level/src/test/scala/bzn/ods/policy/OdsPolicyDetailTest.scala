@@ -340,10 +340,14 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取投保人信息表
       */
     val odrPolicyHolderBznprd: DataFrame = readMysqlTable(sqlContext,"odr_policy_holder_bznprd")
-      .selectExpr("policy_id","name","province","city","district")
+      .selectExpr("policy_id","name","province","city","district","company_name")
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
-        val name = x.getAs[String]("name")
+        var name = x.getAs[String]("name")
+        val companyName = x.getAs[String]("company_name")
+        if(companyName != null && companyName.length >0){
+          name = companyName
+        }
         val province = x.getAs[String]("province")
         val city = x.getAs[String]("city")
         val district = x.getAs[String]("district")
@@ -523,7 +527,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "clean(policy_code) as policy_code",
         "case when product_code_slave is not null then sum_premium else first_premium end first_premium",
         "sum_premium",
-        "clean(holder_name) as holder_name",
+        "holder_name",
         "clean(insured_subject) as insured_subject",
         "policy_start_date","policy_end_date",
         "case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
