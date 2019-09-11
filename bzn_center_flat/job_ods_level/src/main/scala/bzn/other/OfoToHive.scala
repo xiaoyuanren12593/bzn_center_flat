@@ -48,19 +48,40 @@ object OfoToHive extends SparkUtil with Until {
       val yearAndMonth = i.substring(0, 4) + "-" + i.substring(4)
 
 //      每个库的url
-      val url: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_" + i + "?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+      val url: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_" + i + "?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&autoReconnect=true&failOverReadOnly=false&allowMultiQueries=true&user=root&password=123456"
 
 //      按照create_time设定并发
-      val predicates = Array[String]("create_time < '"  + yearAndMonth + "-03 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-03 00:00:00' and create_time < '" + yearAndMonth + "-06 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-06 00:00:00' and create_time < '" + yearAndMonth + "-09 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-09 00:00:00' and create_time < '" + yearAndMonth + "-12 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-12 00:00:00' and create_time < '" + yearAndMonth + "-15 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-15 00:00:00' and create_time < '" + yearAndMonth + "-18 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-18 00:00:00' and create_time < '" + yearAndMonth + "-21 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-21 00:00:00' and create_time < '" + yearAndMonth + "-24 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-24 00:00:00' and create_time < '" + yearAndMonth + "-27 00:00:00'",
-        "create_time >= '"  + yearAndMonth + "-27 00:00:00'"
+      val predicates = Array[String]("create_time < '"  + yearAndMonth + "-01 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-01 00:00:00' and create_time < '" + yearAndMonth + "-02 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-02 00:00:00' and create_time < '" + yearAndMonth + "-03 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-03 00:00:00' and create_time < '" + yearAndMonth + "-04 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-04 00:00:00' and create_time < '" + yearAndMonth + "-05 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-05 00:00:00' and create_time < '" + yearAndMonth + "-06 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-06 00:00:00' and create_time < '" + yearAndMonth + "-07 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-07 00:00:00' and create_time < '" + yearAndMonth + "-08 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-08 00:00:00' and create_time < '" + yearAndMonth + "-09 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-09 00:00:00' and create_time < '" + yearAndMonth + "-10 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-10 00:00:00' and create_time < '" + yearAndMonth + "-11 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-11 00:00:00' and create_time < '" + yearAndMonth + "-12 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-12 00:00:00' and create_time < '" + yearAndMonth + "-13 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-13 00:00:00' and create_time < '" + yearAndMonth + "-14 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-14 00:00:00' and create_time < '" + yearAndMonth + "-15 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-15 00:00:00' and create_time < '" + yearAndMonth + "-16 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-16 00:00:00' and create_time < '" + yearAndMonth + "-17 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-17 00:00:00' and create_time < '" + yearAndMonth + "-18 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-18 00:00:00' and create_time < '" + yearAndMonth + "-19 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-19 00:00:00' and create_time < '" + yearAndMonth + "-20 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-20 00:00:00' and create_time < '" + yearAndMonth + "-21 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-21 00:00:00' and create_time < '" + yearAndMonth + "-22 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-22 00:00:00' and create_time < '" + yearAndMonth + "-23 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-23 00:00:00' and create_time < '" + yearAndMonth + "-24 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-24 00:00:00' and create_time < '" + yearAndMonth + "-25 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-25 00:00:00' and create_time < '" + yearAndMonth + "-26 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-26 00:00:00' and create_time < '" + yearAndMonth + "-27 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-27 00:00:00' and create_time < '" + yearAndMonth + "-28 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-28 00:00:00' and create_time < '" + yearAndMonth + "-29 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-29 00:00:00' and create_time < '" + yearAndMonth + "-30 00:00:00'",
+        "create_time >= '"  + yearAndMonth + "-30 00:00:00'"
       )
 
 //      读取数据表
