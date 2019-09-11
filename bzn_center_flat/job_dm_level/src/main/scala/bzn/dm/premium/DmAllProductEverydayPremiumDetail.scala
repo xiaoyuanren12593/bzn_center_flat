@@ -82,7 +82,8 @@ object DmAllProductEverydayPremiumDetail extends SparkUtil with Until{
         val premiumType = x.getAs[Int]("premium_type")
         val sumPremium = x.getAs[java.math.BigDecimal]("sum_premium")
         val dayId = x.getAs[String]("day_id")
-        ((oneLevelPdtCate,dayId,premiumType),(1,sumPremium))
+        val policyCount = x.getAs[Int]("policy_count")
+        ((oneLevelPdtCate,dayId,premiumType),(policyCount,sumPremium))
       })
       .reduceByKey((x1,x2) => {
         val policyCount = x1._1+x2._1

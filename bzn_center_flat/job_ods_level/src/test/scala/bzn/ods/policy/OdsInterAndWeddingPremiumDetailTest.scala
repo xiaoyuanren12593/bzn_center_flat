@@ -74,16 +74,18 @@ object OdsInterAndWeddingPremiumDetailTest extends SparkUtil with Until{
         maxId
       })
       .map(x => {
-        var product_code = x._1._2
-        var product_name = x._2._2
-        var premium_type = 1
-        var amount = x._2._3
-        var sum_premium = x._2._4
-        var day_id = x._1._1
+        val product_code = x._1._2
+        val product_name = x._2._2
+        val premium_type = 4
+        val amount = x._2._3
+        val sum_premium = x._2._4
+        val day_id = x._1._1
         val premium_res = updataInter(product_code,amount,sum_premium)
         (product_code,product_name,premium_type,amount,premium_res,day_id)
       })
       .toDF("product_code","product_name","premium_type","policy_count","sum_premium","day_id")
+
+    interDate.where("day_id >= '20190901'").show()
 
     /**
       * 婚礼纪数据
@@ -92,7 +94,7 @@ object OdsInterAndWeddingPremiumDetailTest extends SparkUtil with Until{
       .selectExpr("apply_date","product_code","channel_name","status","apply_num","total_actual_premium")
         .where("status = 1")
       .map(x => {
-        var applyDate = x.getAs[Timestamp]("apply_date")
+        var applyDate = x.getAs[java.sql.Timestamp]("apply_date")
         var day_id = ""
         if(applyDate!= null){
           day_id = applyDate.toString.substring(0,10).replaceAll("-","")
@@ -113,7 +115,7 @@ object OdsInterAndWeddingPremiumDetailTest extends SparkUtil with Until{
         (amount,sum_premium)
       })
       .map(x => {
-        (x._1._2,x._1._3,1,x._2._1,x._2._2.doubleValue(),x._1._1)
+        (x._1._2,x._1._3,4,x._2._1,x._2._2.doubleValue(),x._1._1)
       })
       .toDF("product_code","product_name","premium_type","policy_count","sum_premium","day_id")
 
@@ -129,7 +131,7 @@ object OdsInterAndWeddingPremiumDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","clean(product_code) as product_code","clean(product_name) as product_name","clean(one_level_pdt_cate) as one_level_pdt_cate",
         "premium_type","policy_count", "cast(sum_premium as decimal(14,4)) as sum_premium","day_id","getNow() as dw_create_time")
 
-    res.show(1000)
+    res.where("day_id >= '20190901'").show(100)
     res.printSchema()
   }
 //  root

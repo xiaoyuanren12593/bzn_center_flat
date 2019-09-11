@@ -61,7 +61,7 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
         val productCode = x.getAs[String]("product_code")
         val productName = x.getAs[String]("product_name")
         val amount = x.getAs[Int]("amount")
-        var premium = x.getAs[java.math.BigDecimal]("premium")
+        val premium = x.getAs[java.math.BigDecimal]("premium")
         var premiumDecimal = BigDecimal(0.0000).doubleValue()
         if(premium!=null){
           premiumDecimal = premium.doubleValue()
@@ -82,7 +82,7 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
       .map(x => {
         var product_code = x._1._2
         var product_name = x._2._2
-        var premium_type = 1
+        var premium_type = 4
         var amount = x._2._3
         var sum_premium = x._2._4
         var day_id = x._1._1
@@ -119,7 +119,7 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
         (amount,sum_premium)
       })
       .map(x => {
-        (x._1._2,x._1._3,1,x._2._1,x._2._2.doubleValue(),x._1._1)
+        (x._1._2,x._1._3,4,x._2._1,x._2._2.doubleValue(),x._1._1)
       })
       .toDF("product_code","product_name","premium_type","policy_count","sum_premium","day_id")
 
@@ -135,6 +135,7 @@ object OdsInterAndWeddingPremiumDetail extends SparkUtil with Until{
       .selectExpr("getUUID() as id","clean(product_code) as product_code","clean(product_name) as product_name","clean(one_level_pdt_cate) as one_level_pdt_cate",
         "premium_type","policy_count", "cast(sum_premium as decimal(14,4)) as sum_premium","day_id","getNow() as dw_create_time")
     res
+
   }
   /**
     * 更新接口保费
