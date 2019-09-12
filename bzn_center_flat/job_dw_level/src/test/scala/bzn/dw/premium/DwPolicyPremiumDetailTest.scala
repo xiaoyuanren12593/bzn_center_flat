@@ -49,7 +49,9 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       sqlContext.sql("select policy_id,policy_code,product_code,policy_status,first_premium,preserve_policy_no," +
         "num_of_preson_first_policy,policy_start_date,insure_company_name,holder_name,insured_subject,belongs_regional " +
         "from odsdb.ods_policy_detail")
+          .where("cast(policy_start_date as string) like '%2019-05-05%'")
         .cache()
+
 
     /**
       * 读取保全明细表
@@ -108,7 +110,6 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
         "insured_subject","belongs_regional","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","cast(del_premium as decimal(14,4)) as del_premium","del_person_count","day_id")
 
-    newPolicy.printSchema()
     /**
       * 续投
       */
@@ -198,7 +199,7 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
     /**
       * 保全中的续投
       */
-    val preserveReNewPremium = odsPolicyDetail.join(odsPreseveDetail,odsPolicyDetail("policy_id") ===odsPreseveDetail("policy_id_preserve"))
+    val preserveReNewPremium = odsPolicyDetail.join(odsPreseveDetail,odsPolicyDetail("policy_id") === odsPreseveDetail("policy_id_preserve"))
       .where("preserve_status = 1 and preserve_type = 2")
       .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
         "insured_subject","belongs_regional","cast(case when add_premium is null then 0.0 else add_premium end as decimal(14,4)) as add_premium",

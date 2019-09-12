@@ -81,7 +81,7 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
           firstPremium = java.math.BigDecimal.valueOf(0.0)
         }
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
-        val policyStartDate = x.getAs[Timestamp]("policy_start_date")
+        val policyStartDate: Timestamp = x.getAs[Timestamp]("policy_start_date")
         val insureCompanyName = x.getAs[String]("insure_company_name")
         val holderName = x.getAs[String]("holder_name")
         val insuredSubject = x.getAs[String]("insured_subject")
@@ -237,7 +237,6 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
         "holder_name","insured_subject","belongs_regional","add_premium","add_person_count","del_premium","del_person_count",
         "(add_person_count+del_person_count) as sum_preson","(add_premium+del_premium) as sum_premium","day_id")
 
-    res.printSchema()
     /**
       * 读取方案表
       */

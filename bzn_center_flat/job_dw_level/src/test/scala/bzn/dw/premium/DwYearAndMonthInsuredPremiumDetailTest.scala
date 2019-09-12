@@ -46,7 +46,7 @@ object DwYearAndMonthInsuredPremiumDetailTest extends SparkUtil with Until{
       */
     val odsPolicyDetail = sqlContext.sql("select policy_id,policy_code,policy_start_date,policy_end_date,policy_status,holder_name " +
       "from odsdb.ods_policy_detail")
-        .where("policy_status in (1,0)")
+        .where("policy_status in (1,0,-1)")
       .cache()
 
     /**
@@ -205,7 +205,7 @@ object DwYearAndMonthInsuredPremiumDetailTest extends SparkUtil with Until{
 
         res
       })
-    }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
+      }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
       "day_id","sku_price","holder_name")
     res.printSchema()
     res

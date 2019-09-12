@@ -333,10 +333,14 @@ object OdsPolicyDetail extends SparkUtil with Until{
       * 读取投保人信息表
       */
     val odrPolicyHolderBznprd: DataFrame = readMysqlTable(sqlContext,"odr_policy_holder_bznprd")
-      .selectExpr("policy_id","name","province","city","district")
+      .selectExpr("policy_id","name","province","city","district","company_name")
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
-        val name = x.getAs[String]("name")
+        var name = x.getAs[String]("name")
+        val companyName = x.getAs[String]("company_name")
+        if(companyName != null && companyName.length >0){
+          name = companyName
+        }
         val province = x.getAs[String]("province")
         val city = x.getAs[String]("city")
         val district = x.getAs[String]("district")
@@ -437,7 +441,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
     val orderPolicyProductHolderInsurantItemOrderTwo = orderPolicyProductHolderInsurantItemOrder
       .where("product_code in ('15000001') and (user_id not in ('10100080492') or user_id is null)")
     val res = orderPolicyProductHolderInsurantItemOrderone.unionAll(orderPolicyProductHolderInsurantItemOrderTwo)
-
+      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
     /**
       * 读取产品明细表,将蓝领外包以外的数据进行处理，用总保费替换初投保费
       */
@@ -446,7 +450,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
 
     val resEnd = res.join(odsProductDetail,res("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .selectExpr(
-        "clean(id) as id",
+        "id",
         "clean(order_id) as order_id",
         "clean(order_code) as order_code",
         "clean(user_id) as user_id",
@@ -456,7 +460,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "clean(policy_code) as policy_code",
         "case when product_code_slave is not null then sum_premium else first_premium end first_premium",
         "sum_premium",
-        "clean(holder_name) as holder_name",
+        "holder_name",
         "clean(insured_subject) as insured_subject",
         "policy_start_date","policy_end_date",
         "case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
@@ -471,7 +475,6 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "policy_create_time",
         "policy_update_time",
         "dw_create_time")
-      .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
 
     resEnd
   }

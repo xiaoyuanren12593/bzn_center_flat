@@ -35,27 +35,23 @@ object DwPolicyEveryDayPremiumTest extends SparkUtil with Until{
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
     import sqlContext.implicits._
     val policyEveryDayPremium = sqlContext.sql("select policy_id,day_id,sku_day_price from dwdb.dw_year_and_month_insured_premium_detail")
       .map(x => {
         var policyId = x.getAs[String]("policy_id")
         var dayId = x.getAs[String]("day_id")
-        var skuDayPrice = x.getAs[String]("sku_day_price")
-        var skuDayPriceRes = 0.0
+        var skuDayPrice = x.getAs[java.math.BigDecimal]("sku_day_price")
+        var skuDayPriceRes = java.math.BigDecimal.valueOf(0.0)
         if(skuDayPrice != null){
-          skuDayPriceRes = skuDayPrice.toDouble
+          skuDayPriceRes = skuDayPrice
         }
         ((policyId,dayId),skuDayPriceRes)
       })
-      .reduceByKey(_+_)
+      .reduceByKey(_.add(_))
       .map(x => {
-        // 创建一个数值格式化对象(对数字)
-        val numberFormat = NumberFormat.getInstance
-        // 设置精确到小数点后4位
-        numberFormat.setMaximumFractionDigits(4)
-        (x._1._1,x._1._2,numberFormat.format(x._2).replaceAll(",","").toDouble)
+        (x._1._1,x._1._2,x._2)
       })
       .toDF("policy_id","day_id","premium")
       .selectExpr("getUUID() as id","policy_id","day_id","cast(premium as decimal(14,4)) as premium","getNow() as dw_create_time")
