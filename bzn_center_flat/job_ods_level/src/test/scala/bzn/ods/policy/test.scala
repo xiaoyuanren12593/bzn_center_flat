@@ -5,7 +5,6 @@ import java.sql.Timestamp
 import java.text.{NumberFormat, SimpleDateFormat}
 import java.util.{Calendar, Date}
 
-import bzn.dw.premium.DwPolicyInsuredDayIdDetailTest.getBeg_End_one_two
 import bzn.job.common.Until
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -92,14 +91,14 @@ object test {
     if(""<= "232"){
       println("132131")
     }
-    val arrayBuffer: ArrayBuffer[String] = getBeg_End_one_two("20190411","20190415")
-    arrayBuffer.foreach(println)
-    val set = Set("`","`")
-    val setRes = set.filter(x => !x.contains("`"))
-    setRes.foreach(println)
-    println("   153013021115602090480".length)
-    println("   153013021115602090480".substring("   153013021115602090480".length-11))
-    println("BZN_QJDC_1201_1231".contains("BZN_QJDC_001"))
+//    val arrayBuffer: ArrayBuffer[String] = getBeg_End_one_two("20190411","20190415")
+//    arrayBuffer.foreach(println)
+//    val set = Set("`","`")
+//    val setRes = set.filter(x => !x.contains("`"))
+//    setRes.foreach(println)
+//    println("   153013021115602090480".length)
+//    println("   153013021115602090480".substring("   153013021115602090480".length-11))
+//    println("BZN_QJDC_1201_1231".contains("BZN_QJDC_001"))
 
     println("------------------------")
     val time: java.sql.Timestamp = java.sql.Timestamp.valueOf("2019-08-08 01:01:01")
@@ -112,6 +111,17 @@ object test {
     val strs1: String = null
     println(new java.math.BigDecimal(strs))
 //    println(new java.math.BigDecimal(strs1))
+
+    println("------------------------")
+    val array: Array[String] = Array("201711", "201712", "201801", "201802", "201803", "201804", "201805", "201806")
+    for (i <- array) {
+      print(i)
+    }
+    for (i <- array) {
+      println("create_time < '" + i.substring(0, 4) + "-" + i.substring(4) + "-05 00:00:00'")
+    }
+
+    print("2016/11/16 06:57:32.000000000".substring(0, 7).replaceAll("/", ""))
 
 
   }
