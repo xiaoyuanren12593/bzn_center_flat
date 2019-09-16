@@ -241,12 +241,12 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
       * 读取方案表
       */
     val odsPolicyProductPlan = sqlContext.sql("select policy_code as policy_code_plan,sku_coverage,sku_append,sku_ratio,sku_price," +
-      "sku_charge_type,tech_service_rate,economic_rate,commission_rate from odsdb.ods_policy_product_plan_detail")
+      "sku_charge_type,tech_service_rate,economic_rate,commission_discount_rate,commission_rate from odsdb.ods_policy_product_plan_detail")
 
     val resPlan = res.join(odsPolicyProductPlan,res("policy_code")===odsPolicyProductPlan("policy_code_plan"),"leftouter")
       .selectExpr("policy_id","policy_code","product_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "add_batch_code","del_batch_code","preserve_id","premium_type","holder_name","insured_subject","belongs_regional","commission_rate",
-        "tech_service_rate","economic_rate","add_premium","add_person_count","del_premium","del_person_count","sum_preson","sum_premium","day_id")
+        "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count","sum_preson","sum_premium","day_id")
 
     /**
       * 读取销售数据
@@ -267,14 +267,14 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
     val endRes = resPlan.join(entAndSale,resPlan("holder_name")===entAndSale("ent_name"),"leftouter")
       .selectExpr("policy_id","policy_code","product_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "add_batch_code","del_batch_code","preserve_id","premium_type","holder_name","insured_subject","salesman as sale_name","team_name",
-        "belongs_regional","commission_rate", "tech_service_rate","economic_rate","add_premium","add_person_count","del_premium","del_person_count",
+        "belongs_regional","commission_rate", "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
         "sum_preson","sum_premium","day_id")
 
     val result = endRes.join(odsProductDetail,endRes("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .selectExpr("getUUID() as id","policy_id","policy_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "product_code","product_name","one_level_pdt_cate","two_level_pdt_cate","business_line","add_batch_code","del_batch_code",
         "preserve_id","premium_type","holder_name","insured_subject","sale_name","team_name","belongs_regional","commission_rate",
-        "tech_service_rate","economic_rate","add_premium","add_person_count","del_premium","del_person_count",
+        "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
         "sum_preson","sum_premium","day_id","getNow() as dw_create_time")
 
     result
