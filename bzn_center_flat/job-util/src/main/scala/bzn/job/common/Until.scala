@@ -4,7 +4,7 @@ import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
-
+import java.sql.Timestamp
 import com.alibaba.fastjson.JSONObject
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, Months}
@@ -343,6 +343,29 @@ trait Until {
       date = cd.getTime
     }
     arr
+  }
+
+  /**
+    * 得到年月份
+    * @param timePara 时间
+    */
+  def getTimeYearAndMonth(timePara:java.sql.Timestamp) ={
+    val reeTime = java.sql.Date.valueOf(timePara.toString.substring(0,10))
+    val sdf = new SimpleDateFormat("yyyyMM")
+    val res = sdf.format(reeTime)
+    res
+  }
+
+  /**
+    * 得到年月份
+    * @param timePara 时间
+    */
+  def getTimeYearAndMonthAndDay(timePara:String) ={
+
+    val sdf = new SimpleDateFormat("yyyyMMdd")
+    val res = sdf.format(sdf.parse(timePara))
+
+    res
   }
 
   //得到2个日期之间的所有月份

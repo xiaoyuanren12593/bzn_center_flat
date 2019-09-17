@@ -220,13 +220,8 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
         "case when add_person_count is null then 0 else add_person_count end as add_person_count",
         "cast(case when del_premium is null then 0.0 else del_premium end as decimal(14,4)) as del_premium",
         "case when del_person_count is null then 0 else del_person_count end as del_person_count","preserve_effect_date as day_id")
-<<<<<<< HEAD
-    preserveAddAndDelPremium.where("preserve_id = '344093941244760064'").show()
-    preserveAddAndDelPremium.printSchema()
-=======
 
    // preserveAddAndDelPremium.printSchema()
->>>>>>> master
     /**
       * 保全类型中的退保
       */
@@ -260,13 +255,8 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
     val resPlan = res.join(odsPolicyProductPlan,res("policy_code")===odsPolicyProductPlan("policy_code_plan"),"leftouter")
       .selectExpr("policy_id","policy_code","product_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "add_batch_code","del_batch_code","preserve_id","premium_type","holder_name","insured_subject","belongs_regional","commission_rate",
-<<<<<<< HEAD
-        "tech_service_rate","economic_rate","add_premium","add_person_count","del_premium","del_person_count","sum_preson","sum_premium","day_id")
-    resPlan.where("preserve_id = '344093941244760064'").show()
-=======
         "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count","sum_preson","sum_premium","day_id")
 
->>>>>>> master
     /**
       * 读取销售数据
       */
@@ -296,12 +286,7 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
         "preserve_id","premium_type","holder_name","insured_subject","sale_name","team_name","belongs_regional","commission_rate",
         "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
         "sum_preson","sum_premium","day_id","getNow() as dw_create_time")
-<<<<<<< HEAD
-    result.printSchema()
-    result.where("preserve_id = '344093941244760064'").show()
-=======
-    result.show(2)
->>>>>>> master
+
     result
   }
 }

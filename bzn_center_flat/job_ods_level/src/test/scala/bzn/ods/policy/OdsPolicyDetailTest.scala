@@ -363,7 +363,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取被保企业信息表
       */
     val odrPolicyInsurantBznprd: DataFrame = readMysqlTable(sqlContext,"odr_policy_insurant_bznprd")
-      .selectExpr("policy_id","name as insured_subject")
+      .selectExpr("policy_id","trim(company_name) as insured_subject")
 
     /**
       * 读取产品表
@@ -544,7 +544,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "dw_create_time")
 //      .where("policy_code != '21010000889180002031' and policy_code != '21010000889180002022' and policy_code != '21010000889180002030'")
 
-    resEnd.show()
+//    resEnd.show()
     println("1.0")
     resEnd.printSchema()
 
