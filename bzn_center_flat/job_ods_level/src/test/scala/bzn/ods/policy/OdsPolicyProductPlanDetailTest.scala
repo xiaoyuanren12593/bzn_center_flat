@@ -51,9 +51,8 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
     val unionRes = onePlanRes.unionAll(twoPlanRes)
       .where("policy_status in (0,1,-1)")
       .selectExpr("policy_code","sku_id","product_code","sku_coverage",
-        "sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_rate")
+        "sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_discount_rate","commission_rate")
       .distinct()
-
     /**
       * 读取历史方案配置表
       */
@@ -105,20 +104,21 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
         "case when policy_code_master is not null then sku_charge_type_master else sku_charge_type end as sku_charge_type",
         "case when policy_code_master is not null then tech_service_rate_master else tech_service_rate end as tech_service_rate",
         "case when policy_code_master is not null then economic_rate_master else economic_rate end as economic_rate",
+        "commission_discount_rate",
         "case when policy_code_master is not null then commission_rate_master else commission_rate end as commission_rate",
         "getNow() as dw_create_time")
       .cache()
-
+    //resTemp.printSchema()
     /**
       * 众安和国寿财零工保
       */
     val firstRes = resTemp.where("product_code = 'LGB000001'")
       .selectExpr("id","policy_code","product_code","sku_coverage","sku_append", "sku_ratio", "sku_price", "sku_charge_type", "tech_service_rate",
-        "economic_rate", "'0.1' as commission_rate", "dw_create_time")
+        "economic_rate", "commission_discount_rate","'0.1' as commission_rate", "dw_create_time")
 
     val threeRes = resTemp.where("product_code = '17000001'")
       .selectExpr("id","policy_code","product_code", "sku_coverage","sku_append","sku_ratio", "sku_price", "sku_charge_type", "tech_service_rate",
-        "economic_rate", "'0.2' as commission_rate", "dw_create_time")
+        "economic_rate","commission_discount_rate", "'0.2' as commission_rate", "dw_create_time")
 
     /**
       * 其他产品的数据
@@ -137,10 +137,11 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
         "clean(sku_charge_type) as sku_charge_type",
         "cast(clean(tech_service_rate) as decimal(14,4)) as tech_service_rate ",
         "cast(clean(economic_rate) as decimal(14,4)) as economic_rate",
+        "cast(clean(commission_discount_rate) as decimal(14,4)) as commission_discount_rate",
         "cast(clean(commission_rate) as decimal(14,4)) as commission_rate",
         "dw_create_time")
     res.printSchema()
-    res.show()
+    //res.show()
     res
   }
 
@@ -175,7 +176,7 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
     val unionPlanRes = onePlanRes.unionAll(twoPlanRes)
       .selectExpr("id","sku_id","policy_code","insure_code","policy_status")
       .where("policy_code not in ('21010000889180002031','21010000889180002022','21010000889180002030')")
-    unionPlanRes.show()
+    //unionPlanRes.show()
     /**
       * 读取产品方案表
       */
@@ -233,19 +234,25 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
         var tech_service_rate = ""
         var economic_rate = ""
         var commission_rate = ""
+        var commission_discount_percent = ""
 
         if( tech_service_rate == "" && economic_rate == "") {
           tech_service_rate = null
           economic_rate = null
           commission_rate = null
+          commission_discount_percent=null
         }
 
-        ( policyCode, policyStatus,skuId,insuredCode,skuCoverage, skuAppend, sku_ratio, price, sku_charge_type, tech_service_rate, economic_rate,commission_rate)
+        ( policyCode, policyStatus,skuId,insuredCode,skuCoverage, skuAppend, sku_ratio, price, sku_charge_type, tech_service_rate, economic_rate,commission_discount_percent,commission_rate)
       })
-      .toDF("policy_code","policy_status","sku_id","product_code","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_rate")
+      .toDF("policy_code","policy_status","sku_id","product_code","sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_discount_rate","commission_rate")
       .where("policy_code is not null")
+    policyRes.printSchema()
     policyRes
+
   }
+
+
 
   /**
     * 2.0系统数据信息
@@ -259,7 +266,7 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
     val bPolicyBzncen: DataFrame = readMysqlTable(sqlContext,"b_policy_bzncen")
       .selectExpr("id as policy_id","policy_no as master_policy_no",
         "case when `status` = 1 and end_date > NOW() then 1  when (`status` = 4 or (`status` = 1 and end_date < NOW())) then 0  when `status` = -1 then -1 else 99  end  as policy_status",
-        "insurance_policy_no as policy_code","product_code","premium_price")
+        "insurance_policy_no as policy_code","product_code","premium_price","commission_discount_percent as commission_discount_rate")
       .cache()
       .where("policy_code in ('815162019339996017031','815162019339996015930')")
 
@@ -321,8 +328,10 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
 
     val planRes = bPolicyBzncen.join(bPolicyProductPlanBzncen,bPolicyBzncen("master_policy_no")===bPolicyProductPlanBzncen("policy_no_plan"),"leftouter")
       .selectExpr("policy_code","policy_status","product_code as sku_id","product_code","sku_coverage",
-        "sku_append","sku_ratio","premium_price as sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_rate")
+        "sku_append","sku_ratio","premium_price as sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_discount_rate","commission_rate")
       .where("policy_code is not null")
+
+    planRes.printSchema()
     planRes
   }
 
