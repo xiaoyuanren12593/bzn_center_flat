@@ -205,8 +205,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         "case when gender = 2 then 0 else 1 end as gender","case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type",
         "clean(insured_cert_no) as insured_cert_no","clean(birthday) as birthday","clean(industry) as industry","clean(work_type) as work_type","clean(company_name) as company_name",
         "clean(company_phone) as company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
-        "cast(clean(pre_start_date) as timestamp) as pre_start_date","cast(clean(pre_end_date) as timestamp) as pre_end_date","cast(clean(insured_status) as int) as insured_status",
-        "age","cast(clean(getDate(create_time)) as timestamp) as create_time","cast(clean(getDate(update_time)) as timestamp) as update_time","getNow() as dw_create_time")
+        "cast(pre_start_date as timestamp) as pre_start_date","cast(pre_end_date as timestamp) as pre_end_date","cast(clean(insured_status) as int) as insured_status",
+        "age","cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
 
     println("2.0")
     res.printSchema()
@@ -319,6 +319,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       */
     val plcPolicyPreserveBznprd = readMysqlTable(sqlContext,"plc_policy_preserve_bznprd")
       .selectExpr("id","type as preserve_type","add_person_count","del_person_count")
+
     val temp = plcPolicyPreserveBznprd.join(maxStartDateMinEndDate,plcPolicyPreserveBznprd("id")===maxStartDateMinEndDate("preserve_id_insured"))
       .map(x=> {
         val preserveId = x.getAs[String]("id")
@@ -343,9 +344,9 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","clean(master_id) as master_id","clean(preserve_id) as preserve_id","clean(name) as insured_name","cast(clean(gender) as int) as gender",
         "case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type","clean(insured_cert_no) as insured_cert_no","clean(birthday) as birthday","clean(industry) as industry",
         "clean(work_type_new) as work_type", "clean(company_name) as company_name","clean(company_phone) as company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
-        "cast(clean(pre_start_date) as timestamp) as pre_start_date","cast(clean(pre_end_date) as timestamp) as pre_end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
+        "cast(pre_start_date as timestamp) as pre_start_date","cast(pre_end_date as timestamp) as pre_end_date","case when insured_status = 0 then 0 when insured_status = 1 then 1 else null end as insured_status",
         "case when insured_cert_type ='1' and pre_start_date is not null then getAgeFromBirthTime(insured_cert_no,pre_start_date) else null end as age",
-        "cast(clean(getDate(create_time)) as timestamp) as create_time","cast(clean(getDate(update_time)) as timestamp) as update_time","getNow() as dw_create_time")
+        "cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
 
     println("1.0")
     res.printSchema()

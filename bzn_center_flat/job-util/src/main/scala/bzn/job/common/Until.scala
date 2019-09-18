@@ -370,7 +370,7 @@ trait Until {
 
   //得到2个日期之间的所有月份
   def getBeg_End_one_two_month(mon3: String, day_time: String): ArrayBuffer[String] = {
-    val sdf = new SimpleDateFormat("yyyyMM")
+    val sdf = new SimpleDateFormat("yyyy-MM")
 
     //得到今天的日期
     val cc = Calendar.getInstance
