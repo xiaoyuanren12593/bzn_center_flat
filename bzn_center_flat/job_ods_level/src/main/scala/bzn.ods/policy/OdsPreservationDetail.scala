@@ -152,7 +152,7 @@ object OdsPreservationDetail extends SparkUtil with Until{
 
     val tep_five = tep_four.join(bPolicyPreserveBznprdTemp,"temp_inc_dec_order_no").map(x => {
       val tempIncDecOrderNo = x.getAs[String]("temp_inc_dec_order_no")
-      var preStartDate = x.getAs[String]("pre_start_date")
+      val preStartDate = x.getAs[String]("pre_start_date")
       var preEndDate = x.getAs[String]("pre_end_date")
       val addPersonCount = x.getAs[Int]("add_person_count")
       val delPersonCount = x.getAs[Int]("del_person_count")
@@ -181,22 +181,20 @@ object OdsPreservationDetail extends SparkUtil with Until{
           preserveEffectDate = null
         }
       }
-
-      (tempIncDecOrderNo,preserveEffectDate)
+      (tempIncDecOrderNo,preStartDate,preEndDate,preserveEffectDate)
     })
-    .toDF("temp_inc_dec_order_no", "preserve_effect_date")
+      .toDF("temp_inc_dec_order_no", "preserve_start_date","preserve_end_date","preserve_effect_date")
 
     val resTemp = sqlContext.sql("select * from bPolicyInfoMasterInfoTemp")
-      .selectExpr("preserve_id","insurance_policy_no as policy_code","policy_id","inc_dec_order_no" ,"add_batch_code",
-        "add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
-
+      .selectExpr("preserve_id","insurance_policy_no as policy_code","policy_id","inc_dec_order_no" ,"add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
     val res = resTemp.join(tep_five,resTemp("inc_dec_order_no") ===tep_five("temp_inc_dec_order_no"),"leftouter")
       .selectExpr("preserve_id","policy_id","policy_code","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
-        "del_person_count","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
+        "del_person_count","preserve_start_date","preserve_end_date","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
       .distinct()
       .selectExpr("getUUID() as id","clean(cast(preserve_id as String)) as preserve_id","clean(cast(policy_id as String)) as policy_id","policy_code","1 as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","del_batch_code","cast(del_premium as decimal(14,4)) as del_premium",
-        "del_person_count","preserve_effect_date","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
+        "del_person_count","cast(preserve_start_date as Timestamp) as preserve_start_date","cast(preserve_end_date as Timestamp) as preserve_end_date","preserve_effect_date",
+        "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "case when pay_status = 1 then 1 when pay_status = 2 then 0 else -1 end pay_status","create_time","update_time","getNow() as dw_create_time")
 
     res
@@ -354,13 +352,14 @@ object OdsPreservationDetail extends SparkUtil with Until{
             preserve_effect_date = null
           }
         }
-        (preserveId, preserve_effect_date)
+        (preserveId, preserve_effect_date,joinDateRes,leftDateRes)
       })
-      .toDF("preserve_id_temp", "preserve_effect_date")
+      .toDF("preserve_id_temp", "preserve_effect_date","preserve_start_date","preserve_end_date")
 
     val plcPolicyPreserveBznprdResTemp = sqlContext.sql("select * from plcPolicyPreserveBznprdTemp")
     val plcPolicyPreserveBznprdRes = plcPolicyPreserveBznprdResTemp.join(plcPolicyPreserveBznprdTemp, plcPolicyPreserveBznprdResTemp("preserve_id") === plcPolicyPreserveBznprdTemp("preserve_id_temp"), "leftouter")
-      .selectExpr("preserve_id", "policy_id", "policy_code", "status ", "add_batch_code", "add_premium", "add_person_count", "del_batch_code", "del_premium", "del_person_count", "preserve_effect_date", "preserve_type", "create_time", "update_time")
+      .selectExpr("preserve_id", "policy_id", "policy_code", "status ", "add_batch_code", "add_premium", "add_person_count", "del_batch_code", "del_premium", "del_person_count",
+        "preserve_start_date","preserve_end_date","preserve_effect_date", "preserve_type", "create_time", "update_time")
 
     /**
       * 读取2.0保单表 如果1.0保单在2.0保单表中有数据，以2.0的保单id为准
@@ -368,11 +367,11 @@ object OdsPreservationDetail extends SparkUtil with Until{
     val bPolicyBzncen = readMysqlTable(sqlContext, "b_policy_bzncen")
       .selectExpr("id", "insurance_policy_no")
 
-    val res = plcPolicyPreserveBznprdRes.join(bPolicyBzncen, plcPolicyPreserveBznprdRes("policy_code") === bPolicyBzncen("insurance_policy_no"), "leftouter")
+    val res = plcPolicyPreserveBznprdRes.join(bPolicyBzncen,plcPolicyPreserveBznprdRes("policy_code")===bPolicyBzncen("insurance_policy_no"),"leftouter")
       .selectExpr("getUUID() as id","clean(preserve_id) as preserve_id","case when id is null then clean(policy_id) else clean(id) end as policy_id","clean(policy_code) as policy_code",
         "case when status in (4,5) then 1 when status = 6 then 0 else -1 end as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","clean(del_batch_code) as del_batch_code",
-        "cast(del_premium as decimal(14,4)) as del_premium","del_person_count","preserve_effect_date",
+        "cast(del_premium as decimal(14,4)) as del_premium","del_person_count","preserve_start_date","preserve_end_date","preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
         "case when getDefault() = '' then -1 end as pay_status","create_time","update_time","getNow() as dw_create_time")
 

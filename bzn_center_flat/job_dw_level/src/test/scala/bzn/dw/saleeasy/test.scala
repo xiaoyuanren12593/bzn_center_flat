@@ -17,6 +17,12 @@ object test extends Until{
     val timePara1 = "20171103"
     getBeg_End_one_two_month("2017-11-03 00:00:00","2017-12-03 00:00:00").foreach(println)
     println (getNowTime().substring(0,10).replaceAll("-",""))
+    println (getNowTime().substring (0, 10))
+    println (java.sql.Timestamp.valueOf ("2017-11-03 00:00:00"))
+
+    println (getTimeYearAndMonth (currTimeFuction (java.sql.Timestamp.valueOf ("2017-11-30 00:00:00").toString, 1).substring(0,7).replaceAll("-","")))
+
+    getBeg_End_one_two_month_day("2017-01-03 00:00:00","2017-12-01 00:00:00").foreach(println)
   }
 
   /**
