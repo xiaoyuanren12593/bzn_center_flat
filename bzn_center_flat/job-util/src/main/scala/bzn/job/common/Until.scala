@@ -357,7 +357,7 @@ trait Until {
   }
 
   /**
-    * 得到年月份
+    * 得到年月份日
     * @param timePara 时间
     */
   def getTimeYearAndMonthAndDay(timePara:String) ={
@@ -368,9 +368,48 @@ trait Until {
     res
   }
 
+  /**
+    * 得到年月份
+    * @param timePara 时间
+    */
+  def getTimeYearAndMonth(timePara:String) ={
+
+    val sdf = new SimpleDateFormat("yyyyMM")
+    val res = sdf.format(sdf.parse(timePara))
+
+    res
+  }
+
   //得到2个日期之间的所有月份
   def getBeg_End_one_two_month(mon3: String, day_time: String): ArrayBuffer[String] = {
     val sdf = new SimpleDateFormat("yyyy-MM")
+
+    //得到今天的日期
+    val cc = Calendar.getInstance
+    cc.setTime(new Date)
+    val day = cc.getTime
+
+    //得到他们相间的所有日期
+    val arr: ArrayBuffer[String] = ArrayBuffer[String]()
+    val date_start = sdf.parse(mon3)
+    //    val date_start = sdf.parse("20161007")
+    val date_end = sdf.parse(day_time)
+    //    val date_end = sdf.parse("20161008")
+    var date = date_start
+    val cd = Calendar.getInstance //用Calendar 进行日期比较判断
+
+    while (date.getTime <= date_end.getTime) {
+      arr += sdf.format(date)
+      cd.setTime(date)
+      cd.add(Calendar.MONTH, 1); //增加一天 放入集合
+      date = cd.getTime
+    }
+    arr
+  }
+
+  //得到2个日期之间的所有月份和日
+  def getBeg_End_one_two_month_day(mon3: String, day_time: String): ArrayBuffer[String] = {
+    val sdf = new SimpleDateFormat("yyyy-MM-dd")
 
     //得到今天的日期
     val cc = Calendar.getInstance

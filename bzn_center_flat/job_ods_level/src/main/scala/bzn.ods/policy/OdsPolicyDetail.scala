@@ -291,6 +291,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "num_of_preson_first_policy",
         "policy_create_time",
         "policy_update_time",
+        "'2.0' as source_system",
         "dw_create_time")
 
     val res = restemp.join(bsChannelBznmana, restemp("channel_id") === bsChannelBznmana("channelId"), "leftouter")
@@ -554,8 +555,8 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "clean(policy_code) as policy_code",
         "case when product_code_slave is not null then sum_premium else first_premium end first_premium",
         "sum_premium",
-        "holder_name",
-        "clean(insured_subject) as insured_subject",
+        "trim(holder_name) as holder_name",
+        "case when clean(insured_subject) is null then trim(holder_name) else clean(insured_subject) end as insured_subject",
         "policy_start_date","policy_end_date",
         "case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
         "commission_discount_percent",
