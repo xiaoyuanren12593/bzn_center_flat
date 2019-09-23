@@ -28,7 +28,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneData = odsPolicyInsuredDetail(hiveContext)
     val twoData = twoOdsPolicyInsuredDetail(hiveContext)
-    oneData.unionAll(twoData).printSchema()
+    oneData.unionAll(twoData).show(10)
 //    oneDate.write.format("parquet").mode("overwrite").save("/xing/data/odsPolicyInsuredDetail")
     sc.stop()
   }
@@ -53,7 +53,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
       */
     val bPolicySubjectPersonMasterBzncen = sqlContext.sql("select * from sourcedb.b_policy_subject_person_master_bzncen")
       .selectExpr("id as master_id","policy_no as master_policy_no","name as insured_name","cert_type as insured_cert_type",
-        "cert_no","birthday","is_married","sex as gender","tel as insured_mobile","email","industry_name as industry","work_type",
+        "cert_no","birthday","is_married","sex as gender","tel as insured_mobile","email","industry_name as industry","work_type","job_company",
         "company_name","company_phone","status","start_date as insured_start_date",
         "end_date as insured_end_date","create_time","update_time")
       .registerTempTable("bPolicySubjectPersonMasterBzncenTable")
@@ -97,15 +97,17 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
         "clean(name_new) as insured_name",
         "case when insured_cert_type = '1' then 1 else -1 end as insured_cert_type ","clean(insured_cert_no) as insured_cert_no","birthday","cast(clean(is_married) as int) as is_married",
         "case when `gender` = 2 then 0 when  gender = 1 then 1 else null  end  as gender","clean(insured_mobile) as insured_mobile","clean(email) as email","clean(industry) as industry",
-        "clean(work_type_new) as work_type", "clean(company_name) as company_name","clean(company_phone) as company_phone","cast(clean(insured_status) as int) as insured_status",
+        "clean(work_type_new) as work_type",
+        "clean(job_company) as job_company",
+        "clean(company_name) as company_name","clean(company_phone) as company_phone","cast(clean(insured_status) as int) as insured_status",
         "cast(clean(insure_policy_status) as int) as policy_status","cast(getDate(insured_start_date) as timestamp) as start_date",
         "cast(getDate(insured_end_date) as timestamp) as end_date", "case when insured_cert_type ='1' and insured_start_date is not null then getAgeFromBirthTime(insured_cert_no,insured_start_date) else null end as age",
         "cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
 
-    println("2.0")
-    res.printSchema()
+    //println("2.0")
+    //res.printSchema()
     res
-//    res.show()
+    //res.show()
   }
 
   /**
@@ -129,7 +131,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
       */
     val odrPolicyInsuredBznprd = sqlContext.sql("select * from sourcedb.odr_policy_insured_bznprd")
       .selectExpr("id as master_id","policy_id","policy_code","name as insured_name","cert_type as insured_cert_type","cert_no",
-        "birthday","gender","is_married","email","mobile as insured_mobile","industry","work_type","company_name","company_phone",
+        "birthday","gender","is_married","email","mobile as insured_mobile","industry","work_type","''","company_name","company_phone",
         "status","insure_policy_status","start_date","end_date","create_time","update_time","remark")
       .registerTempTable("odrPolicyInsuredBznprdTemp")
     //odrPolicyInsuredBznprd.show()
@@ -182,14 +184,15 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
         "case when insured_cert_type = '1' then 1 else -1 end as insured_cert_type ", "clean(insured_cert_no) as insured_cert_no","clean(birthday) as birthday",
         "cast(clean(is_married) as int) as is_married","case when `gender` = 0 then 0 when  gender = 1 then 1 else null  end  as gender",
         "clean(insured_mobile) as insured_mobile","clean(email) as email","clean(industry) as industry", "clean(work_type_new) as work_type",
+        "clean('') as job_company",
         "clean(company_name) as company_name","clean(company_phone) as company_phone","case when status = '0' then 0 else 1 end as insured_status",
         "case when insure_policy_status = '1' then 1 else 0 end  as policy_status","cast(getDate(start_date) as timestamp) as start_date",
         "cast(getDate(end_date) as timestamp) as end_date",
         "case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
         "cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
 
-    println("1.0")
-    resTemp.printSchema()
+    //println("1.0")
+    //resTemp.printSchema()
     resTemp
   }
 
