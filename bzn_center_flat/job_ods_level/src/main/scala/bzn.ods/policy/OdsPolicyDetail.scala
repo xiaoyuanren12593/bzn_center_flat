@@ -574,13 +574,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "policy_update_time",
         "'1.0' as source_system",
         "dw_create_time")
-    //      .where("policy_code != '21010000889180002031' and policy_code != '21010000889180002022' and policy_code != '21010000889180002030'")
 
-    //    resEnd.show()
-   // println("1.0")
-   // resEnd.printSchema()
-
-    // val test = resEnd.selectExpr("sales_name").where("sales_name is not null")
     resEnd
   }
   /**
