@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 import java.util.{Calendar, Date}
 import java.sql.Timestamp
+import java.time.{YearMonth, ZoneId, ZonedDateTime}
+
 import com.alibaba.fastjson.JSONObject
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, Months}
@@ -407,9 +409,37 @@ trait Until {
     arr
   }
 
+  /**
+    * 得到月份的开始和结束时间
+    * @param year
+    * @param month
+    * @return
+    */
+  def getBeginTime( year:Int,  month:Int) = {
+    var sdf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss")
+    val yearMonth = YearMonth.of(year, month)
+    val localDate = yearMonth.atDay(1)
+    val  startOfDay = localDate.atStartOfDay()
+    val zonedDateTime: ZonedDateTime = startOfDay.atZone(ZoneId.of("Asia/Shanghai"))
+    import java.util.Date
+    val res = sdf.format(Date.from (zonedDateTime.toInstant ()))
+    res
+  }
+
+  def getEndTime( year:Int,  month:Int) = {
+    var sdf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss")
+    val yearMonth = YearMonth.of(year, month)
+    val endOfMonth = yearMonth.atEndOfMonth()
+    val localDateTime = endOfMonth.atTime(23, 59, 59, 999)
+    val zonedDateTime = localDateTime.atZone(ZoneId.of("Asia/Shanghai"))
+    import java.util.Date
+    val res =  sdf.format(Date.from(zonedDateTime.toInstant()))
+    res
+  }
+
   //得到2个日期之间的所有月份和日
   def getBeg_End_one_two_month_day(mon3: String, day_time: String): ArrayBuffer[String] = {
-    val sdf = new SimpleDateFormat("yyyy-MM-dd")
+    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     //得到今天的日期
     val cc = Calendar.getInstance
@@ -433,7 +463,6 @@ trait Until {
     }
     arr
   }
-
 
   //精准的获取年龄
   def getAgeFromBirthTime(cert_no: String, time: String): Int = {
