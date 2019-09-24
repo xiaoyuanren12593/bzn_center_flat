@@ -1,5 +1,8 @@
 package bzn.dw.saleeasy
 
+import java.time.{YearMonth, ZoneId, ZonedDateTime}
+import java.util.Date
+
 import bzn.job.common.Until
 
 import scala.collection.mutable
@@ -22,7 +25,19 @@ object test extends Until{
 
     println (getTimeYearAndMonth (currTimeFuction (java.sql.Timestamp.valueOf ("2017-11-30 00:00:00").toString, 1).substring(0,7).replaceAll("-","")))
 
-    getBeg_End_one_two_month_day("2017-01-03 00:00:00","2017-12-01 00:00:00").foreach(println)
+    getBeg_End_one_two_month_day("2018-03-01 00:00:00","2019-02-28 23:59:59").foreach(println)
+
+    import java.text.SimpleDateFormat
+    var sdf = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss")
+    val year = 2016
+    val month = "03".toInt
+
+    println (month)
+    val beginTime = getBeginTime (year, month)
+    println (beginTime)
+    val endTime = getEndTime (year, month)
+    println ("2018-03-01 00:00:00".compareTo ("2019-02-28 23:59:59"))
+    println (currTimeFuction ("2017-11-30 00:00:00.0", 1))
   }
 
   /**
