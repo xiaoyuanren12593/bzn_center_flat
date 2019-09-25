@@ -410,6 +410,16 @@ trait Until {
   }
 
   /**
+    * 得到年月日00：00：00格式的时间
+    * @return
+    */
+  def getBeginTime( date:String) = {
+    var sdf = new SimpleDateFormat ("yyyy-MM-dd 00:00:00")
+    val res = sdf.parse(date)
+    res
+  }
+
+  /**
     * 得到月份的开始和结束时间
     * @param year
     * @param month

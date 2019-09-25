@@ -158,6 +158,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -194,6 +195,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month_res as month",
         "ent_id",
         "ent_name",
@@ -224,6 +226,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -278,7 +281,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
           val nowDate = getNowTime ().substring (0, 10).replaceAll ("-", "")
           if(startDate.compareTo(policyStartDate) <= 0){
             //应续投时间
-            val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1))
+            val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1).substring(0,10).concat(" 00:00:00"))
             //应续投判断时间
             val shouldContinuePolicyDateIs = if( endDate != null ) {
               val res = endDate.toString.substring (0, 10).replaceAll ("-", "")
@@ -286,11 +289,18 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
             } else {
               null
             }
-            (policyId,nowDate,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,policyStartDate,endDate)
+            //保单所在月份
+            val effectMonth = if( policyStartDate != null ) {
+              val res = getTimeYearAndMonth (policyStartDate.toString.substring (0, 7).replaceAll ("-", ""))
+              res
+            } else {
+              null
+            }
+            (policyId,nowDate,effectMonth,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,policyStartDate,endDate)
           }else{
             if(endDate.compareTo(policyEndDate)>0){
               //应续投时间
-              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1))
+              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1).substring(0,10).concat(" 00:00:00"))
               //应续投判断时间
               val shouldContinuePolicyDateIs = if( endDate != null ) {
                 val res = endDate.toString.substring (0, 10).replaceAll ("-", "")
@@ -298,10 +308,17 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
               } else {
                 null
               }
-              (policyId,nowDate,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,policyEndDate)
+              //保单所在月份
+              val effectMonth = if( startDate != null ) {
+                val res = getTimeYearAndMonth (startDate.toString.substring (0, 7).replaceAll ("-", ""))
+                res
+              } else {
+                null
+              }
+              (policyId,nowDate,effectMonth,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,policyEndDate)
             }else{
               //应续投时间
-              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1))
+              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1).substring(0,10).concat(" 00:00:00"))
               //应续投判断时间
               val shouldContinuePolicyDateIs = if( endDate != null ) {
                 val res = endDate.toString.substring (0, 10).replaceAll ("-", "")
@@ -309,13 +326,20 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
               } else {
                 null
               }
-              (policyId,nowDate,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,endDate)
+              //保单所在月份
+              val effectMonth = if( startDate != null ) {
+                val res = getTimeYearAndMonth (startDate.toString.substring (0, 7).replaceAll ("-", ""))
+                res
+              } else {
+                null
+              }
+              (policyId,nowDate,effectMonth,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,endDate)
             }
           }
         })
       })
     })
-      .toDF("policy_id_salve", "now_date","month_res","should_continue_policy_date", "should_continue_policy_date_is","policy_start_date_every", "policy_end_date_every")
+      .toDF("policy_id_salve", "now_date","effect_month","month_res","should_continue_policy_date", "should_continue_policy_date_is","policy_start_date_every", "policy_end_date_every")
 
     val policyProductPlanEveMonthRes = policyProductPlanTempRes.join(policyProductPlanEveMonthTempRes,policyProductPlanTempRes("policy_id")===policyProductPlanEveMonthTempRes("policy_id_salve"))
       .selectExpr(
@@ -334,6 +358,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "now_date",
         "should_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month_res"
       )
 
@@ -373,6 +398,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month_res"
       )
     res
@@ -426,7 +452,15 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
 
       //应续投时间  保单结束时间+1天
       val shouldContinuePolicyDate = if( policyEndDate != null ) {
-        val res = java.sql.Timestamp.valueOf(currTimeFuction (policyEndDate.toString, 1))
+        val res = java.sql.Timestamp.valueOf(currTimeFuction (policyEndDate.toString, 1).substring(0,10).concat(" 00:00:00"))
+        res
+      } else {
+        null
+      }
+
+      //保单所在月份
+      val effectMonth = if( policyStartDate != null ) {
+        val res = getTimeYearAndMonth (policyStartDate.toString.substring (0, 7).replaceAll ("-", ""))
         res
       } else {
         null
@@ -461,7 +495,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
       }
 
       (policyId, policyCode, policyStartDate, policyEndDate, insureCompanyName, holderName, productCode, productName, continuePolicyId, preservePolicyNo,
-        skuCoverage, skuChargeType, skuPrice, nowDate, shouldContinuePolicyDate, realyContinuePolicyDate,shouldContinuePolicyDateIs, month)
+        skuCoverage, skuChargeType, skuPrice, nowDate, shouldContinuePolicyDate, realyContinuePolicyDate,shouldContinuePolicyDateIs,effectMonth, month)
     })
       .toDF (
         "policy_id",
@@ -481,6 +515,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month"
       )
     /**
