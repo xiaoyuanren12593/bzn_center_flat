@@ -23,7 +23,65 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    continueProposalDetail(hiveContext)
+    val res = continueProposalDetail(hiveContext)
+      .selectExpr(
+        "id",
+        "policy_id",
+        "policy_code",
+        "policy_start_date",
+        "policy_end_date",
+        "insure_company_name",//保险公司
+        "product_code",
+        "product_name",
+        "continue_policy_id",
+        "preserve_policy_no",
+        "sku_coverage",
+        "sku_charge_type",
+        "sku_price",
+        "now_date",
+        "curr_insured_count as current_insured",
+        "should_continue_policy_date  as continue_date",
+        "realy_continue_policy_date",
+        "realy_insured_count  as persons_continued",
+        "should_continue_policy_date_is",
+        "should_insured_count as persons_expired",
+        "effect_month as month",
+        "month as continue_month",
+        "ent_id",
+        "ent_name",
+        "salesman",
+        "team_name",
+        "biz_operator",
+        "consumer_category",
+        "channel_id",
+        "channel_name",
+        "dw_create_time"
+      )
+
+    val mysqlRes = res.selectExpr(
+      "id",
+      "policy_code",
+      "insure_company_name",//保险公司
+      "ent_id",
+      "ent_name",
+      "channel_id",
+      "channel_name",
+      "salesman",
+      "biz_operator",
+      "sku_coverage",
+      "sku_price",
+      "sku_charge_type",
+      "current_insured",
+      "policy_start_date",
+      "policy_end_date",
+      "continue_date",
+      "continue_month",
+      "persons_expired",
+      "persons_continued",
+      "month",
+      "dw_create_time"
+    ).cache()
+    mysqlRes.printSchema()
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
     sc.stop ()
   }
@@ -61,6 +119,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -101,6 +160,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is as day_id",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -135,6 +195,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "realy_continue_policy_date as day_id",
         "day_id as should_continue_policy_date_is",
         "case when count is null then 0 else count end as should_insured_count",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -171,6 +232,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "case when count is null then 0 else count end as realy_insured_count",
         "should_continue_policy_date_is",
         "should_insured_count",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",

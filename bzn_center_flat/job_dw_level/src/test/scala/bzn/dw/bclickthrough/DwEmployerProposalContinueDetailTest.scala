@@ -29,7 +29,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
   }
 
   /**
-    * 续投保单统计
+    * 续投保保单统计
     * @param sqlContext //上下文
     */
   def continueProposalDetail(sqlContext:HiveContext) = {
@@ -49,6 +49,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
       val nowDayId = getNowTime().substring(0,10).replaceAll("-","")
       nowDayId
     })
+
     /**
       * 国寿财和中华  保单层级的续投
       */
@@ -83,7 +84,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
       */
     val odsPreservationDetail =
       sqlContext.sql ("select policy_id,policy_code,preserve_id,preserve_start_date,preserve_end_date,preserve_status,preserve_type from odsdb.ods_preservation_detail")
-      .where("preserve_status = 1 and preserve_type = 2 and (preserve_end_date is not null or preserve_start_date is not null)")
+        .where("preserve_status = 1 and preserve_type = 2 and (preserve_end_date is not null or preserve_start_date is not null)")
 
     /***
       * 保单和产品进行关联的到结果
@@ -153,6 +154,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -189,6 +191,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month_res as month",
         "ent_id",
         "ent_name",
@@ -219,6 +222,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month",
         "ent_id",
         "ent_name",
@@ -248,7 +252,6 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
     val policyProductPlanTempRes = policyProductPlanRes
       .where ("sku_charge_type = '1' and policy_start_date is not null and policy_end_date is not null")
       .where ("insure_company_name like '%众安%'")
-      .where("policy_id = '001513e7887c47d89318aa1d4276bcf1'")
 
     /**
       * 结果表中对开始和结束时间取出每个月的开始和结束时间，并且得到每个月的月份参照
@@ -274,7 +277,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
           val nowDate = getNowTime ().substring (0, 10).replaceAll ("-", "")
           if(startDate.compareTo(policyStartDate) <= 0){
             //应续投时间
-            val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1))
+            val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1).substring(0,10).concat(" 00:00:00"))
             //应续投判断时间
             val shouldContinuePolicyDateIs = if( endDate != null ) {
               val res = endDate.toString.substring (0, 10).replaceAll ("-", "")
@@ -282,11 +285,18 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
             } else {
               null
             }
-            (policyId,nowDate,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,policyStartDate,endDate)
+            //保单所在月份
+            val effectMonth = if( policyStartDate != null ) {
+              val res = getTimeYearAndMonth (policyStartDate.toString.substring (0, 7).replaceAll ("-", ""))
+              res
+            } else {
+              null
+            }
+            (policyId,nowDate,effectMonth,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,policyStartDate,endDate)
           }else{
             if(endDate.compareTo(policyEndDate)>0){
               //应续投时间
-              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1))
+              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1).substring(0,10).concat(" 00:00:00"))
               //应续投判断时间
               val shouldContinuePolicyDateIs = if( endDate != null ) {
                 val res = endDate.toString.substring (0, 10).replaceAll ("-", "")
@@ -294,10 +304,17 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
               } else {
                 null
               }
-              (policyId,nowDate,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,policyEndDate)
+              //保单所在月份
+              val effectMonth = if( startDate != null ) {
+                val res = getTimeYearAndMonth (startDate.toString.substring (0, 7).replaceAll ("-", ""))
+                res
+              } else {
+                null
+              }
+              (policyId,nowDate,effectMonth,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,policyEndDate)
             }else{
               //应续投时间
-              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1))
+              val shouldContinuePolicyDate = java.sql.Timestamp.valueOf(currTimeFuction (endDate.toString, 1).substring(0,10).concat(" 00:00:00"))
               //应续投判断时间
               val shouldContinuePolicyDateIs = if( endDate != null ) {
                 val res = endDate.toString.substring (0, 10).replaceAll ("-", "")
@@ -305,14 +322,21 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
               } else {
                 null
               }
-              (policyId,nowDate,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,endDate)
+              //保单所在月份
+              val effectMonth = if( startDate != null ) {
+                val res = getTimeYearAndMonth (startDate.toString.substring (0, 7).replaceAll ("-", ""))
+                res
+              } else {
+                null
+              }
+              (policyId,nowDate,effectMonth,monthRes,shouldContinuePolicyDate,shouldContinuePolicyDateIs,startDate,endDate)
             }
           }
         })
       })
     })
-      .toDF("policy_id_salve", "now_date","month_res","should_continue_policy_date", "should_continue_policy_date_is","policy_start_date_every", "policy_end_date_every")
-    policyProductPlanEveMonthTempRes.show()
+      .toDF("policy_id_salve", "now_date","effect_month","month_res","should_continue_policy_date", "should_continue_policy_date_is","policy_start_date_every", "policy_end_date_every")
+
     val policyProductPlanEveMonthRes = policyProductPlanTempRes.join(policyProductPlanEveMonthTempRes,policyProductPlanTempRes("policy_id")===policyProductPlanEveMonthTempRes("policy_id_salve"))
       .selectExpr(
         "policy_id",
@@ -330,9 +354,9 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "now_date",
         "should_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month_res"
       )
-      .where("policy_id = '001513e7887c47d89318aa1d4276bcf1'")
 
     /**
       * 批单的生效时间
@@ -352,8 +376,6 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         (policyId,monthRes,realyContinuePolicyDate,preserveStartDate,preserveEndDate)
       })
       .toDF("policy_id", "month_res", "realy_continue_policy_date","preserve_start_date", "preserve_end_date")
-      .where("policy_id = '001513e7887c47d89318aa1d4276bcf1'")
-
     val res = policyProductPlanEveMonthRes.join(odsPreservationDetailRes,Seq("policy_id","month_res"),"leftouter")
       .selectExpr(
         "policy_id",
@@ -372,10 +394,9 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "should_continue_policy_date",
         "realy_continue_policy_date",
         "should_continue_policy_date_is",
+        "effect_month",
         "month_res"
       )
-      .where("policy_id = '001513e7887c47d89318aa1d4276bcf1'")
-    res.show()
     res
   }
 
@@ -394,7 +415,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
     val continueTemp =
       odsPolicyDetail.selectExpr ("policy_id as continue_policy_id", "preserve_policy_no as continue_policy_code",
         "policy_start_date as continue_policy_start_date", "policy_end_date as continue_policy_end_date")
-      .where("continue_policy_code is not null")
+        .where("continue_policy_code is not null")
 
     val policyProductPlanTempRes = policyProductPlanRes
       .where ("sku_charge_type = '1'")
@@ -427,7 +448,15 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
 
       //应续投时间  保单结束时间+1天
       val shouldContinuePolicyDate = if( policyEndDate != null ) {
-        val res = java.sql.Timestamp.valueOf(currTimeFuction (policyEndDate.toString, 1))
+        val res = java.sql.Timestamp.valueOf(currTimeFuction (policyEndDate.toString, 1).substring(0,10).concat(" 00:00:00"))
+        res
+      } else {
+        null
+      }
+
+      //保单所在月份
+      val effectMonth = if( policyStartDate != null ) {
+        val res = getTimeYearAndMonth (policyStartDate.toString.substring (0, 7).replaceAll ("-", ""))
         res
       } else {
         null
@@ -462,28 +491,29 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
       }
 
       (policyId, policyCode, policyStartDate, policyEndDate, insureCompanyName, holderName, productCode, productName, continuePolicyId, preservePolicyNo,
-        skuCoverage, skuChargeType, skuPrice, nowDate, shouldContinuePolicyDate, realyContinuePolicyDate,shouldContinuePolicyDateIs, month)
+        skuCoverage, skuChargeType, skuPrice, nowDate, shouldContinuePolicyDate, realyContinuePolicyDate,shouldContinuePolicyDateIs,effectMonth, month)
     })
-    .toDF (
-      "policy_id",
-      "policy_code",
-      "policy_start_date",
-      "policy_end_date",
-      "insure_company_name", //保险公司
-      "holder_name",
-      "product_code",
-      "product_name",
-      "continue_policy_id",
-      "preserve_policy_no",
-      "sku_coverage",
-      "sku_charge_type",
-      "sku_price",
-      "now_date",
-      "should_continue_policy_date",
-      "realy_continue_policy_date",
-      "should_continue_policy_date_is",
-      "month"
-    )
+      .toDF (
+        "policy_id",
+        "policy_code",
+        "policy_start_date",
+        "policy_end_date",
+        "insure_company_name", //保险公司
+        "holder_name",
+        "product_code",
+        "product_name",
+        "continue_policy_id",
+        "preserve_policy_no",
+        "sku_coverage",
+        "sku_charge_type",
+        "sku_price",
+        "now_date",
+        "should_continue_policy_date",
+        "realy_continue_policy_date",
+        "should_continue_policy_date_is",
+        "effect_month",
+        "month"
+      )
     /**
       * 月单中，保单期间是一个月的并且可以利用续投保单号进行续投的数据
       */
@@ -493,7 +523,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
 
   /**
     * 读取公共信息
-    * @param sqlContext 上下文
+    * @param sqlContext
     */
   def publicInfo(sqlContext:HiveContext) = {
     /**

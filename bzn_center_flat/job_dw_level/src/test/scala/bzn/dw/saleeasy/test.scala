@@ -37,7 +37,8 @@ object test extends Until{
     println (beginTime)
     val endTime = getEndTime (year, month)
     println ("2018-03-01 00:00:00".compareTo ("2019-02-28 23:59:59"))
-    println (currTimeFuction ("2017-11-30 00:00:00.0", 1))
+    println (java.sql.Timestamp.valueOf(currTimeFuction ("2019-02-28 23:59:59.0".toString, 1).substring(0,10).concat(" 00:00:00")))
+
   }
 
   /**
