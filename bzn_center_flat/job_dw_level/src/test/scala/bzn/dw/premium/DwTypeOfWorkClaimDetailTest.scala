@@ -2,8 +2,6 @@ package bzn.dw.premium
 
 import java.text.SimpleDateFormat
 import java.util.Date
-
-import bzn.dw.premium.DwTypeOfWorkMatchingDetail.clean
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
@@ -12,10 +10,11 @@ import org.apache.spark.sql.hive.HiveContext
 
 /*
 * @Author:liuxiang
-* @Date：2019/9/17
-* @Describe:工种匹配
-*/ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
+* @Date：2019/9/26
+* @Describe:
+*/ object DwTypeOfWorkClaimDetailTest extends SparkUtil with  Until{
   def main(args: Array[String]): Unit = {
+
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
     val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
@@ -25,6 +24,7 @@ import org.apache.spark.sql.hive.HiveContext
     val res = DwTypeOfWorkMatching(hiveContext)
     res.printSchema()
     sc.stop()
+
   }
 
   def DwTypeOfWorkMatching(sqlContext: HiveContext) = {
@@ -100,7 +100,7 @@ import org.apache.spark.sql.hive.HiveContext
     //读取方案信息表
     val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type from odsdb.ods_policy_product_plan_detail")
 
-     // 将上述结果与方案信息表关联
+    // 将上述结果与方案信息表关联
     val WorkAndPlan = resAndOdsWorkMatch.join(odsPolicyProductPlanDetail, resAndOdsWorkMatch("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"))
       .selectExpr("policy_id", "policy_code", "policy_start_date", "policy_end_date", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
@@ -145,13 +145,34 @@ import org.apache.spark.sql.hive.HiveContext
           "when work_type is null then 2 end as whether_recognition"
       )
 
-    val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code","policy_start_date",
+
+     val restemp = odsWorkMatch.selectExpr("id", "policy_id", "policy_code","policy_start_date",
       "policy_end_date", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
       "holder_name",
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
       "insured_subject", "insured_name", "insured_cert_no", "work_type","primitive_work","job_company", "gender", "age",
       "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition")
+
+
+    /**
+      * 读取dw层的理赔表
+      */
+
+    val dwPolicyClaim = sqlContext.sql("select sum(res_pay) as res_pay, policy_id as id_temp ,risk_cert_no from dwdb.dw_policy_claim_detail group by policy_id,risk_cert_no")
+
+    // 将上述结果与理赔表进行关联
+    val res = restemp.join(dwPolicyClaim, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no, "leftouter")
+      .selectExpr("id", "policy_id", "policy_code", "policy_start_date", "policy_end_date", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","holder_name",
+        "product_code", "product_name", "profession_type", "channel_id", "channel_name",
+        "insured_subject", "insured_name", "insured_cert_no", "work_type", "primitive_work", "job_company", "gender", "age",
+        "bzn_work_name", "work_name", "bzn_work_risk", "recognition", "whether_recognition",
+        "case when id_temp is null then 0.0000 else res_pay end as res_pay"
+      )
+
     res
 
+
   }
+
+
 }
