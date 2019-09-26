@@ -24,7 +24,6 @@ import org.apache.spark.sql.hive.HiveContext
     val hiveContext = sparkConf._4
     val res = DwTypeOfWorkMatching(hiveContext)
     res.printSchema()
-    res.show(10)
     sc.stop()
   }
 
@@ -98,14 +97,29 @@ import org.apache.spark.sql.hive.HiveContext
         "gender", "age", "one_level_pdt_cate")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
 
+    //读取方案信息表
+    val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type from odsdb.ods_policy_product_plan_detail")
+
+     // 将上述结果与方案信息表关联
+    val WorkAndPlan = resAndOdsWorkMatch.join(odsPolicyProductPlanDetail, resAndOdsWorkMatch("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"))
+      .selectExpr("policy_id", "policy_code", "policy_start_date", "policy_end_date", "holder_name",
+        "product_code", "product_name", "profession_type", "channel_id", "channel_name",
+        "insured_subject", "insured_name", "insured_cert_no", "work_type", "job_company", "primitive_work", "work_name",
+        "gender", "age", "one_level_pdt_cate", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type")
+
     //读取标准工种表 如果bzn_work_name 重复 拿最小的bzn_work_risk
     val odsWorkRiskDimension: DataFrame =
       sqlContext.sql("SELECT bzn_work_name as name,min(bzn_work_risk) as risk  from odsdb.ods_work_risk_dimension GROUP BY bzn_work_name")
 
+
     //将上述结果与标准工种表关联
-    var odsWorkMatch: DataFrame = resAndOdsWorkMatch.join(odsWorkRiskDimension, resAndOdsWorkMatch("work_name") === odsWorkRiskDimension("name"), "leftouter")
+    var odsWorkMatch: DataFrame = WorkAndPlan.join(odsWorkRiskDimension,
+      WorkAndPlan("work_name") === odsWorkRiskDimension("name"), "leftouter")
       .selectExpr("getUUID() as id", "policy_id ",
         "clean(policy_code) as policy_code","policy_start_date","policy_end_date",
+        "sku_coverage",
+        "clean(sku_append) as sku_append", "clean(sku_ratio) as sku_ratio",
+        "clean(sku_price) as sku_price", "clean(sku_charge_type) as sku_charge_type",
         "clean(holder_name) as holder_name",
         "clean(product_code) as product_code",
         "clean(product_name) as product_name",
@@ -131,10 +145,12 @@ import org.apache.spark.sql.hive.HiveContext
           "when work_type is null then 2 end as whether_recognition"
       )
 
-    val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "holder_name",
-      "product_code", "policy_start_date","policy_end_date","product_name", "profession_type", "channel_id", "channel_name",
-      "insured_subject", "insured_name", "insured_cert_no", "work_type","job_company", "gender", "age",
-      "bzn_work_name", "bzn_work_risk","recognition", "whether_recognition")
+    val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code","policy_start_date",
+      "policy_end_date", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
+      "holder_name",
+      "product_code", "product_name", "profession_type", "channel_id", "channel_name",
+      "insured_subject", "insured_name", "insured_cert_no", "work_type","primitive_work","job_company", "gender", "age",
+      "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition")
     res
 
   }
