@@ -48,15 +48,15 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
       */
     val odsPolicyDetail = sqlContext.sql("select policy_id,policy_code," +
       "product_code,policy_status,holder_name from odsdb.ods_policy_detail")
-      .where("holder_name = '青岛招才通企业管理有限公司'")
-    odsPolicyDetail.show()
+      .where("policy_status in (0,1,-1)")
+
     /**
       * 读取理赔表
        */
     val odsClaimDetailOne = sqlContext.sql("select id, clean(case_no) as case_no, " +
       "clean(policy_no) as policy_no, " +
-      "cast(clean(risk_date) as timestamp) as risk_date, " +
-      "cast(clean(report_date) as timestamp) as report_date, clean(risk_name) as risk_name," +
+      "clean(risk_date) as risk_date, " +
+      "clean(report_date) as report_date, clean(risk_name) as risk_name," +
       "clean(risk_cert_no) as risk_cert_no, clean(mobile) as mobile, " +
       "clean(insured_company) as insured_company, " +
       "pre_com, clean(disable_level) as disable_level, clean(scene) as scene, " +
@@ -109,8 +109,6 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
         "cast(final_payment_new as decimal(14,4)) as final_payment",
         "cast(res_pay as decimal(14,4)) as res_pay","getNow() as dw_create_time")
 
-    odsPolicyDetail.show(300)
-
    //读取企业信息表
     val odsEnterpriseDetail: DataFrame = sqlContext.sql("select ent_id,ent_name from " +
       "odsdb.ods_enterprise_detail")
@@ -127,7 +125,7 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
     // 将理赔表与保单明细表的结果 与 客户归属销售表和企业信息表的结果关联
     val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("entname"),
       "leftouter").selectExpr(
-      "id","id_slave", "policy_id", "policy_code", "product_code", "policy_status",
+      "id","policy_id", "policy_code", "product_code", "policy_status",
       "case_no", "risk_policy_code",
       "risk_date", "report_date", "risk_name", "risk_cert_no", "mobile",
       " entid as ent_id","entname as ent_name","channel_id ","channel_name", "insured_company",

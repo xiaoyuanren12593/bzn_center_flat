@@ -152,21 +152,14 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
           "when work_type is null then 2 end as whether_recognition"
       )
 
-<<<<<<< HEAD
-    // proscal
-    val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "holder_name",
-      "product_code", "policy_start_date","policy_end_date","product_name", "profession_type", "channel_id", "channel_name",
-      "insured_subject", "insured_name", "insured_cert_no", "work_type","job_company", "gender", "age",
-      "bzn_work_name", "bzn_work_risk","recognition", "whether_recognition")
-=======
     val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code","policy_start_date",
       "policy_end_date", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
       "holder_name",
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
       "insured_subject", "insured_name", "insured_cert_no", "work_type","primitive_work","job_company", "gender", "age",
       "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition")
->>>>>>> master
-    res
 
+    res
   }
+
 }
