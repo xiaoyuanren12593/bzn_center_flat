@@ -50,14 +50,15 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
       */
     val odsPolicyDetail = sqlContext.sql("select policy_id,policy_code,product_code," +
       "holder_name,policy_status from odsdb.ods_policy_detail")
+      .where("policy_status in (0,1,-1)")
 
     /**
       * 读取理赔表
       */
     val odsClaimDetailOne = sqlContext.sql("select id, clean(case_no) as case_no, " +
       "clean(policy_no) as policy_no, " +
-      "cast(clean(risk_date) as timestamp) as risk_date, " +
-      "cast(clean(report_date) as timestamp) as report_date, clean(risk_name) as risk_name, " +
+      "clean(risk_date) as risk_date, " +
+      "clean(report_date) as report_date, clean(risk_name) as risk_name," +
       "clean(risk_cert_no) as risk_cert_no, clean(mobile) as mobile, " +
       "clean(insured_company) as insured_company, " +
       "pre_com, clean(disable_level) as disable_level, clean(scene) as scene, " +
@@ -77,6 +78,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
         val id: String = clean(x.getAs[Long]("id").toString)
 
         val preCom: String = clean(x.getAs[String]("pre_com"))
+
         val finalPayment: String = clean(x.getAs[String]("final_payment"))
         val finalPaymentRes = if (finalPayment == null || finalPayment == "" ) preCom else finalPayment
         //保单号  预估赔付   最终赔付        赔付
@@ -85,11 +87,12 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
       .toDF("id_slave","pre_com_new","final_payment_new","res_pay")
 
     val odsClaimDetail = odsClaimDetailOne.join(odsClaimDetailTwo,odsClaimDetailOne("id") ===odsClaimDetailTwo("id_slave"))
-      .selectExpr("id_slave","case_no","policy_no","risk_date","report_date",
-        "risk_name","risk_cert_no","mobile","insured_company",
+      .selectExpr("id_slave","case_no","policy_no",
+        "risk_date","report_date","risk_name","risk_cert_no",
+        "mobile","insured_company",
         "cast(pre_com_new as decimal(14,4)) as pre_com_new",
-        "disable_level","scene","case_type","case_status",
-        "case_close_date","hos_benefits","medical_coverage",
+        "disable_level","scene","case_type","case_status","case_close_date",
+        "hos_benefits","medical_coverage",
         "delay_payment","disable_death_payment",
         "cast( final_payment_new as decimal(14,4)) as final_payment_new",
         "cast( res_pay as decimal(14,4)) as res_pay")
@@ -108,29 +111,26 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
         "cast(final_payment_new as decimal(14,4)) as final_payment",
         "cast(res_pay as decimal(14,4)) as res_pay","getNow() as dw_create_time")
 
-
     //读取企业信息表
     val odsEnterpriseDetail: DataFrame = sqlContext.sql("select ent_id,ent_name from " +
       "odsdb.ods_enterprise_detail")
 
     //读取客户归属销售表
-
     val odsEntguzhuSalesmanDetail: DataFrame = sqlContext.sql("select ent_id as entid,ent_name as entname," +
       "channel_id,channel_name from odsdb.ods_ent_guzhu_salesman_detail")
 
     // 关联两个表
-    val enterAndsalesman: DataFrame = odsEnterpriseDetail.join(odsEntguzhuSalesmanDetail,
-      odsEnterpriseDetail("ent_id")
-        === odsEntguzhuSalesmanDetail("entid"),"leftouter")
-      .selectExpr("entid as ent_id","entname as ent_name","channel_id","channel_name")
+    val enterAndsalesman: DataFrame =
+      odsEnterpriseDetail.join(odsEntguzhuSalesmanDetail,odsEnterpriseDetail("ent_id") === odsEntguzhuSalesmanDetail("entid"),"leftouter")
+        .selectExpr("entid","entname","channel_id","channel_name")
 
     // 将理赔表与保单明细表的结果 与 客户归属销售表和企业信息表的结果关联
-    val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("ent_name"),
+    val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("entname"),
       "leftouter").selectExpr(
-      "id","id_slave", "policy_id", "policy_code", "product_code", "policy_status",
+      "id","policy_id", "policy_code", "product_code", "policy_status",
       "case_no", "risk_policy_code",
       "risk_date", "report_date", "risk_name", "risk_cert_no", "mobile",
-      "ent_id","ent_name","insured_company","channel_id","channel_name",
+      " entid as ent_id","entname as ent_name","channel_id ","channel_name", "insured_company",
       "pre_com", "disable_level",
       "scene", "case_type", "case_status", "case_close_date", "hos_benefits",
       "medical_coverage",
@@ -138,6 +138,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
       "final_payment",
       "res_pay", "dw_create_time"
     )
+
     resEnd
   }
 

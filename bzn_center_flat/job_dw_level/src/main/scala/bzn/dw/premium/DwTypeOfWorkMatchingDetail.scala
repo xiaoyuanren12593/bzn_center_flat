@@ -158,7 +158,8 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
       "insured_subject", "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
       "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition")
-    res
 
+    res
   }
+
 }
