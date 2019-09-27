@@ -2,6 +2,7 @@ package bzn.dw.premium
 
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
@@ -22,10 +23,11 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = DwTypeOfWorkMatching(hiveContext)
-    res.printSchema()
+    res
     sc.stop()
 
   }
+
 
   def DwTypeOfWorkMatching(sqlContext: HiveContext) = {
     import sqlContext.implicits._
@@ -38,141 +40,63 @@ import org.apache.spark.sql.hive.HiveContext
       (date + "")
     })
 
-    //读取保单明细表
-    val odsPolicyDetail: DataFrame = sqlContext.sql("select policy_id,policy_code,policy_start_date,policy_end_date,holder_name,insured_subject,product_code " +
-      ",policy_status from odsdb.ods_policy_detail")
-      .where("policy_status in (1,0,-1)")
+    /**
+      * 读取dw层工种匹配表
+      */
+    val res1 = sqlContext.sql(" select id,policy_id, policy_code, sku_coverage,sku_append," +
+      "sku_ratio,sku_price,sku_charge_type, holder_name, product_code, product_name, profession_type, " +
+      "channel_id, channel_name, insured_subject, insured_name, insured_cert_no, start_date,end_date," +
+      "work_type,primitive_work,job_company, gender, age, " +
+      "bzn_work_name,work_name,bzn_work_risk,recognition, whether_recognition from dwdb.dw_work_type_matching_detail")
 
-    //读取产品表
-    val odsProductDetail: DataFrame = sqlContext.sql("select product_code as product_code_temp,product_name,one_level_pdt_cate from odsdb.ods_product_detail")
+    val res2 = res1.selectExpr("policy_id","insured_cert_no","start_date","end_date")
 
-    //将明细表与产品表关联
-    val ProductAndPolicy: DataFrame = odsPolicyDetail.join(odsProductDetail, odsPolicyDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "product_code_temp as product_code", "policy_code","policy_start_date","policy_end_date", "product_name", "holder_name", "insured_subject", "one_level_pdt_cate")
-
-    //读取被保人明细表
-    val odsPolicyInsuredDetail: DataFrame = sqlContext.sql(" select policy_id as id,insured_name,insured_cert_no,work_type,job_company,gender,age from odsdb.ods_policy_insured_detail")
-
-    // 将上述结果与被保人表关联
-    val policyInsure: DataFrame = ProductAndPolicy.join(odsPolicyInsuredDetail, ProductAndPolicy("policy_id") === odsPolicyInsuredDetail("id"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","product_code", "product_name", "holder_name", "insured_subject", "insured_name", "insured_cert_no", "work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
-      .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
-
-    //读取企业联系人
-    val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
-
-    //将上述结果与企业联系人关联
-    val enterprise = policyInsure.join(odsEnterpriseDetail, policyInsure("holder_name") === odsEnterpriseDetail("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "product_code", "product_name", "holder_name", "insured_subject", "ent_name", "ent_id", "insured_name", "insured_cert_no", "work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
-
-    //读取客户归属销售表 拿到渠道id和名称
-    val odsEntGuzhuDetail: DataFrame =
-      sqlContext.sql("select ent_id as entid,ent_name as entname,channel_id, (case when channel_name='直客' then ent_name else channel_name end) as channel_name from odsdb.ods_ent_guzhu_salesman_detail")
-
-    //将上述结果与客户归属销售表做关联
-    val entAndGuzhuDetil = enterprise.join(odsEntGuzhuDetail, enterprise("ent_id") === odsEntGuzhuDetail("entid"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "product_code", "policy_start_date","policy_end_date","holder_name", "product_name", "channel_id", "channel_name", "insured_subject", "insured_name", "insured_cert_no", "work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
-
-    //读取方案类别表
-    val odsWorkGradeDimension: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,profession_type from odsdb.ods_work_grade_dimension")
-
-    //将上述结果与方案类别表关联
-    val WorkGardeAndEnt = entAndGuzhuDetil.join(odsWorkGradeDimension, entAndGuzhuDetil("policy_code") === odsWorkGradeDimension("policy_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "holder_name",
-        "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
-
-    //读取bzn工种表
-    val odsWorkMatching: DataFrame = sqlContext.sql("select primitive_work,work_name from odsdb.ods_work_matching_dimension")
-
-    //将上述结果与bzn工种表关联
-    val resAndOdsWorkMatch = WorkGardeAndEnt.join(odsWorkMatching, WorkGardeAndEnt("work_type") === odsWorkMatching("primitive_work"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "holder_name",
-        "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "work_type", "job_company", "primitive_work", "work_name",
-        "gender", "age", "one_level_pdt_cate")
-      .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
-
-    //读取方案信息表
-    val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type from odsdb.ods_policy_product_plan_detail")
-
-    // 将上述结果与方案信息表关联
-    val WorkAndPlan = resAndOdsWorkMatch.join(odsPolicyProductPlanDetail, resAndOdsWorkMatch("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"))
-      .selectExpr("policy_id", "policy_code", "policy_start_date", "policy_end_date", "holder_name",
-        "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "work_type", "job_company", "primitive_work", "work_name",
-        "gender", "age", "one_level_pdt_cate", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type")
-
-    //读取标准工种表 如果bzn_work_name 重复 拿最小的bzn_work_risk
-    val odsWorkRiskDimension: DataFrame =
-      sqlContext.sql("SELECT bzn_work_name as name,min(bzn_work_risk) as risk  from odsdb.ods_work_risk_dimension GROUP BY bzn_work_name")
-
-
-    //将上述结果与标准工种表关联
-    var odsWorkMatch: DataFrame = WorkAndPlan.join(odsWorkRiskDimension,
-      WorkAndPlan("work_name") === odsWorkRiskDimension("name"), "leftouter")
-      .selectExpr("getUUID() as id", "policy_id ",
-        "clean(policy_code) as policy_code","policy_start_date","policy_end_date",
-        "sku_coverage",
-        "clean(sku_append) as sku_append", "clean(sku_ratio) as sku_ratio",
-        "clean(sku_price) as sku_price", "clean(sku_charge_type) as sku_charge_type",
-        "clean(holder_name) as holder_name",
-        "clean(product_code) as product_code",
-        "clean(product_name) as product_name",
-        "clean(profession_type) as profession_type",
-        "clean(channel_id) as channel_id",
-        "clean(channel_name) as channel_name ",
-        "clean(insured_subject) as insured_subject ",
-        "clean(insured_name) as insured_name",
-        "clean(insured_cert_no) as insured_cert_no",
-        "clean(job_company) as job_company", //实际用工单位
-        "gender",
-        "age",
-        "clean(work_type) as work_type",
-        "clean(primitive_work) as primitive_work ", //原始工种
-        "clean(name) as bzn_work_name ", //工种名称
-        "clean(work_name) as work_name ", //标准工种
-        "clean(risk) as bzn_work_risk", //级别
-        "case when work_type is null then '已匹配' when work_type is not null and primitive_work is not null then '已匹配'" +
-          " when work_type is not null and primitive_work is null then '未匹配' end as recognition ",
-        "case when work_type is not null and (work_name is not null and work_name !='未知') then 1 " +
-          "when work_type is not null and work_name='未知' then 0 " +
-          "when work_type is not null and work_name is null then 0  " +
-          "when work_type is null then 2 end as whether_recognition"
-      )
-
-
-     val restemp = odsWorkMatch.selectExpr("id", "policy_id", "policy_code","policy_start_date",
-      "policy_end_date", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
-      "holder_name",
-      "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-      "insured_subject", "insured_name", "insured_cert_no", "work_type","primitive_work","job_company", "gender", "age",
-      "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition")
 
 
     /**
       * 读取dw层的理赔表
       */
 
-    val dwPolicyClaim = sqlContext.sql("select sum(res_pay) as res_pay, policy_id as id_temp ,risk_cert_no from dwdb.dw_policy_claim_detail group by policy_id,risk_cert_no")
+    val dwPolicyClaim = sqlContext.sql("select  policy_id as id_temp ,risk_cert_no,risk_date ,res_pay from dwdb.dw_policy_claim_detail")
 
-    // 将上述结果与理赔表进行关联
-    val res = restemp.join(dwPolicyClaim, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no, "leftouter")
-      .selectExpr("id", "policy_id", "policy_code", "policy_start_date", "policy_end_date", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type","holder_name",
+
+    // 将res2与理赔表进行关联
+
+    val res3: DataFrame = res2.join(dwPolicyClaim, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no)
+      .where("start_date is not null and risk_date is not null")
+      .selectExpr("policy_id", "insured_cert_no", "start_date", "end_date", "risk_date","res_pay")
+      .map( f =x=> {
+        val policy_id = x.getAs[String]("policy_id")
+        val insured_cert_no = x.getAs[String]("insured_cert_no")
+        val start_date = x.getAs[java.sql.Timestamp]("start_date")
+        val end_date = x.getAs[java.sql.Timestamp]("end_date")
+        val risk_date = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(x.getAs[String]("risk_date").replaceAll("/", "-").concat(" 00:00:00"))))
+
+        val res_pay = x.getAs[java.math.BigDecimal]("res_pay")
+        (policy_id, insured_cert_no, start_date, end_date, risk_date,res_pay)
+      }).toDF("id_temp", "risk_cert_no", "start_date", "end_date", "risk_date","res_pay")
+    val res4 = res3.selectExpr("id_temp", "risk_cert_no", " start_date ", "end_date", "risk_date","res_pay",
+      "case when risk_date >= start_date and risk_date <= end_date then 1 else 0 end as tem")
+      .where("tem = 0")
+   // res4.foreach(println)
+    val res5 = res4.selectExpr("id_temp", "risk_cert_no", "cast(start_date as Timestamp) as start_date_temp ", "cast(end_date as Timestamp) as end_date_temp", "risk_date", "res_pay",
+      "tem")
+
+    val TableTemp = res5.registerTempTable("tempTable")
+    val tenmpTbles = sqlContext.sql("select sum(res_pay) as res_pay,id_temp,risk_cert_no,start_date_temp from tempTable group by id_temp, risk_cert_no,start_date_temp")
+    sqlContext.sql("select sum(res_pay) as res_pay from tempTable").show()
+    println(tenmpTbles.count())
+    val res6 = res1.join(tenmpTbles, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp)
+      .selectExpr( "id","policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type","holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "work_type", "primitive_work", "job_company", "gender", "age",
+        "insured_subject", "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
         "bzn_work_name", "work_name", "bzn_work_risk", "recognition", "whether_recognition",
-        "case when id_temp is null then 0.0000 else res_pay end as res_pay"
-      )
-
-    res
-
-
+        "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay","id_temp")
+    res4.foreach(println)
   }
+
+
+
 
 
 }

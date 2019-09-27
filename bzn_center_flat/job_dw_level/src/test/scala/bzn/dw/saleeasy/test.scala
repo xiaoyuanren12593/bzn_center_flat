@@ -1,5 +1,6 @@
 package bzn.dw.saleeasy
 
+import java.sql.Timestamp
 import java.time.{YearMonth, ZoneId, ZonedDateTime}
 import java.util.Date
 
@@ -39,6 +40,11 @@ object test extends Until{
     println ("2018-03-01 00:00:00".compareTo ("2019-02-28 23:59:59"))
     println (java.sql.Timestamp.valueOf(currTimeFuction ("2019-02-28 23:59:59.0".toString, 1).substring(0,10).concat(" 00:00:00")))
 
+
+    println(getBeginTime("2019-6-13 00:00:00").toString+"2346546")
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date11: Timestamp = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019-6-3 00:00:00")))
+    println(date11)
   }
 
   /**
