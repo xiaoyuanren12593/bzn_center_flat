@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.time.{YearMonth, ZoneId, ZonedDateTime}
 import java.util.Date
 
+import bzn.dw.premium.DwTypeOfWorkClaimDetailTest.{getBeginTime, getFormatTime}
 import bzn.job.common.Until
 
 import scala.collection.mutable
@@ -43,8 +44,10 @@ object test extends Until{
 
     println(getBeginTime("2019-6-13 00:00:00").toString+"2346546")
     val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val date11: Timestamp = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019-6-3 00:00:00")))
+    val date11: Timestamp = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019-6-17 00:00:00")))
     println(date11)
+    println(java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019/4/7".replaceAll("/", "-").concat(" 00:00:00")))))
+
   }
 
   /**

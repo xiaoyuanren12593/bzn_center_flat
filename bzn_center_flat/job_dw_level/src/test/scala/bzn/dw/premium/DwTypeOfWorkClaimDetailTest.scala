@@ -45,54 +45,56 @@ import org.apache.spark.sql.hive.HiveContext
       */
     val res1 = sqlContext.sql(" select id,policy_id, policy_code, sku_coverage,sku_append," +
       "sku_ratio,sku_price,sku_charge_type, holder_name, product_code, product_name, profession_type, " +
-      "channel_id, channel_name, insured_subject, insured_name, insured_cert_no, start_date,end_date," +
+      "channel_id, channel_name, insured_subject,sum_premium, insured_name, insured_cert_no, start_date,end_date," +
       "work_type,primitive_work,job_company, gender, age, " +
-      "bzn_work_name,work_name,bzn_work_risk,recognition, whether_recognition from dwdb.dw_work_type_matching_detail")
+      "bzn_work_name,work_name,bzn_work_risk,recognition, whether_recognition,plan_recognition from dwdb.dw_work_type_matching_detail")
 
     val res2 = res1.selectExpr("policy_id","insured_cert_no","start_date","end_date")
-
-
 
     /**
       * 读取dw层的理赔表
       */
-
     val dwPolicyClaim = sqlContext.sql("select  policy_id as id_temp ,risk_cert_no,risk_date ,res_pay from dwdb.dw_policy_claim_detail")
 
-
     // 将res2与理赔表进行关联
-
     val res3: DataFrame = res2.join(dwPolicyClaim, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no)
-      .where("start_date is not null and risk_date is not null")
+      .where("start_date is not null")
       .selectExpr("policy_id", "insured_cert_no", "start_date", "end_date", "risk_date","res_pay")
       .map( f =x=> {
         val policy_id = x.getAs[String]("policy_id")
         val insured_cert_no = x.getAs[String]("insured_cert_no")
         val start_date = x.getAs[java.sql.Timestamp]("start_date")
         val end_date = x.getAs[java.sql.Timestamp]("end_date")
-        val risk_date = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(x.getAs[String]("risk_date").replaceAll("/", "-").concat(" 00:00:00"))))
-
+        val riskDate = x.getAs[String]("risk_date")
+        val riskDateRes = if(riskDate != null){
+          java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(riskDate.replaceAll("/", "-").concat(" 00:00:00"))))
+        }else{
+          null
+        }
+        println(start_date+"  "+end_date +"  "+riskDateRes)
         val res_pay = x.getAs[java.math.BigDecimal]("res_pay")
-        (policy_id, insured_cert_no, start_date, end_date, risk_date,res_pay)
+        (policy_id, insured_cert_no, start_date, end_date, riskDateRes,res_pay)
       }).toDF("id_temp", "risk_cert_no", "start_date", "end_date", "risk_date","res_pay")
+
     val res4 = res3.selectExpr("id_temp", "risk_cert_no", " start_date ", "end_date", "risk_date","res_pay",
-      "case when risk_date >= start_date and risk_date <= end_date then 1 else 0 end as tem")
-      .where("tem = 0")
-   // res4.foreach(println)
-    val res5 = res4.selectExpr("id_temp", "risk_cert_no", "cast(start_date as Timestamp) as start_date_temp ", "cast(end_date as Timestamp) as end_date_temp", "risk_date", "res_pay",
+      "case when risk_date is null then 1 when risk_date >= start_date and risk_date <= end_date then 1 else 0 end as tem")
+      .where("tem = 1")
+
+    val res5 = res4.selectExpr("id_temp", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay",
       "tem")
 
-    val TableTemp = res5.registerTempTable("tempTable")
+    res5.registerTempTable("tempTable")
     val tenmpTbles = sqlContext.sql("select sum(res_pay) as res_pay,id_temp,risk_cert_no,start_date_temp from tempTable group by id_temp, risk_cert_no,start_date_temp")
-    sqlContext.sql("select sum(res_pay) as res_pay from tempTable").show()
-    println(tenmpTbles.count())
-    val res6 = res1.join(tenmpTbles, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp)
+    //sqlContext.sql("select sum(res_pay) as res_pay from tempTable").show()
+
+    val res6 = res1.join(tenmpTbles, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp,"leftouter")
       .selectExpr( "id","policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type","holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
         "insured_subject", "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
-        "bzn_work_name", "work_name", "bzn_work_risk", "recognition", "whether_recognition",
-        "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay","id_temp")
-    res4.foreach(println)
+        "bzn_work_name", "work_name", "bzn_work_risk", "recognition", "whether_recognition","plan_recognition",
+        "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay")
+    res6.printSchema()
+    res6
   }
 
 
