@@ -40,7 +40,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     //读取保单明细表
     val odsPolicyDetail: DataFrame = sqlContext.sql("select policy_id,policy_code,holder_name,insured_subject,product_code " +
-      ",policy_status from odsdb.ods_policy_detail")
+      ",policy_status,sum_premium from odsdb.ods_policy_detail")
       .where("policy_status in (1,0,-1)")
 
     //读取产品表
@@ -48,24 +48,24 @@ import org.apache.spark.sql.hive.HiveContext
 
     //将明细表与产品表关联
     val ProductAndPolicy: DataFrame = odsPolicyDetail.join(odsProductDetail, odsPolicyDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "product_code_temp as product_code", "policy_code", "product_name", "holder_name", "insured_subject", "one_level_pdt_cate")
+      .selectExpr("policy_id", "product_code_temp as product_code", "policy_code", "product_name", "holder_name", "insured_subject","sum_premium","one_level_pdt_cate")
 
     //读取被保人明细表
     val odsPolicyInsuredDetail: DataFrame = sqlContext.sql(" select policy_id as id,insured_name,insured_cert_no,start_date,end_date,work_type,job_company,gender,age from odsdb.ods_policy_insured_detail")
 
     // 将上述结果与被保人表关联
     val policyInsure: DataFrame = ProductAndPolicy.join(odsPolicyInsuredDetail, ProductAndPolicy("policy_id") === odsPolicyInsuredDetail("id"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject", "insured_name", "insured_cert_no", "start_date","end_date","work_type", "job_company",
+      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject","sum_premium","insured_name",
+        "insured_cert_no", "start_date","end_date","work_type", "job_company",
         "gender", "age", "one_level_pdt_cate")
-      .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
 
     //读取企业联系人
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
 
     //将上述结果与企业联系人关联
     val enterprise = policyInsure.join(odsEnterpriseDetail, policyInsure("holder_name") === odsEnterpriseDetail("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject", "ent_name", "ent_id", "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
+      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject","sum_premium", "ent_name", "ent_id", "insured_name",
+        "insured_cert_no","start_date","end_date", "work_type", "job_company","gender", "age", "one_level_pdt_cate")
 
     //读取客户归属销售表 拿到渠道id和名称
     val odsEntGuzhuDetail: DataFrame =
@@ -73,18 +73,37 @@ import org.apache.spark.sql.hive.HiveContext
 
     //将上述结果与客户归属销售表做关联
     val entAndGuzhuDetil = enterprise.join(odsEntGuzhuDetail, enterprise("ent_id") === odsEntGuzhuDetail("entid"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "product_code", "holder_name", "product_name", "channel_id", "channel_name", "insured_subject", "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
+      .selectExpr("policy_id", "policy_code", "product_code", "holder_name", "product_name", "channel_id", "channel_name", "insured_subject","sum_premium",
+        "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company", "gender", "age", "one_level_pdt_cate")
 
     //读取方案类别表
     val odsWorkGradeDimension: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,profession_type from odsdb.ods_work_grade_dimension")
+      .map(x => {
+        val policyCodTemp = x.getAs[String]("policy_code_temp")
+        val professionType = x.getAs[String]("profession_type")
+        val result = if(professionType != null){
+          val res = professionType.replaceAll("类","")
+          if(res == "5"){
+            (5,5)
+          }else{
+            val sp1 = res.split("-")(0).toInt
+            val sp2 = res.split("-")(1).toInt
+            (sp1,sp2)
+          }
+        }else{
+          (-1,-1)
+        }
+        (policyCodTemp,professionType,result._1,result._2)
+      })
+      .toDF("policy_code_temp","profession_type","profession_type_slow","profession_type_high")
+    odsWorkGradeDimension.show()
 
     //将上述结果与方案类别表关联
     val WorkGardeAndEnt = entAndGuzhuDetil.join(odsWorkGradeDimension, entAndGuzhuDetil("policy_code") === odsWorkGradeDimension("policy_code_temp"), "leftouter")
       .selectExpr("policy_id", "policy_code","holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "start_date","end_date","work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate")
+        "insured_subject","sum_premium", "insured_name", "insured_cert_no", "start_date","end_date","work_type", "job_company",
+        "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high")
 
     //读取bzn工种表
     val odsWorkMatching: DataFrame = sqlContext.sql("select primitive_work,work_name from odsdb.ods_work_matching_dimension")
@@ -93,9 +112,10 @@ import org.apache.spark.sql.hive.HiveContext
     val resAndOdsWorkMatch = WorkGardeAndEnt.join(odsWorkMatching, WorkGardeAndEnt("work_type") === odsWorkMatching("primitive_work"), "leftouter")
       .selectExpr("policy_id", "policy_code", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company", "primitive_work", "work_name",
-        "gender", "age", "one_level_pdt_cate")
+        "insured_subject","sum_premium", "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company", "primitive_work", "work_name",
+        "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
+    // and product_code not in ('LGB000001','17000001')
 
     //读取方案信息表
     val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type from odsdb.ods_policy_product_plan_detail")
@@ -104,8 +124,8 @@ import org.apache.spark.sql.hive.HiveContext
     val WorkAndPlan = resAndOdsWorkMatch.join(odsPolicyProductPlanDetail, resAndOdsWorkMatch("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"))
       .selectExpr("policy_id", "policy_code", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company", "primitive_work", "work_name",
-        "gender", "age", "one_level_pdt_cate", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type")
+        "insured_subject","sum_premium", "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company", "primitive_work", "work_name",
+        "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type")
 
     //读取标准工种表 如果bzn_work_name 重复 拿最小的bzn_work_risk
     val odsWorkRiskDimension: DataFrame =
@@ -118,8 +138,10 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("getUUID() as id", "policy_id ",
         "clean(policy_code) as policy_code",
         "sku_coverage",
-        "clean(sku_append) as sku_append", "clean(sku_ratio) as sku_ratio",
-        "clean(sku_price) as sku_price", "clean(sku_charge_type) as sku_charge_type",
+        "clean(sku_append) as sku_append",
+        "clean(sku_ratio) as sku_ratio",
+        "case when product_code in ('LGB000001','17000001') then sum_premium else sku_price end as sku_price",
+        "clean(sku_charge_type) as sku_charge_type",
         "clean(holder_name) as holder_name",
         "clean(product_code) as product_code",
         "clean(product_name) as product_name",
@@ -127,6 +149,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(channel_id) as channel_id",
         "clean(channel_name) as channel_name ",
         "clean(insured_subject) as insured_subject ",
+        "sum_premium",
         "clean(insured_name) as insured_name",
         "clean(insured_cert_no) as insured_cert_no",
         "start_date","end_date",
@@ -143,15 +166,15 @@ import org.apache.spark.sql.hive.HiveContext
         "case when work_type is not null and (work_name is not null and work_name !='未知') then 1 " +
           "when work_type is not null and work_name='未知' then 0 " +
           "when work_type is not null and work_name is null then 0  " +
-          "when work_type is null then 2 end as whether_recognition"
+          "when work_type is null then 2 end as whether_recognition",
+        "case when profession_type is null then '未知' when cast(risk as int) >= profession_type_slow and  cast(risk as int) <= profession_type_high then '已知' else '未知' end as plan_recognition" //方案级别已匹配未匹配
       )
 
     val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
       "holder_name",
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-      "insured_subject", "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
-      "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition")
+      "insured_subject","sum_premium", "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
+      "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition","plan_recognition")
     res
-
   }
 }
