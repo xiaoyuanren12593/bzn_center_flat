@@ -63,8 +63,8 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 关联两个表
       */
-    val resTemp = dayIdPremium.join(dayIdInsure, 'policy_id_temp === 'policy_id and 'day_id_temp === 'day_id, "leftouter")
-      .selectExpr("getUUID() as id", "policy_id_temp",
+    val resTemp = dayIdInsure.join(dayIdPremium, 'policy_id === 'policy_id_temp and 'day_id === 'day_id_temp, "leftouter")
+      .selectExpr("getUUID() as id", "policy_id",
         "policy_code",
         "product_code",
         "policy_start_date",
@@ -91,7 +91,7 @@ import org.apache.spark.sql.hive.HiveContext
         "channel_name",
         "curr_insured",
         "premium",
-        "day_id_temp",
+        "day_id",
         "date_time",
         "is_old_customer",
         "policy_create_time",
@@ -133,8 +133,8 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 讲每日在报人数和已赚保费作为左表 关联 理赔表
       */
-    val res = resTemp.join(policySumClaim, 'policy_id_temp === 'policy_id_res and 'day_id_temp === 'risk_date, "leftouter")
-      .selectExpr("getUUID() as id", "policy_id_temp",
+    val res = resTemp.join(policySumClaim, 'policy_id === 'policy_id_res and 'day_id === 'risk_date, "leftouter")
+      .selectExpr("getUUID() as id", "policy_id",
         "policy_code",
         "product_code",
         "policy_start_date",
@@ -161,7 +161,7 @@ import org.apache.spark.sql.hive.HiveContext
         "channel_name",
         "curr_insured",
         "premium",
-        "day_id_temp",
+        "day_id",
         "cast(res_pay as decimal(14,4)) as res_pay",
         "date_time",
         "is_old_customer",
