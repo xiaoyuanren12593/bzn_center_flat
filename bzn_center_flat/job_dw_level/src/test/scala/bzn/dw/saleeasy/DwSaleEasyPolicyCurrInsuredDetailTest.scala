@@ -104,7 +104,6 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
         "insurant_company_name","policy_create_time","policy_update_time","profession_type",
         "belongs_regional","holder_city","holder_province")
 
-
     /**
       * 读取渠道表
       */

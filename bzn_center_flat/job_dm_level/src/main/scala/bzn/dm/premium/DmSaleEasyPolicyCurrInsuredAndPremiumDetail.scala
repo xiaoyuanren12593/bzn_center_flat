@@ -24,7 +24,7 @@ import org.apache.spark.sql.hive.HiveContext
     val res = DmSaleEasyPolicyCurrInsuredAndPremium(hiveContext)
     hiveContext.sql("truncate table dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
-
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetai")
     sc.stop()
 
   }
@@ -54,6 +54,7 @@ import org.apache.spark.sql.hive.HiveContext
       "salesman,team_name,biz_operator,consumer_category,channel_id,channel_name,curr_insured,day_id,date_time," +
       "is_old_customer,policy_create_time,policy_update_time from dwdb.dw_saleeasy_policy_curr_insured_detail")
 
+
     /**
       * 读取每日已赚保费表
       */
@@ -62,8 +63,8 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 关联两个表
       */
-    val resTemp = dayIdPremium.join(dayIdInsure, 'policy_id_temp === 'policy_id and 'day_id_temp === 'day_id, "leftouter")
-      .selectExpr("getUUID() as id", "policy_id_temp",
+    val resTemp = dayIdInsure.join(dayIdPremium, 'policy_id === 'policy_id_temp and 'day_id === 'day_id_temp, "leftouter")
+      .selectExpr("getUUID() as id", "policy_id",
         "policy_code",
         "product_code",
         "policy_start_date",
@@ -90,7 +91,7 @@ import org.apache.spark.sql.hive.HiveContext
         "channel_name",
         "curr_insured",
         "premium",
-        "day_id_temp",
+        "day_id",
         "date_time",
         "is_old_customer",
         "policy_create_time",
@@ -125,14 +126,15 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 按照出险日期和保单id就行分组
       */
+
     val policyClaimTable = policyClaimRes.registerTempTable("policyClaimTemp")
     val policySumClaim = sqlContext.sql("select policy_id_res ,sum(res_pay) as res_pay ,risk_date from policyClaimTemp group by policy_id_res,risk_date")
 
     /**
       * 讲每日在报人数和已赚保费作为左表 关联 理赔表
       */
-    val res = resTemp.join(policySumClaim, 'policy_id_temp === 'policy_id_res and 'day_id_temp === 'risk_date, "leftouter")
-      .selectExpr("getUUID() as id", "policy_id_temp",
+    val res = resTemp.join(policySumClaim, 'policy_id === 'policy_id_res and 'day_id === 'risk_date, "leftouter")
+      .selectExpr("getUUID() as id", "policy_id",
         "policy_code",
         "product_code",
         "policy_start_date",
@@ -159,7 +161,7 @@ import org.apache.spark.sql.hive.HiveContext
         "channel_name",
         "curr_insured",
         "premium",
-        "day_id_temp",
+        "day_id",
         "cast(res_pay as decimal(14,4)) as res_pay",
         "date_time",
         "is_old_customer",
@@ -168,6 +170,7 @@ import org.apache.spark.sql.hive.HiveContext
         "getNow() as dw_create_time")
 
     res
+
 
   }
 
