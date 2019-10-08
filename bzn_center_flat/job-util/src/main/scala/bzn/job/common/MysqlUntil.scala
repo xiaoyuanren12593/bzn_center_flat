@@ -72,7 +72,11 @@ trait MysqlUntil {
           e.printStackTrace()
       }
     }
-    dataFrame.write.mode(SaveMode.Append).jdbc(prop.getProperty("url"), table, prop)
+    dataFrame.write.mode(SaveMode.Append)
+      .option("batchsize","10000")
+      .option("isolationLevel","NONE")
+      .jdbc(prop.getProperty("url"), table, prop)
+
   }
 
   /**
