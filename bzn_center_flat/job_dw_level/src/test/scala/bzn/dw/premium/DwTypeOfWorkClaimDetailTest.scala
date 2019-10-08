@@ -27,7 +27,11 @@ import org.apache.spark.sql.hive.HiveContext
 
   }
 
-
+  /**
+    *
+    * @param sqlContext
+    * @return
+    */
   def DwTypeOfWorkMatching(sqlContext: HiveContext) = {
     import sqlContext.implicits._
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -48,11 +52,10 @@ import org.apache.spark.sql.hive.HiveContext
       "work_type,primitive_work,job_company, gender, age, " +
       "bzn_work_name,work_name,bzn_work_risk,recognition, whether_recognition,plan_recognition from dwdb.dw_work_type_matching_detail")
 
-<<<<<<< HEAD
-    val res2 = res1.selectExpr("policy_id", "insured_cert_no", "start_date", "end_date")
-=======
+
+
     val res2 = res1.selectExpr("policy_id","insured_cert_no","start_date","end_date")
->>>>>>> a4cb84e8a01a7c0c9c5bb13a9d5ea3f4f1529a68
+
 
     /**
       * 读取dw层的理赔表
@@ -61,45 +64,16 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 将res2与理赔表进行关联
     val res3: DataFrame = res2.join(dwPolicyClaim, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no)
-<<<<<<< HEAD
-      .where("start_date is not null and risk_date is not null")
-      .selectExpr("policy_id", "insured_cert_no", "start_date", "end_date", "risk_date", "res_pay")
-      .map(f = x => {
-=======
+
+
       .where("start_date is not null")
       .selectExpr("policy_id", "insured_cert_no", "start_date", "end_date", "risk_date","res_pay")
       .map( f =x=> {
->>>>>>> a4cb84e8a01a7c0c9c5bb13a9d5ea3f4f1529a68
+
         val policy_id = x.getAs[String]("policy_id")
         val insured_cert_no = x.getAs[String]("insured_cert_no")
         val start_date = x.getAs[java.sql.Timestamp]("start_date")
         val end_date = x.getAs[java.sql.Timestamp]("end_date")
-<<<<<<< HEAD
-        val risk_date = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(x.getAs[String]("risk_date").replaceAll("/", "-").concat(" 00:00:00"))))
-        val res_pay = x.getAs[java.math.BigDecimal]("res_pay")
-        (policy_id, insured_cert_no, start_date, end_date, risk_date, res_pay)
-      }).toDF("id_temp", "risk_cert_no", "start_date", "end_date", "risk_date", "res_pay")
-    val res4 = res3.selectExpr("id_temp", "risk_cert_no", " start_date ", "end_date", "risk_date", "res_pay",
-      "case when risk_date >= start_date and risk_date <= end_date then 1 else 0 end as tem")
-      .where("tem = 1")
-    val ss: java.math.BigDecimal = res4.map(x => {
-      val res = if (x.getAs[java.math.BigDecimal]("res_pay") == null) java.math.BigDecimal.valueOf(0.0) else x.getAs[java.math.BigDecimal]("res_pay")
-      res
-    }).reduce(_.add(_))
-    println(ss)
-    val res5 = res4.selectExpr("id_temp", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay",
-      "tem")
-    val TableTemp = res5
-    //    val tenmpTbles = sqlContext.sql("select sum(res_pay) as res_pay,id_temp,risk_cert_no,start_date_temp from tempTable group by id_temp, risk_cert_no,start_date_temp")
-    //    sqlContext.sql("select sum(res_pay) as res_pay from tempTable").show()
-    //    println(tenmpTbles.count())
-    val res6 = res1.join(TableTemp, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp)
-      .selectExpr("id", "policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type", "holder_name",
-        "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
-        "bzn_work_name", "work_name", "bzn_work_risk", "recognition", "whether_recognition",
-        "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay", "id_temp", "risk_date", "tem")
-=======
         val riskDate = x.getAs[String]("risk_date")
         val riskDateRes = if(riskDate != null){
           java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(riskDate.replaceAll("/", "-").concat(" 00:00:00"))))
@@ -135,7 +109,5 @@ import org.apache.spark.sql.hive.HiveContext
 
 
 
->>>>>>> a4cb84e8a01a7c0c9c5bb13a9d5ea3f4f1529a68
 
-  }
 }
