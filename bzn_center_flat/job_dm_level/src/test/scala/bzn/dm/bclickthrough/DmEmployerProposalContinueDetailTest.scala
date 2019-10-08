@@ -4,9 +4,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.Until
+import bzn.job.common.{MysqlUntil, Until}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 /**
@@ -15,7 +15,7 @@ import org.apache.spark.sql.hive.HiveContext
   * Time:16:52
   * describe: 续投结果数据
   **/
-object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
+object DmEmployerProposalContinueDetailTest extends SparkUtil with Until with MysqlUntil{
   def main (args: Array[String]): Unit = {
     System.setProperty ("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -31,6 +31,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "insure_company_short_name",
         "product_code",
         "product_name",
         "continue_policy_id",
@@ -62,6 +63,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
       "id",
       "policy_code",
       "insure_company_name",//保险公司
+      "insure_company_short_name",
       "ent_id",
       "ent_name",
       "channel_id",
@@ -81,8 +83,19 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
       "month",
       "dw_create_time"
     ).cache()
-    mysqlRes.printSchema()
-    //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
+
+    val tableName  = "dm_employer_policy_continue_detail"
+
+    val user103 = "mysql.username.103"
+    val pass103 = "mysql.password.103"
+    val url103 = "mysql_url.103.dmdb"
+    val driver = "mysql.driver"
+    val user106 = "mysql.username.106"
+    val pass106 = "mysql.password.106"
+    val url106 = "mysql_url.106.dmdb"
+
+    saveASMysqlTable(mysqlRes: DataFrame, tableName, SaveMode.Overwrite,user103,pass103,driver,url103)
+    saveASMysqlTable(mysqlRes: DataFrame, tableName, SaveMode.Overwrite,user106,pass106,driver,url106)
     sc.stop ()
   }
 
@@ -108,6 +121,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "insure_company_short_name",
         "product_code",
         "product_name",
         "continue_policy_id",
@@ -148,6 +162,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "insure_company_short_name",
         "product_code",
         "product_name",
         "continue_policy_id",
@@ -182,6 +197,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "insure_company_short_name",
         "product_code",
         "product_name",
         "continue_policy_id  as policy_id",
@@ -218,6 +234,7 @@ object DmEmployerProposalContinueDetailTest extends SparkUtil with Until {
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "insure_company_short_name",
         "product_code",
         "product_name",
         "policy_id as continue_policy_id",

@@ -54,6 +54,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
       val nowDayId = getNowTime().substring(0,10).replaceAll("-","")
       nowDayId
     })
+
     /**
       * 国寿财和中华  保单层级的续投
       */
@@ -84,6 +85,13 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         .cache()
 
     /**
+      * 读取保险公司码表
+      */
+    val odsInsuranceCompanyTempDimension =
+      sqlContext.sql ("select * from odsdb.ods_insurance_company_temp_dimension")
+        .cache()
+
+    /**
       * 读取保全明细表
       */
     val odsPreservationDetail =
@@ -109,13 +117,31 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
     /**
       * 上述结果和方案表进行关联
       */
-    val policyProductPlanRes = policyProductRes.join(odsPolicyProductPlanDetail,policyProductRes("policy_code")===odsPolicyProductPlanDetail("policy_code_plan"))
+    val policyProductPlanResTemp = policyProductRes.join(odsPolicyProductPlanDetail,policyProductRes("policy_code")===odsPolicyProductPlanDetail("policy_code_plan"))
       .selectExpr(
         "policy_id",
         "policy_code",
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "holder_name",
+        "product_code",
+        "product_name",
+        "preserve_policy_no",
+        "sku_coverage",
+        "sku_charge_type",
+        "sku_price"
+      )
+      .cache()
+
+    val policyProductPlanRes = policyProductPlanResTemp.join(odsInsuranceCompanyTempDimension,policyProductPlanResTemp("insure_company_name")===odsInsuranceCompanyTempDimension("insurance_company"),"leftouter")
+      .selectExpr(
+        "policy_id",
+        "policy_code",
+        "policy_start_date",
+        "policy_end_date",
+        "insure_company_name",//保险公司
+        "short_name",//保险公司简称
         "holder_name",
         "product_code",
         "product_name",
@@ -147,6 +173,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "short_name",//保险公司
         "product_code",
         "product_name",
         "continue_policy_id",
@@ -184,6 +211,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "short_name",
         "product_code",
         "product_name",
         "policy_id as continue_policy_id",
@@ -215,6 +243,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "policy_start_date",
         "policy_end_date",
         "insure_company_name",//保险公司
+        "short_name as insure_company_short_name",
         "product_code",
         "product_name",
         "case when continue_policy_id = '' then null else continue_policy_id end as continue_policy_id",
@@ -238,7 +267,6 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "channel_name",
         "dw_create_time"
       )
-
     res
   }
 
@@ -348,6 +376,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "policy_start_date_every",
         "policy_end_date_every",
         "insure_company_name",//保险公司
+        "short_name",
         "holder_name",
         "product_code",
         "product_name",
@@ -387,6 +416,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "policy_start_date_every as policy_start_date",
         "policy_end_date_every as policy_end_date",
         "insure_company_name",//保险公司
+        "short_name",
         "holder_name",
         "product_code",
         "product_name",
@@ -438,6 +468,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
       val policyEndDate = x.getAs [java.sql.Timestamp]("policy_end_date")
       val continuePolicyEndDate = x.getAs [java.sql.Timestamp]("continue_policy_end_date")
       val insureCompanyName = x.getAs [String]("insure_company_name")
+      val shortName = x.getAs [String]("short_name")
       val holderName = x.getAs [String]("holder_name")
       val productCode = x.getAs [String]("product_code")
       val productName = x.getAs [String]("product_name")
@@ -494,7 +525,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         null
       }
 
-      (policyId, policyCode, policyStartDate, policyEndDate, insureCompanyName, holderName, productCode, productName, continuePolicyId, preservePolicyNo,
+      (policyId, policyCode, policyStartDate, policyEndDate, insureCompanyName, shortName, holderName, productCode, productName, continuePolicyId, preservePolicyNo,
         skuCoverage, skuChargeType, skuPrice, nowDate, shouldContinuePolicyDate, realyContinuePolicyDate,shouldContinuePolicyDateIs,effectMonth, month)
     })
       .toDF (
@@ -503,6 +534,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         "policy_start_date",
         "policy_end_date",
         "insure_company_name", //保险公司
+        "short_name",
         "holder_name",
         "product_code",
         "product_name",
@@ -565,3 +597,4 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
     entAndChannelAndSaleRes
   }
 }
+

@@ -176,5 +176,6 @@ import org.apache.spark.sql.hive.HiveContext
       "insured_subject","sum_premium", "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
       "bzn_work_name","work_name","bzn_work_risk","recognition", "whether_recognition","plan_recognition")
     res
+
   }
 }

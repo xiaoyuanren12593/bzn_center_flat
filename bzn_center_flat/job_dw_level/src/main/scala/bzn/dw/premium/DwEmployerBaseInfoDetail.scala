@@ -109,10 +109,5 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
         "getNow() as dw_create_time")
 
     res
-
-
   }
-
-
-
 }

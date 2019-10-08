@@ -51,11 +51,8 @@ import org.apache.spark.sql.hive.HiveContext
       "channel_id, channel_name, insured_subject,sum_premium, insured_name, insured_cert_no, start_date,end_date," +
       "work_type,primitive_work,job_company, gender, age, " +
       "bzn_work_name,work_name,bzn_work_risk,recognition, whether_recognition,plan_recognition from dwdb.dw_work_type_matching_detail")
-
-
-
+    
     val res2 = res1.selectExpr("policy_id","insured_cert_no","start_date","end_date")
-
 
     /**
       * 读取dw层的理赔表
@@ -64,12 +61,9 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 将res2与理赔表进行关联
     val res3: DataFrame = res2.join(dwPolicyClaim, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no)
-
-
       .where("start_date is not null")
       .selectExpr("policy_id", "insured_cert_no", "start_date", "end_date", "risk_date","res_pay")
-      .map( f =x=> {
-
+      .map( x=> {
         val policy_id = x.getAs[String]("policy_id")
         val insured_cert_no = x.getAs[String]("insured_cert_no")
         val start_date = x.getAs[java.sql.Timestamp]("start_date")
@@ -105,9 +99,4 @@ import org.apache.spark.sql.hive.HiveContext
     res6.printSchema()
     res6
   }
-
-
-
-
-
 }

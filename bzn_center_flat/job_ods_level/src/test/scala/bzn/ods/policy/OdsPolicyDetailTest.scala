@@ -354,6 +354,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val odrOrderInfoBznprd: DataFrame = readMysqlTable(sqlContext,"odr_order_info_bznprd")
       .selectExpr("id as master_order_id","order_code","user_id","pay_amount as pay_amount_master","sales_name")
+      .where("master_order_id = 'ed6020c04f5342dba8247c2bd2cbda8f'")
 
 
     /**
@@ -369,7 +370,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       .selectExpr("id as master_policy_id","policy_code","order_id","insure_code","premium","status","channelId","channel_name",
         "start_date","end_date","'' as pay_way","'' as commission_discount_percent","renewal_policy_code",
         "insure_company_name","create_time","update_time")
-      .where("master_policy_id in ('fe40239d73894414aa2b6a7f0285f9bc','84515507e4fa48b295599ee4e784c14f')")
+      .where("master_policy_id = 'dda19e31ff9d4ca0b6e3bd9af5d51398'")
 
     /**
       * 读取投保人信息表
@@ -582,7 +583,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "'1.0' as source_system",
         "dw_create_time")
 //      .where("policy_code != '21010000889180002031' and policy_code != '21010000889180002022' and policy_code != '21010000889180002030'")
-
+    resEnd.show()
 //    resEnd.show()
     println("1.0")
    resEnd.printSchema()
