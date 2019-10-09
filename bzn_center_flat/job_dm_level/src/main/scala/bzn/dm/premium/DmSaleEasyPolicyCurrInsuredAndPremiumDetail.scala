@@ -97,9 +97,5 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_update_time",
         "getNow() as dw_create_time")
     res
-
-
   }
-
-
 }
