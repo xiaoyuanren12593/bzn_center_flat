@@ -170,8 +170,9 @@ import org.apache.spark.{SparkConf, SparkContext}
         "getNow() as dw_create_time")
 
     res
-
-
   }
+<<<<<<< HEAD:bzn_center_flat/job_dm_level/src/main/scala/bzn/dm/saleeasy/DmSaleEasyPolicyCurrInsuredAndPremiumDetail.scala
 
+=======
+>>>>>>> fea-xwc-add-user-label:bzn_center_flat/job_dm_level/src/main/scala/bzn/dm/premium/DmSaleEasyPolicyCurrInsuredAndPremiumDetail.scala
 }

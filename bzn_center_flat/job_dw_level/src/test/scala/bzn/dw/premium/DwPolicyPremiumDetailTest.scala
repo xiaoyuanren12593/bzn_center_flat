@@ -279,14 +279,14 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
         "belongs_regional","commission_rate", "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
         "sum_preson","sum_premium","day_id")
 
-    endRes.where("preserve_id = '344093941244760064'").show(1000)
+
     val result = endRes.join(odsProductDetail,endRes("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .selectExpr("getUUID() as id","policy_id","policy_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "product_code","product_name","one_level_pdt_cate","two_level_pdt_cate","business_line","add_batch_code","del_batch_code",
         "preserve_id","premium_type","holder_name","insured_subject","sale_name","team_name","belongs_regional","commission_rate",
         "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
-        "sum_preson","sum_premium","day_id","getNow() as dw_create_time")
-
+        "sum_preson as sum_person","sum_premium","day_id","getNow() as dw_create_time")
+    result.printSchema()
     result
   }
 }

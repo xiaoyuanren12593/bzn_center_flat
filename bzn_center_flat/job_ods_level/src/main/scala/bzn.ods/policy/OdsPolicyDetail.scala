@@ -306,7 +306,7 @@ object OdsPolicyDetail extends SparkUtil with Until{
         "first_premium",
         "sum_premium",
         "holder_name",
-        "insured_subject",
+        "case when insured_subject is null then holder_name else insured_subject end as insured_subject",
         "policy_start_date",
         "policy_end_date",
         "pay_way",
