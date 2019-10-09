@@ -1,13 +1,13 @@
-package bzn.dm.premium
+package bzn.dm.saleeasy
 
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
 import bzn.job.common.Until
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /*
 * @Author:liuxiang
