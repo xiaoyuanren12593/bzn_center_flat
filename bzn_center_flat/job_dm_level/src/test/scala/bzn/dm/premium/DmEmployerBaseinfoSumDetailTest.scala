@@ -54,12 +54,12 @@ import org.apache.spark.{SparkConf, SparkContext}
      * 读取每日已赚保费
      */
    val dwPolicyEverydayPremium = hqlContext.sql("select  policy_id,day_id,premium from dwdb.dw_policy_everyday_premium_detail")
-     .map(f = x => {
+     .map( x => {
        val policy_id = x.getAs[String]("policy_id")
-       val day_id = x.getAs[String]("day_id").toInt
+       val day_id = x.getAs[String]("day_id")
        val premium = x.getAs[java.math.BigDecimal]("premium")
        //得到当前时间
-       val nowTime = getNowTime().substring(0, 10).replaceAll("-", "").toInt
+       val nowTime = getNowTime().substring(0, 10).replaceAll("-", "")
 
        if (day_id < nowTime) policy_id
 

@@ -21,11 +21,12 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    val res = DmSaleEasyPolicyCurrInsuredAndPremium(hiveContext)
+    val res: DataFrame = DmSaleEasyPolicyCurrInsuredAndPremium(hiveContext)
     hiveContext.sql("truncate table dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetai")
+    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetail")
     sc.stop()
+
 
   }
 
@@ -171,8 +172,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     res
   }
-<<<<<<< HEAD:bzn_center_flat/job_dm_level/src/main/scala/bzn/dm/saleeasy/DmSaleEasyPolicyCurrInsuredAndPremiumDetail.scala
 
-=======
->>>>>>> fea-xwc-add-user-label:bzn_center_flat/job_dm_level/src/main/scala/bzn/dm/premium/DmSaleEasyPolicyCurrInsuredAndPremiumDetail.scala
+
 }
