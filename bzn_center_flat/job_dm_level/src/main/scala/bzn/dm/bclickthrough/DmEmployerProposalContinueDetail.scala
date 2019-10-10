@@ -59,7 +59,7 @@ object DmEmployerProposalContinueDetail extends SparkUtil with Until with MysqlU
         "channel_name",
         "dw_create_time"
       )
-
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_b_clickthrouth_emp_proposal_continue_Detail")
     val mysqlRes = res.selectExpr(
       "id",
       "policy_code",
