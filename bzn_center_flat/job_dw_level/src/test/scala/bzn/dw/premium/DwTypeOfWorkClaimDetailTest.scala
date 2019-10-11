@@ -48,9 +48,10 @@ import org.apache.spark.sql.hive.HiveContext
       */
     val res1 = sqlContext.sql(" select id,policy_id, policy_code, sku_coverage,sku_append," +
       "sku_ratio,sku_price,sku_charge_type, holder_name, product_code, product_name, profession_type, " +
-      "channel_id, channel_name, insured_subject,sum_premium, insured_name, insured_cert_no, start_date,end_date," +
+      "channel_id, channel_name, insured_subject,sum_premium, insure_company_name, short_name,insured_name, " +
+      "insured_cert_no, start_date,end_date," +
       "work_type,primitive_work,job_company, gender, age, " +
-      "bzn_work_name,work_name,bzn_work_risk,recognition, whether_recognition,plan_recognition from dwdb.dw_work_type_matching_detail")
+      "bzn_work_name,work_name,bzn_work_risk,gs_work_risk,recognition, whether_recognition,plan_recognition,gs_plan_recognition from dwdb.dw_work_type_matching_detail")
     
     val res2 = res1.selectExpr("policy_id","insured_cert_no","start_date","end_date")
 
@@ -91,10 +92,13 @@ import org.apache.spark.sql.hive.HiveContext
     //sqlContext.sql("select sum(res_pay) as res_pay from tempTable").show()
 
     val res6 = res1.join(tenmpTbles, 'policy_id === 'id_temp and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp,"leftouter")
-      .selectExpr( "id","policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type","holder_name",
+      .selectExpr( "id","policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio",
+        "sku_price", "sku_charge_type","holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject", "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
-        "bzn_work_name", "work_name", "bzn_work_risk", "recognition", "whether_recognition","plan_recognition",
+        "insured_subject","sum_premium", "insure_company_name", "short_name","insured_name", "insured_cert_no",
+        "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
+        "bzn_work_name", "work_name", "bzn_work_risk","gs_work_risk",
+        "recognition", "whether_recognition","plan_recognition","gs_plan_recognition",
         "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay")
     res6.printSchema()
     res6

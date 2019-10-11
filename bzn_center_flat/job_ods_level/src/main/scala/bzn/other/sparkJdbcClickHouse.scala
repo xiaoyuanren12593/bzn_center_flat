@@ -1,12 +1,14 @@
 package bzn.other
 
+import java.sql.DriverManager
 import java.util.Properties
-
 import bzn.job.common.Until
 import bzn.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import ru.yandex.clickhouse.ClickHouseDriver
+import ru.yandex.clickhouse.settings.ClickHouseProperties
 
 import scala.io.Source
 
@@ -37,17 +39,19 @@ object sparkJdbcClickHouse extends  SparkUtil with Until{
   def  writeTable(res:DataFrame,tableName: String): Unit ={
     val properties: Properties = getProPerties()
     //配置文件中的key 与 spark 中的 key 不同 所以 创建prop 按照spark 的格式 进行配置数据库
-    val prop = new Properties
-    prop.setProperty("user", properties.getProperty("clickhouse.username"))
-    prop.setProperty("password", properties.getProperty("clickhouse.password"))
-    prop.setProperty("driver", properties.getProperty("clickhouse.driver"))
-    prop.setProperty("url", properties.getProperty("clickhouse.url"))
 
+   val clickDriver = new  ClickHouseDriver()
+    DriverManager.deregisterDriver(clickDriver)
+    val prop = new ClickHouseProperties()
+    prop.setHost("jdbc:clickhouse://172.16.11.100:8123/odsdb")
+    prop.setUser("default")
+    prop.setPassword("iaisYuX4")
     res.write
       .format("jdbc")
+      .option("","")
       .option("isolationLevel","NONE") //设置事务
       .option("numPartitions","1")//设置并发
-      .mode("Append").jdbc(prop.getProperty("url"),tableName,prop)
+      .mode("Append")
 
   }
 
