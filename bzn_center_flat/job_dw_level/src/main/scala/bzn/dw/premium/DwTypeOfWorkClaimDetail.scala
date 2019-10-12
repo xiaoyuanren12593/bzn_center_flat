@@ -29,7 +29,6 @@ import org.apache.spark.sql.hive.HiveContext
 
   }
 
-
   /**
     *
     * @param sqlContext
@@ -45,6 +44,24 @@ import org.apache.spark.sql.hive.HiveContext
       val date = df.format(new Date()) // new Date()为获取当前系统时间
       (date + "")
     })
+
+    /**
+      * 读取每日已赚保费表
+      */
+    val dwYearAndMonthInsuredPremiumDetail = sqlContext.sql("select policy_id,insured_cert_no,insured_start_date,sku_day_price,day_id from dwdb.dw_year_and_month_insured_premium_detail")
+      .where("cast(day_id as int) <= cast(regexp_replace(cast(current_date() as string),'-','') as int)")
+      .map(x => {
+        val policyId = x.getAs[String]("policy_id")
+        val insuredCertNo = x.getAs[String]("insured_cert_no")
+        val insuredStartDate = x.getAs[java.sql.Timestamp]("insured_start_date")
+        val skuDayPrice = x.getAs[java.math.BigDecimal]("sku_day_price")
+        ((policyId,insuredCertNo,insuredStartDate),skuDayPrice)
+      })
+      .reduceByKey(_.add(_))
+      .map( x => {
+        (x._1._1,x._1._2,x._1._3,x._2)
+      })
+      .toDF("policy_id_pemium","insured_cert_no_premium","start_date_premium","days_promium")
 
     /**
       * 读取dw层工种匹配表
@@ -104,6 +121,46 @@ import org.apache.spark.sql.hive.HiveContext
         "recognition", "whether_recognition","plan_recognition","gs_plan_recognition",
         "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay")
 
-    res6
+    val res = res6.join(dwYearAndMonthInsuredPremiumDetail,'policy_id === 'policy_id_pemium and 'insured_cert_no === 'insured_cert_no_premium and 'start_date === 'start_date_premium,"leftouter")
+      .selectExpr(
+        "id",
+        "policy_id",
+        "policy_code",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "sku_price",
+        "sku_charge_type",
+        "holder_name",
+        "product_code",
+        "product_name",
+        "profession_type",
+        "channel_id",
+        "channel_name",
+        "insured_subject",
+        "sum_premium",
+        "insure_company_name",
+        "short_name",
+        "insured_name",
+        "insured_cert_no",
+        "start_date",
+        "end_date",
+        "work_type",
+        "primitive_work",
+        "job_company",
+        "gender", "age",
+        "bzn_work_name",
+        "work_name",
+        "bzn_work_risk",
+        "gs_work_risk",
+        "recognition",
+        "whether_recognition",
+        "plan_recognition",
+        "gs_plan_recognition",
+        "res_pay",
+        "cast(days_promium as decimal(14,4)) as charge_premium",
+        "getNow() as dw_create_time"
+      )
+    res
   }
 }

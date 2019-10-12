@@ -109,7 +109,7 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
       .map(x => {
         val policyCodTemp = x.getAs[String]("policy_code_temp")
         val professionType = x.getAs[String]("profession_type")
-        val result = if (professionType != null) {
+        val result = if (professionType != null && professionType.length >0) {
           val res = professionType.replaceAll("类", "")
           if (res == "5") {
             (5, 5)
@@ -219,7 +219,6 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
           "when work_type is null then 2 end as whether_recognition",
         "case when profession_type is null then '未知' when cast(risk as int) >= profession_type_slow and  cast(risk as int) <= profession_type_high then '已知' else '未知' end as plan_recognition", //方案级别已匹配未匹配
         "case when profession_type is null then '未知' when  gs_work_risk >=profession_type_slow and gs_work_risk <= profession_type_high then '已知' else '未知' end as gs_plan_recognition"
-
       )
 
     val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type",

@@ -14,7 +14,8 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/9/17
 * @Describe:工种匹配
-*/ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
+*/
+object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -101,7 +102,7 @@ import org.apache.spark.sql.hive.HiveContext
       .map(x => {
         val policyCodTemp = x.getAs[String]("policy_code_temp")
         val professionType = x.getAs[String]("profession_type")
-        val result = if(professionType != null){
+        val result = if(professionType != null && professionType.length >0 ){
           val res = professionType.replaceAll("类","")
           if(res == "5"){
             (5,5)
