@@ -7,7 +7,7 @@ object Dependencies {
 
   val mysqlConnectorJava = "mysql" % "mysql-connector-java" % "5.1.36"
 
-  val clickhouseConnector = "ru.yandex.clickhouse" % "clickhouse-jdbc" % "0.1.40"
+  val clickhouseConnector =  "cc.blynk.clickhouse" % "clickhouse4j" % "1.0.0"
 
   // val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.4.4"
 
