@@ -167,6 +167,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
         (bznWorkName, bznWorkRisk,res)
 
       }).toDF("bzn_work_name", "bzn_work_risk","gs_work_risk")
+    resTemp.show(10000)
 
      resTemp.registerTempTable("ods_work_risk_dimension_Temp")
 

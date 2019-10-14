@@ -11,7 +11,9 @@ import scala.io.Source
 * @Author:liuxiang
 * @Date：2019/10/12
 * @Describe:
-*/ trait ClickHouseUntil {
+*/
+trait ClickHouseUntil {
+
   /**
     *    读取ClickHouse表的数据
     * @param sqlContext
@@ -21,7 +23,6 @@ import scala.io.Source
     * @param possWord
     * @return
     */
-
   def  readClickHouseTable(sqlContext:SQLContext,tableName: String,url:String,user:String,possWord:String): DataFrame ={
     val prop = getProPerties()
 
@@ -96,6 +97,4 @@ import scala.io.Source
     }
     properties
   }
-
-
 }
