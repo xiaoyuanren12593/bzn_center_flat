@@ -155,11 +155,14 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
     //读取标准工种表 如果bzn_work_name 重复 拿最小的bzn_work_risk,取gs_work_risk的第一个,如果字段为空串,替换成-1
 
     val resTemp = sqlContext.sql("SELECT bzn_work_name,bzn_work_risk,gs_work_risk from odsdb.ods_work_risk_dimension")
+      .where("gs_work_risk is not null")
       .map(x => {
         val bznWorkName = x.getAs[String]("bzn_work_name")
         val bznWorkRisk = x.getAs[String]("bzn_work_risk")
         val gsWrokRisk = x.getAs[String]("gs_work_risk")
-        val res = if (gsWrokRisk == "" || gsWrokRisk.split(",")(0) == "S") -1 else {
+        val res = if (gsWrokRisk == "" || gsWrokRisk == null) -1 else if
+        (gsWrokRisk != null && gsWrokRisk.split(",")(0) =="S") 0
+        else{
           val restemp = gsWrokRisk.split(",")(0).toInt
           restemp
         }

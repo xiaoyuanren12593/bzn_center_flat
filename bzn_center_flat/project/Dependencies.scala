@@ -72,7 +72,7 @@ object Dependencies {
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------工具模块----------------------------------------------------------------
-  val utilDeps = Seq(jodaTime,mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+  val utilDeps = Seq(jodaTime,mysqlConnectorJava,clickhouseConnector, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------ods层----------------------------------------------------------------
@@ -84,7 +84,7 @@ object Dependencies {
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------dm层----------------------------------------------------------------
-  val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
+  val bznDmLevelDepsProvided = Seq(mysqlConnectorJava, clickhouseConnector,fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------c端标签层----------------------------------------------------------------

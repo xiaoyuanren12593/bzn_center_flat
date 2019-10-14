@@ -4,18 +4,17 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.Until
+import bzn.job.common.{ClickHouseUntil, Until}
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /*
 * @Author:liuxiang
 * @Date：2019/9/29
 * @Describe: 销售易每日在保人数和已赚保费
-*/ object DmSaleEasyPolicyCurrInsuredAndPremiumDetailTest extends SparkUtil with Until {
+*/ object DmSaleEasyPolicyCurrInsuredAndPremiumDetailTest extends SparkUtil with Until with ClickHouseUntil {
   def main(args: Array[String]): Unit = {
-
 
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -24,7 +23,9 @@ import org.apache.spark.{SparkConf, SparkContext}
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = DmSaleEasyPolicyCurrInsuredAndPremium(hiveContext)
-    res.printSchema()
+
+    writeClickHouseTable(res,"dm_saleeasy_policy_curr_insured_premium_detail",SaveMode.Overwrite,
+      "clickhouse.url","clickhouse.username","clickhouse.password")
 
     sc.stop()
 

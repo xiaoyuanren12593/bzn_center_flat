@@ -49,6 +49,7 @@ import scala.io.Source
     var table = tableName
     val prop = getProPerties()
     prop.setProperty("url", prop.getProperty(url))
+    println(prop.getProperty(url))
     prop.setProperty("user", prop.getProperty(user) )
     prop.setProperty("password",  prop.getProperty(possWord))
     prop.setProperty("driver", "cc.blynk.clickhouse.ClickHouseDriver")
@@ -91,6 +92,7 @@ import scala.io.Source
     for (elem <- lines_source) {
       val split = elem.split("==")
       val key = split(0)
+      println(key)
       val value = split(1)
       properties.setProperty(key,value)
     }
