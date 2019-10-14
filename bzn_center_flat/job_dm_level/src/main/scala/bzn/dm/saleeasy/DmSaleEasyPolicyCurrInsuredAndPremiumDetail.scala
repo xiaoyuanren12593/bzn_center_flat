@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.Until
+import bzn.job.common.{ClickHouseUntil, Until}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -13,7 +13,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/9/29
 * @Describe:
-*/ object DmSaleEasyPolicyCurrInsuredAndPremiumDetail extends SparkUtil with Until {
+*/ object DmSaleEasyPolicyCurrInsuredAndPremiumDetail extends SparkUtil with Until with ClickHouseUntil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -25,6 +25,8 @@ import org.apache.spark.{SparkConf, SparkContext}
     hiveContext.sql("truncate table dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
     res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetail")
+    writeClickHouseTable(res,"dm_saleeasy_policy_curr_insured_premium_detail",SaveMode.Overwrite,
+      "clickhouse.url","clickhouse.username","clickhouse.password")
     sc.stop()
 
 

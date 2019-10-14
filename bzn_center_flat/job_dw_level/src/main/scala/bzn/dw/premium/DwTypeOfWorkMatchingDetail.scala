@@ -2,7 +2,6 @@ package bzn.dw.premium
 
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
@@ -21,12 +20,10 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
     val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
-
     val sc = sparkConf._2
     val hiveContext: HiveContext = sparkConf._4
     val res = DwTypeOfWorkMatching(hiveContext)
     res.cache()
-
     hiveContext.sql("truncate table dwdb.dw_work_type_matching_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_work_type_matching_detail")
     //res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/OdsWorkTypeMatching")
@@ -166,7 +163,9 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
         val bznWorkName = x.getAs[String]("bzn_work_name")
         val bznWorkRisk = x.getAs[String]("bzn_work_risk")
         val gsWrokRisk = x.getAs[String]("gs_work_risk")
-        val res = if (gsWrokRisk == "" || gsWrokRisk.split(",")(0) == "S") -1 else {
+        val res = if (gsWrokRisk == "" || gsWrokRisk == null) -1 else if
+        (gsWrokRisk != null && gsWrokRisk.split(",")(0) =="S") 0
+        else{
           val restemp = gsWrokRisk.split(",")(0).toInt
           restemp
         }
