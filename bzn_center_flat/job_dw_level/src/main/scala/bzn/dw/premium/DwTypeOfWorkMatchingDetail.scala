@@ -109,7 +109,7 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
         val result = if (professionType != null && professionType.length >0) {
           val res = professionType.replaceAll("类", "")
           if (res == "5") {
-            (5, 5)
+            (1, 5)
           } else {
             val sp1 = res.split("-")(0).toInt
             val sp2 = res.split("-")(1).toInt
