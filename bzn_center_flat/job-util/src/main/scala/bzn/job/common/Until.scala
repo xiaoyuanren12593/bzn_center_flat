@@ -151,6 +151,13 @@ trait Until {
     now_Date
   }
 
+  //将日期的十分秒变成 00:00:00
+  def getFormatDate(date:Timestamp): String = {
+    val dateFormatOne: SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd 00:00:00")
+    val now_Date: String = dateFormatOne.format(date)
+    now_Date
+  }
+
   //当前时间的前三个月是第几天
   def ThreeMonth(): String = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd 00:00:00")
