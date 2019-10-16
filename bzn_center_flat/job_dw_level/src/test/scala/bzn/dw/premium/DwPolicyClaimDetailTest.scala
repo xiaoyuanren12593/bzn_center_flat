@@ -75,9 +75,9 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
       .map(x => {
         val id: String = clean(x.getAs[Long]("id").toString)
 
-        val preCom: String = clean(x.getAs[String]("pre_com"))
+        val preCom: String = x.getAs[String]("pre_com")
 
-        val finalPayment: String = clean(x.getAs[String]("final_payment"))
+        val finalPayment: String =  x.getAs[String]("final_payment")
         val finalPaymentRes = if (finalPayment == null || finalPayment == "" ) preCom else finalPayment
         //保单号  预估赔付   最终赔付        赔付
         (id,preCom,finalPayment,finalPaymentRes)
@@ -98,8 +98,8 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
     /**
       * 保单明细数据和理赔明细数据通过保单号关联
       */
-    val res = odsPolicyDetail.join(odsClaimDetail,odsPolicyDetail("policy_code") === odsClaimDetail("policy_no"))
-      .selectExpr("getUUID() as id","id_slave","policy_id","policy_code","product_code",
+    val res = odsPolicyDetail.join(odsClaimDetail,odsPolicyDetail("policy_code") === odsClaimDetail("policy_no"),"leftouter")
+      .selectExpr("getUUID() as id","id_slave","policy_id","policy_code","product_code","policy_no",
         "policy_status","case_no","policy_no as risk_policy_code",
         "risk_date","report_date","risk_name","holder_name","risk_cert_no",
         "mobile","insured_company","cast(pre_com_new as decimal(14,4)) as pre_com",
@@ -108,6 +108,8 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
         "medical_coverage","delay_payment","disable_death_payment",
         "cast(final_payment_new as decimal(14,4)) as final_payment",
         "cast(res_pay as decimal(14,4)) as res_pay","getNow() as dw_create_time")
+    res.where("policy_no is null").show()
+    println (res.count ())
 
    //读取企业信息表
     val odsEnterpriseDetail: DataFrame = sqlContext.sql("select ent_id,ent_name from " +

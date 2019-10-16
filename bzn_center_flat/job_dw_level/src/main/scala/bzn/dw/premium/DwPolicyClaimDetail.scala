@@ -77,9 +77,9 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
       .map(x => {
         val id: String = clean(x.getAs[Long]("id").toString)
 
-        val preCom: String = clean(x.getAs[String]("pre_com"))
+        val preCom: String = x.getAs[String]("pre_com")
 
-        val finalPayment: String = clean(x.getAs[String]("final_payment"))
+        val finalPayment: String = x.getAs[String]("final_payment")
         val finalPaymentRes = if (finalPayment == null || finalPayment == "" ) preCom else finalPayment
         //保单号  预估赔付   最终赔付        赔付
         (id,preCom,finalPayment,finalPaymentRes)

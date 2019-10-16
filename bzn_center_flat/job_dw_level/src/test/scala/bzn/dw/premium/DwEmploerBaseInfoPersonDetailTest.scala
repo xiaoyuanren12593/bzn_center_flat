@@ -49,7 +49,8 @@ res.printSchema()
     //读取保单明细表
     val odsPolicyDetail: DataFrame = sqlContext.sql("select policy_id,policy_code,holder_name,insured_subject,product_code " +
       ",policy_status,policy_start_date,policy_end_date ,channel_id as channelId,channel_name as channelName,sales_name as salesName from odsdb.ods_policy_detail")
-      .where("policy_status in (1,0,-1)")
+      .where("policy_status in (1,0,-1) and policy_id = '360472629502676992'")
+    odsPolicyDetail.show()
 
     //读取企业联系人
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
@@ -80,11 +81,14 @@ res.printSchema()
 
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject", "product_code", "policy_status","one_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
+      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject", "product_code", "policy_status","one_level_pdt_cate","ent_id", "ent_name",
+        "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
 
     //读取被保人表
     val odsPolicyInsured = sqlContext.sql("select policy_id as policy_id_salve,insured_name,insured_cert_no,insured_mobile,start_date,end_date from odsdb.ods_policy_insured_detail")
+      .where("policy_id_salve = '360472629502676992'")
+    odsPolicyInsured.show()
 
     /**
       * 将上述结果与被保人表关联
@@ -95,8 +99,7 @@ res.printSchema()
         "product_code","policy_status",
         "one_level_pdt_cate","ent_id", "ent_name",
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
-
-
+    resProductAndInsuredDetail.show()
 
     /**
       * 读取理赔表
@@ -108,7 +111,8 @@ res.printSchema()
       */
     val insuredAndClaimRes = resProductAndInsuredDetail.join(dwPolicyClaimDetail, resProductAndInsuredDetail("policy_id") === dwPolicyClaimDetail("id"), "leftouter")
       .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject", "product_code","insured_name", "insured_cert_no",
-      "insured_mobile","start_date","end_date","policy_status", "one_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name", "biz_operator","pre_com", "final_payment", "res_pay")
+      "insured_mobile","start_date","end_date","policy_status", "one_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman",
+        "salesName", "team_name", "biz_operator","pre_com", "final_payment", "res_pay")
 
     //读取方案信息表
     val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
@@ -131,8 +135,8 @@ res.printSchema()
         "tech_service_rate", "economic_rate", "commission_discount_rate", "commission_rate","pre_com", "final_payment", "res_pay",
         "getNow() as dw_create_time")
 
+    res.show()
     res
-
 
 
 

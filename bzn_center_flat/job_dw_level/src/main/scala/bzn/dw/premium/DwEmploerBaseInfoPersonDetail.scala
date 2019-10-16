@@ -72,14 +72,16 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 将关联结果与保单明细表关联
     val resDetail = odsPolicyDetail.join(enterperiseAndSaleRes, odsPolicyDetail("holder_name") === enterperiseAndSaleRes("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "holder_name", "insured_subject", "product_code","policy_status","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
+      .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "holder_name", "insured_subject", "product_code","policy_status","ent_id", "ent_name", "channel_id",
+        "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
 
     //读取产品表
     val odsProductDetail = sqlContext.sql("select product_code as product_code_temp,product_name,one_level_pdt_cate from odsdb.ods_product_detail")
 
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject", "product_code", "policy_status","one_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
+      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject", "product_code", "policy_status","one_level_pdt_cate","ent_id",
+        "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
 
     //读取被保人表
@@ -94,8 +96,6 @@ import org.apache.spark.sql.hive.HiveContext
         "product_code","policy_status",
         "one_level_pdt_cate","ent_id", "ent_name",
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "team_name","biz_operator")
-
-
 
     /**
       * 读取理赔表
@@ -131,13 +131,5 @@ import org.apache.spark.sql.hive.HiveContext
         "getNow() as dw_create_time")
 
     res
-
-
-
-
   }
-
-
-
-
 }

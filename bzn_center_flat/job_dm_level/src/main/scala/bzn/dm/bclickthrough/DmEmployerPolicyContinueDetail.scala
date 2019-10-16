@@ -2,11 +2,12 @@ package bzn.dm.bclickthrough
 
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import bzn.dm.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.{SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -14,15 +15,17 @@ import org.apache.spark.sql.hive.HiveContext
   * Time:15:27
   * describe: 雇主续保功能
   **/
-object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with MysqlUntil{
+object DmEmployerPolicyContinueDetail extends SparkUtil with Until with MysqlUntil{
     def main (args: Array[String]): Unit = {
         System.setProperty ("HADOOP_USER_NAME", "hdfs")
         val appName = this.getClass.getName
-        val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo (appName, "local[*]")
+        val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo (appName, "")
 
         val sc = sparkConf._2
         val hiveContext = sparkConf._4
-        DmEmployerPolicyContinueDetail(hiveContext)
+        val res = DmEmployerPolicyContinueDetail(hiveContext)
+        hiveContext.sql("truncate table dmdb.dm_b_clickthrouth_emp_policy_continue_Detail")
+        res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_b_clickthrouth_emp_policy_continue_Detail")
         sc.stop ()
     }
 
@@ -31,7 +34,6 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
       * @param sqlContext
       */
     def DmEmployerPolicyContinueDetail(sqlContext:HiveContext) = {
-
       import sqlContext.implicits._
       sqlContext.udf.register ("getUUID", () => (java.util.UUID.randomUUID () + "").replace ("-", ""))
       sqlContext.udf.register ("getNow", () => {
@@ -49,85 +51,84 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
         nowDayId
       })
 
-        /**
-          * 读取雇主基础数据人员明细表
-          */
-        val dwEmployerBaseinfoPersonDetail = sqlContext.sql("select * from dwdb.dw_employer_baseinfo_person_detail")
-          .where("policy_status in (0,1) and sku_charge_type = '2' and policy_id = '228964688451473408'")
+      /**
+        * 读取雇主基础数据人员明细表
+        */
+      val dwEmployerBaseinfoPersonDetail = sqlContext.sql("select * from dwdb.dw_employer_baseinfo_person_detail")
+        .where("policy_status in (0,1) and sku_charge_type = '2'")
 
-        /**
-          * 读取时间维度数据
-          */
-        val odsTDayDimension =
-            sqlContext.sql("select d_day,c_day_id,c_week_long_desc,c_month_long_desc,c_quarter_long_desc from odsdb.ods_t_day_dimension")
+      /**
+        * 读取时间维度数据
+        */
+      val odsTDayDimension =
+        sqlContext.sql("select d_day,c_day_id,c_week_long_desc,c_month_long_desc,c_quarter_long_desc from odsdb.ods_t_day_dimension")
 
-        /**
-          * 读取当前在保人表
-          */
-        val dwolicyCurrInsuredDetail =
-            sqlContext.sql("select policy_id,day_id,count from dwdb.dw_policy_curr_insured_detail")
-        .where("policy_id = '228964688451473408'")
+      /**
+        * 读取当前在保人表
+        */
+      val dwolicyCurrInsuredDetail =
+        sqlContext.sql("select policy_id,day_id,count from dwdb.dw_policy_curr_insured_detail")
 
-       /**
+      /**
         * 根据雇主基础数据人员明细数据，得到应续保日期，实际续保参照日期，应续保参照日期，当前在保的day_id，应续保参照日期的day_id
         */
-        val dwEmployerBaseinfoPersonDetailLeftRes = dwEmployerBaseinfoPersonDetail
-          .selectExpr("policy_id","holder_name","policy_start_date","policy_end_date","start_date","end_date","insured_cert_no")
-          .map(x => {
-            val policyId = x.getAs[String]("policy_id")
-            val holderName = x.getAs[String]("holder_name")
-            val policyStartDate = x.getAs[java.sql.Timestamp]("policy_start_date")
-            val policyEndDate = x.getAs[java.sql.Timestamp]("policy_end_date")
-            val startDate = x.getAs[java.sql.Timestamp]("start_date")
-            val endDate = x.getAs[java.sql.Timestamp]("end_date")
-            val insuredCertNo = x.getAs[String]("insured_cert_no")
-            var shouldContinuePolicyDayId = "" //应续投时间的day_id
-            var shouldContinuePolicyReferDayId = "" //应续投参照时间的day_id
-            val nowDate = getNowTime ().substring (0, 10).replaceAll ("-", "")
-            val shouldContinuePolicyDate = if(policyEndDate != null ){
-              java.sql.Timestamp.valueOf(currTimeFuction(getFormatDate(policyEndDate),1)) //应续保时间 保单结束时间+1D
-            }else{
-              null
-            }
+      val dwEmployerBaseinfoPersonDetailLeftRes = dwEmployerBaseinfoPersonDetail
+        .selectExpr("policy_id","holder_name","policy_start_date","policy_end_date","start_date","end_date","insured_cert_no")
+        .map(x => {
+          val policyId = x.getAs[String]("policy_id")
+          val holderName = x.getAs[String]("holder_name")
+          val policyStartDate = x.getAs[java.sql.Timestamp]("policy_start_date")
+          val policyEndDate = x.getAs[java.sql.Timestamp]("policy_end_date")
+          val startDate = x.getAs[java.sql.Timestamp]("start_date")
+          val endDate = x.getAs[java.sql.Timestamp]("end_date")
+          val insuredCertNo = x.getAs[String]("insured_cert_no")
+          var shouldContinuePolicyDayId = "" //应续投时间的day_id
+          var shouldContinuePolicyReferDayId = "" //应续投参照时间的day_id
+          val nowDate = getNowTime ().substring (0, 10).replaceAll ("-", "")
+          val shouldContinuePolicyDate = if(policyEndDate != null ){
+            java.sql.Timestamp.valueOf(currTimeFuction(getFormatDate(policyEndDate),1)) //应续保时间 保单结束时间+1D
+          }else{
+            null
+          }
 
-            shouldContinuePolicyDayId = if(shouldContinuePolicyDate != null){
-              shouldContinuePolicyDate.toString.substring(0,10).replaceAll("-","")
-            }else{
-              null
-            }
+          shouldContinuePolicyDayId = if(shouldContinuePolicyDate != null){
+            shouldContinuePolicyDate.toString.substring(0,10).replaceAll("-","")
+          }else{
+            null
+          }
 
-            var shouldContinuePolicyReferDate = if(policyEndDate != null ){
-              java.sql.Timestamp.valueOf(currTimeFuction(getFormatDate(policyEndDate),-30)) //应续保人数的参照时间 保单结束时间-30D
-            }else{
-              null
-            }
+          var shouldContinuePolicyReferDate = if(policyEndDate != null ){
+            java.sql.Timestamp.valueOf(currTimeFuction(getFormatDate(policyEndDate),-30)) //应续保人数的参照时间 保单结束时间-30D
+          }else{
+            null
+          }
 
-            shouldContinuePolicyReferDayId = if(shouldContinuePolicyReferDate != null){
-              shouldContinuePolicyReferDate.toString.substring(0,10).replaceAll("-","")
-            }else{
-              null
-            }
+          shouldContinuePolicyReferDayId = if(shouldContinuePolicyReferDate != null){
+            shouldContinuePolicyReferDate.toString.substring(0,10).replaceAll("-","")
+          }else{
+            null
+          }
 
-            val realyContinuePolicyDate = if(policyEndDate != null ){
-              java.sql.Timestamp.valueOf(currTimeFuction(getFormatDate(policyEndDate),30)) //实续参照时间为  保单时间+30d
-            }else{
-              null
-            }
+          val realyContinuePolicyDate = if(policyEndDate != null ){
+            java.sql.Timestamp.valueOf(currTimeFuction(getFormatDate(policyEndDate),30)) //实续参照时间为  保单时间+30d
+          }else{
+            null
+          }
 
-            if(shouldContinuePolicyReferDate != null ){
-              if (policyStartDate != null){
-                if(shouldContinuePolicyReferDate.compareTo(policyStartDate) < 0){
-                  shouldContinuePolicyReferDate = policyStartDate
-                }
+          if(shouldContinuePolicyReferDate != null ){
+            if (policyStartDate != null){
+              if(shouldContinuePolicyReferDate.compareTo(policyStartDate) < 0){
+                shouldContinuePolicyReferDate = policyStartDate
               }
             }
-            (policyId,holderName,policyStartDate,policyEndDate,startDate,endDate,insuredCertNo,
-              shouldContinuePolicyDayId,shouldContinuePolicyReferDayId,
-              shouldContinuePolicyDate,shouldContinuePolicyReferDate,realyContinuePolicyDate,nowDate)
-          })
-          .toDF("policy_id","holder_name","policy_start_date","policy_end_date","start_date","end_date","insured_cert_no","should_continue_policy_day_id",
+          }
+          (policyId,holderName,policyStartDate,policyEndDate,startDate,endDate,insuredCertNo,
+            shouldContinuePolicyDayId,shouldContinuePolicyReferDayId,
+            shouldContinuePolicyDate,shouldContinuePolicyReferDate,realyContinuePolicyDate,nowDate)
+        })
+        .toDF("policy_id","holder_name","policy_start_date","policy_end_date","start_date","end_date","insured_cert_no","should_continue_policy_day_id",
           "should_continue_policy_refer_day_id","should_continue_policy_date","should_continue_policy_refer_date","realy_continue_policy_date","now_date")
-      dwEmployerBaseinfoPersonDetailLeftRes.show()
+
       /**
         * 将雇主基础数据人员信息作为右表
         */
@@ -144,8 +145,6 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
         .where("start_date_right <= realy_continue_policy_date and end_date_right >= realy_continue_policy_date " +
           "and start_date <= should_continue_policy_refer_date and end_date >= should_continue_policy_refer_date")
 
-
-      dwEmployerBaseinfoPersonDetailRes.show()
       /**
         * 注册成临时表
         */
@@ -156,7 +155,7 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
         */
       val resTemp1 = sqlContext.sql("select policy_id as policy_id_slave,count(distinct insured_cert_no_right) as realy_continue_person_count " +
         "from dwEmployerBaseinfoPersonDetailResTemp group by policy_id,holder_name")
-      resTemp1.show()
+
       /**
         * 对雇主基础数据人员左表信息不包含人员信息的数据进行去重，保存唯一保单信息
         */
@@ -169,7 +168,7 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
         */
       val resTemp2 = baseInfoRes.join(resTemp1,baseInfoRes("policy_id")===resTemp1("policy_id_slave"),"leftouter")
         .selectExpr("policy_id as policy_id_master","holder_name as holder_name_master","policy_start_date as policy_start_date_master",
-            "policy_end_date as policy_end_date_master","should_continue_policy_day_id","should_continue_policy_refer_day_id",
+          "policy_end_date as policy_end_date_master","should_continue_policy_day_id","should_continue_policy_refer_day_id",
           "should_continue_policy_date","realy_continue_policy_date","now_date","realy_continue_person_count")
 
       /**
@@ -298,8 +297,6 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
           "realy_continue_policy_date",
           "getNow() as dw_create_time"
         )
-      res.printSchema()
-      res.show()
       res
     }
 }
