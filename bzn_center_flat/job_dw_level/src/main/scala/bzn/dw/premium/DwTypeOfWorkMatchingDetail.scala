@@ -225,7 +225,8 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
       "insured_subject", "sum_premium", "insure_company_name", "short_name",
       "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
-      "bzn_work_name", "work_name", "bzn_work_risk", "cast(gs_work_risk as string) as gs_work_risk", "recognition", "whether_recognition", "plan_recognition", "gs_plan_recognition")
+      "bzn_work_name", "work_name", "bzn_work_risk", "cast(gs_work_risk as string) as gs_work_risk", "recognition", "whether_recognition",
+      "plan_recognition", "gs_plan_recognition")
     res
 
   }

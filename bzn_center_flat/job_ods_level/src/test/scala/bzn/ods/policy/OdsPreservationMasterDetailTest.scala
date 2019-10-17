@@ -44,6 +44,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     udfUtil(sqlContext)
     val bPolicyPreservationSubjectPersonMasterBzncenOne =
       sqlContext.sql("select * from sourcedb.b_policy_preservation_subject_person_master_bzncen")
+          .where("id = '243058275917107200'")
       .selectExpr("id","inc_dec_order_no","policy_no","name","sex as gender","cert_type as insured_cert_type","cert_no","birthday","industry_name as industry","work_type","company_name",
         "company_phone","status","start_date","end_date","create_time","update_time")
       .registerTempTable("bPolicyPreservationSubjectPersonMasterBzncenTemp")
@@ -94,6 +95,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       * 读取保全表
       */
     val bPolicyPreservationBzncen = readMysqlTable(sqlContext,"b_policy_preservation_bzncen")
+
+        .where("id = '324233515782770688'")
       .selectExpr("id as preserve_id","inc_dec_order_no","policy_no","preservation_type as preserve_type","inc_revise_sum as add_person_count","dec_revise_sum as del_person_count",
         "create_time as create_time_master")
 
@@ -199,7 +202,9 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       })
       .toDF("temp_inc_dec_order_no","pre_start_date","pre_end_date")
 
-    val resTempTwo = sqlContext.sql("select *  from res_temp")
+    bPolicyPreserveTempRes.show()
+
+    val resTempTwo = sqlContext.sql("select * from res_temp")
     val res = resTempTwo.join(bPolicyPreserveTempRes,resTempTwo("inc_dec_order_no")===bPolicyPreserveTempRes("temp_inc_dec_order_no"),"leftouter")
       .selectExpr("getUUID() as id","clean(master_id) as master_id","clean(cast(preserve_id as String)) as preserve_id","clean(insured_name) as insured_name",
         "case when gender = 2 then 0 else 1 end as gender","case when insured_cert_type = 1 then 1 else -1 end as insured_cert_type",
@@ -207,7 +212,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         "clean(company_phone) as company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "cast(pre_start_date as timestamp) as pre_start_date","cast(pre_end_date as timestamp) as pre_end_date","cast(clean(insured_status) as int) as insured_status",
         "age","cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
-
+    res.show()
     println("2.0")
     res.printSchema()
     res

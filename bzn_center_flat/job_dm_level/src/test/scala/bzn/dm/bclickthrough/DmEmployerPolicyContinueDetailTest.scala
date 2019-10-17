@@ -53,7 +53,7 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
           * 读取雇主基础数据人员明细表
           */
         val dwEmployerBaseinfoPersonDetail = sqlContext.sql("select * from dwdb.dw_employer_baseinfo_person_detail")
-          .where("policy_status in (0,1) and sku_charge_type = '2' and policy_id = '228964688451473408'")
+          .where("policy_status in (0,1) and sku_charge_type = '2'")
 
         /**
           * 读取时间维度数据
@@ -66,7 +66,6 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
           */
         val dwolicyCurrInsuredDetail =
             sqlContext.sql("select policy_id,day_id,count from dwdb.dw_policy_curr_insured_detail")
-        .where("policy_id = '228964688451473408'")
 
        /**
         * 根据雇主基础数据人员明细数据，得到应续保日期，实际续保参照日期，应续保参照日期，当前在保的day_id，应续保参照日期的day_id
@@ -127,6 +126,8 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
           })
           .toDF("policy_id","holder_name","policy_start_date","policy_end_date","start_date","end_date","insured_cert_no","should_continue_policy_day_id",
           "should_continue_policy_refer_day_id","should_continue_policy_date","should_continue_policy_refer_date","realy_continue_policy_date","now_date")
+        .where("policy_id = '241619919165329408'")
+
       dwEmployerBaseinfoPersonDetailLeftRes.show()
       /**
         * 将雇主基础数据人员信息作为右表
@@ -145,7 +146,7 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
           "and start_date <= should_continue_policy_refer_date and end_date >= should_continue_policy_refer_date")
 
 
-      dwEmployerBaseinfoPersonDetailRes.show()
+      dwEmployerBaseinfoPersonDetailRes.show(1000)
       /**
         * 注册成临时表
         */
@@ -156,7 +157,7 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
         */
       val resTemp1 = sqlContext.sql("select policy_id as policy_id_slave,count(distinct insured_cert_no_right) as realy_continue_person_count " +
         "from dwEmployerBaseinfoPersonDetailResTemp group by policy_id,holder_name")
-      resTemp1.show()
+
       /**
         * 对雇主基础数据人员左表信息不包含人员信息的数据进行去重，保存唯一保单信息
         */
@@ -220,7 +221,7 @@ object DmEmployerPolicyContinueDetailTest extends SparkUtil with Until with Mysq
         "policy_id",
         "policy_code",
         "insure_company_name",
-        "'' as insure_company_short_name",
+        "insure_company_short_name",
         "ent_id",
         "channel_id",
         "channel_name",

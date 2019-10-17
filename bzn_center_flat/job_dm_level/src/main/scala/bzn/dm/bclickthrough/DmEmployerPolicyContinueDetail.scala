@@ -219,7 +219,7 @@ object DmEmployerPolicyContinueDetail extends SparkUtil with Until with MysqlUnt
         "policy_id",
         "policy_code",
         "insure_company_name",
-        "'' as insure_company_short_name",
+        "insure_company_short_name",
         "ent_id",
         "channel_id",
         "channel_name",

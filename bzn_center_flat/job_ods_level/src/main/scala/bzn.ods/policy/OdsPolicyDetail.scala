@@ -334,7 +334,6 @@ object OdsPolicyDetail extends SparkUtil with Until{
   }
 
   /**
-    * 1.0系统保单明细表
     * @param sqlContext //上下文
     */
   def oneOdsPolicyDetail(sqlContext:HiveContext) :DataFrame ={
@@ -355,10 +354,6 @@ object OdsPolicyDetail extends SparkUtil with Until{
       */
     val odrOrderInfoBznprd: DataFrame = readMysqlTable(sqlContext,"odr_order_info_bznprd")
       .selectExpr("id as master_order_id","order_code","user_id","pay_amount as pay_amount_master","sales_name")
-<<<<<<< HEAD
-=======
-
->>>>>>> fea-lx-add-user-label
 
     /**
       * 读取初投保费表

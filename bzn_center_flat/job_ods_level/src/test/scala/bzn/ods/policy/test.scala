@@ -27,7 +27,8 @@ object test {
     if(i.equals(null)){
       z = Integer.valueOf(0).toInt
     }
-
+    println ("12312313   "+currentTimeL ("2018-10-17 00:00:00").toDouble)  //1.5712416E12
+    println (get_current_date (1.5712416E12.toLong))
     println(i)
 //    println(MD5("132")+"4654")
     println("123")

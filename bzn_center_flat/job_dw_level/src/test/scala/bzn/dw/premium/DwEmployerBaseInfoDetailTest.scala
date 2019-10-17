@@ -48,7 +48,7 @@ import org.apache.spark.sql.hive.HiveContext
     val odsPolicyDetailTemp: DataFrame = sqlContext.sql("select policy_id,policy_code,holder_name,insured_subject,product_code " +
       ",policy_status,policy_start_date,policy_end_date,insure_company_name,channel_id as channelId," +
       "channel_name as channelName,sales_name as salesName from odsdb.ods_policy_detail")
-      .where("policy_status in (1,0,-1)")
+      .where("policy_status in (1,0,-1) and policy_id = '6a892d6880524b4788430a5c2a320f88'")
 
     //读取保险公司表,拿到保险公司简称
     val insuranceCompany = sqlContext.sql("select insurance_company,short_name from odsdb.ods_insurance_company_temp_dimension")
@@ -60,6 +60,7 @@ import org.apache.spark.sql.hive.HiveContext
         "insure_company_name", "short_name", "holder_name", "insured_subject", "product_code",
         "channelId", "channelName",
         "salesName")
+    odsPolicyDetail.show()
 
     //读取企业联系人
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
@@ -93,6 +94,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject", "product_code", "one_level_pdt_cate","ent_id", "ent_name","channel_id","channelId", "channel_name","channelName","salesman","salesName", "team_name","biz_operator")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
 
+    resProductDetail.show()
     /**
       * 读取理赔表
       */
@@ -123,7 +125,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(sku_charge_type) as sku_charge_type ",
         "tech_service_rate", "economic_rate", "commission_discount_rate", "commission_rate","pre_com", "final_payment", "res_pay",
         "getNow() as dw_create_time")
-
+    res.show()
     res
 
 
