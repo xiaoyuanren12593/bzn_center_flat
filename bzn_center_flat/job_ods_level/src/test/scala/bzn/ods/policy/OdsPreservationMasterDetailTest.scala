@@ -7,7 +7,7 @@ import java.util.{Date, Properties}
 import bzn.job.common.Until
 import bzn.ods.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext, UserDefinedFunction}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
@@ -42,9 +42,8 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
   def twoPreservetionMasterDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
     udfUtil(sqlContext)
-    val bPolicyPreservationSubjectPersonMasterBzncenOne =
       sqlContext.sql("select * from sourcedb.b_policy_preservation_subject_person_master_bzncen")
-          .where("id = '243058275917107200'")
+          .where("policy_no = 'P00006641'")
       .selectExpr("id","inc_dec_order_no","policy_no","name","sex as gender","cert_type as insured_cert_type","cert_no","birthday","industry_name as industry","work_type","company_name",
         "company_phone","status","start_date","end_date","create_time","update_time")
       .registerTempTable("bPolicyPreservationSubjectPersonMasterBzncenTemp")
@@ -57,8 +56,6 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       .drop("work_type")
       .withColumnRenamed("work_type_new","work_type")
       .registerTempTable("bPolicyPreservationSubjectPersonMasterBzncenNew")
-
-    val temp = sqlContext.sql("select * from bPolicyPreservationSubjectPersonMasterBzncenNew")
 
     /**
       * 更改在保人被保人状态0在职  1不在职
@@ -84,7 +81,6 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     val value = bPolicyPreservationSubjectPersonMasterBzncenThree.map(r => Row(r: _*))
     val schema = StructType(fields_name.map(fieldName => StructField(fieldName, StringType, nullable = true)))
     val bPolicyPreservationSubjectPersonMasterBzncenFour = sqlContext.createDataFrame(value, schema)
-    val bPolicyPreservationSubjectPersonMasterBzncenFive =
       bPolicyPreservationSubjectPersonMasterBzncenFour
         .drop("work_type")
         .drop("insured_name")
@@ -95,8 +91,6 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       * 读取保全表
       */
     val bPolicyPreservationBzncen = readMysqlTable(sqlContext,"b_policy_preservation_bzncen")
-
-        .where("id = '324233515782770688'")
       .selectExpr("id as preserve_id","inc_dec_order_no","policy_no","preservation_type as preserve_type","inc_revise_sum as add_person_count","dec_revise_sum as del_person_count",
         "create_time as create_time_master")
 
@@ -109,7 +103,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         "start_date","end_date","insured_status","case when insured_cert_type ='1' and start_date is not null then getAgeFromBirthTime(insured_cert_no,start_date) else null end as age",
         "create_time","update_time")
         .registerTempTable("res_temp")
-
+    sqlContext.sql("select * from res_temp").show()
     /**
       * 将每个增减员批单中开始时间选择最大，结束时间选择最小，如果开始时间是null  就把结束时间给它  结束时间亦然
       */
@@ -117,7 +111,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       .map(x=> {
         val preStartDate = x.getAs[String]("start_date")
         val preEndDate = x.getAs[String]("end_date")
-        val one = if (preStartDate == "null" || preStartDate == null) {
+        val one = if (preStartDate == "" || preStartDate == null) {
           if(preEndDate !=null){
             currentTimeL(preEndDate.toString.substring(0, 19)).toDouble
           }else{
@@ -126,7 +120,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         } else {
           currentTimeL(preStartDate.toString.substring(0, 19)).toDouble
         }
-        val two = if (preEndDate == "null" || preEndDate == null) {
+        val two = if (preEndDate == "" || preEndDate == null) {
           if(preStartDate != null){
             currentTimeL(preStartDate.toString.substring(0, 19)).toDouble
           }else{
@@ -159,13 +153,15 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       })
       .toDF("temp_inc_dec_order_no", "pre_start_date", "pre_end_date")
 
+    resTemp.show()
+
     val bPolicyPreserveTemp = bPolicyPreservationBzncen.selectExpr("inc_dec_order_no","preserve_type","add_person_count","del_person_count","create_time_master")
     val bPolicyPreserveTempRes = resTemp.join(bPolicyPreserveTemp,resTemp("temp_inc_dec_order_no")===bPolicyPreserveTemp("inc_dec_order_no"))
       .map(x => {
         val tempIncDecOrderNo = x.getAs[String]("temp_inc_dec_order_no")
-        var preStartDate = x.getAs[String]("pre_start_date")
+        val preStartDate = x.getAs[String]("pre_start_date")
         var preStartDateRes = ""
-        var preEndDate =  x.getAs[String]("pre_end_date")
+        val preEndDate =  x.getAs[String]("pre_end_date")
         var preEndDateRes =  ""
         val addPersonCount = x.getAs[Int]("add_person_count")
         val delPersonCount = x.getAs[Int]("del_person_count")
@@ -174,16 +170,21 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
         if(preStartDate != null && preStartDate.length >18){
           preStartDateRes =  preStartDate
-          preStartDateRes
         }else{
           preStartDateRes = null
         }
+
+        if(preEndDate != null && preEndDate.length >18){
+          preEndDateRes =  preEndDate
+        }else{
+          preEndDateRes = null
+        }
+
         // 生效日期：如果是纯减员  结束时间+1 去前十位  如果是增减员就得到开始时间的前十位，如果是退保使用时 创建时间 得到生效日期
         if(addPersonCount == 0 && delPersonCount > 0){
           preStartDateRes = null
           if(preEndDate!=null && preEndDate.length >18){
             preEndDateRes = dateAddOneDay(preEndDate)
-            preEndDateRes
           }else{
             preEndDateRes = null
           }
@@ -212,7 +213,6 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         "clean(company_phone) as company_phone","case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "cast(pre_start_date as timestamp) as pre_start_date","cast(pre_end_date as timestamp) as pre_end_date","cast(clean(insured_status) as int) as insured_status",
         "age","cast(getDate(create_time) as timestamp) as create_time","cast(getDate(update_time) as timestamp) as update_time","getNow() as dw_create_time")
-    res.show()
     println("2.0")
     res.printSchema()
     res
@@ -220,9 +220,9 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
   /**
     * 1.0 保全人员清单明细表
-    * @param sqlContext
+    * @param sqlContext 上下文
     */
-  def onePreservetionMasterDetail(sqlContext:HiveContext) ={
+  def onePreservetionMasterDetail(sqlContext:HiveContext) :DataFrame = {
     import sqlContext.implicits._
     udfUtil(sqlContext)
     /**
@@ -253,7 +253,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     val value = plcPolicyPreserveInsuredBznprdThree.map(r => Row(r: _*))
     val schema = StructType(fields_name.map(fieldName => StructField(fieldName, StringType, nullable = true)))
     val plcPolicyPreserveInsuredBznprdFour = sqlContext.createDataFrame(value, schema)
-    val plcPolicyPreserveBznprdFive =
+
       plcPolicyPreserveInsuredBznprdFour
         .withColumn("name", plcPolicyPreserveInsuredBznprdFour("name_new"))
         .drop("work_type")
@@ -265,25 +265,25 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     /**
       * 人员明细的最大开始时间和最小结束时间
       */
-    val maxStartDateMinEndDate = sqlContext.sql("select preserve_id,join_date,left_date from plcPolicyPreserveBznprdFiveTemp")
+    val maxStartDateMinEndDate = sqlContext.sql("select preserve_id as preserve_id_insured,join_date,left_date from plcPolicyPreserveBznprdFiveTemp")
       .map(x => {
         val preserveIdInsured = x.getAs[String]("preserve_id_insured")
-        var joinDate = x.getAs[Timestamp]("join_date")
-        var leftDate = x.getAs[Timestamp]("left_date")
+        val joinDate = x.getAs[String]("join_date")
+        val leftDate = x.getAs[String]("left_date")
         var joinDateRes = "0"
         if(joinDate != null){
-          joinDateRes = currentTimeL(joinDate.toString.substring(0,19)).toString
+          joinDateRes = currentTimeL(joinDate.substring(0,19)).toString
         }else{
           if(leftDate != null){
-            joinDateRes = currentTimeL(leftDate.toString.substring(0,19)).toString
+            joinDateRes = currentTimeL(leftDate.substring(0,19)).toString
           }
         }
         var leftDateRes = "0"
         if(leftDate != null){
-          leftDateRes = currentTimeL(leftDate.toString.substring(0,19)).toString
+          leftDateRes = currentTimeL(leftDate.substring(0,19)).toString
         }else{
           if(joinDate != null){
-            leftDateRes = currentTimeL(joinDate.toString.substring(0,19)).toString
+            leftDateRes = currentTimeL(joinDate.substring(0,19)).toString
           }
         }
         (preserveIdInsured,(joinDateRes,leftDateRes))
@@ -297,9 +297,9 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
         //        get_current_date
         val joinDate: List[String] = x._2._1.split("\u0001").distinct.toList.sorted.reverse//降序
         var joinDateRes = ""
-        if(joinDate.size > 0 && joinDate(0) !="0"){
-          joinDateRes = get_current_date(joinDate(0).toLong)
-        }else if (joinDate.size == 0){
+        if(joinDate.nonEmpty && joinDate.head !="0"){
+          joinDateRes = get_current_date(joinDate.head.toLong)
+        }else if (joinDate.isEmpty){
           joinDateRes = null
         }else{
           joinDateRes = null
@@ -307,9 +307,9 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
         val leftDate: List[String] = x._2._2.split("\u0001").distinct.toList.sorted//降序
         var leftDateRes = ""
-        if(leftDate.size > 0 && leftDate(0) !="0"){
-          leftDateRes = get_current_date(leftDate(0).toLong)
-        }else if (leftDate.size == 0){
+        if(leftDate.nonEmpty && leftDate.head!="0"){
+          leftDateRes = get_current_date(leftDate.head.toLong)
+        }else if (leftDate.isEmpty){
           leftDateRes = null
         }else{
           leftDateRes = null
@@ -329,9 +329,9 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
       .map(x=> {
         val preserveId = x.getAs[String]("id")
         val preserveType = x.getAs[Int]("preserve_type")
-        var addPersonCount = x.getAs[Int]("add_person_count")
-        var delPersonCount = x.getAs[Int]("del_person_count")
-        var startDate = x.getAs[String]("joinDateRes")
+        val addPersonCount = x.getAs[Int]("add_person_count")
+        val delPersonCount = x.getAs[Int]("del_person_count")
+        val startDate = x.getAs[String]("joinDateRes")
         var endDate = x.getAs[String]("leftDateRes")
         /**
           * 纯减员情况下  结束时间 +1
@@ -360,10 +360,10 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
   /**
     * hive 自定义 udf函数
-    * @param sqlContext
+    * @param sqlContext 上下文
     * @return
     */
-  def udfUtil(sqlContext:HiveContext) ={
+  def udfUtil(sqlContext:HiveContext): UserDefinedFunction = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getDate", (time:String) => timeSubstring(time))
@@ -374,7 +374,7 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
 
     sqlContext.udf.register("getAgeFromBirthTime", (cert_no: String, end: String) => getAgeFromBirthTime(cert_no, end))
@@ -382,12 +382,12 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
   /**
     * 获取 Mysql 表的数据
-    * @param sqlContext
+    * @param sqlContext 上下文
     * @param tableName 读取Mysql表的名字
     * @return 返回 Mysql 表的 DataFrame
     */
   def readMysqlTable(sqlContext: SQLContext, tableName: String): DataFrame = {
-    val properties: Properties = getProPerties()
+    val properties: Properties = getProperties
     sqlContext
       .read
       .format("jdbc")
@@ -405,12 +405,10 @@ object OdsPreservationMasterDetailTest extends SparkUtil with Until{
 
   /**
     * 获取配置文件
-    *
-    * @return
     */
-  def getProPerties() = {
+  def getProperties : Properties = {
     val lines_source = Source.fromURL(getClass.getResource("/config_scala.properties")).getLines.toSeq
-    var properties: Properties = new Properties()
+    val properties: Properties = new Properties()
     for (elem <- lines_source) {
       val split = elem.split("==")
       val key = split(0)

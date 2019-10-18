@@ -132,7 +132,8 @@ object DmEmployerPolicyContinueDetail extends SparkUtil with Until with MysqlUnt
       /**
         * 将雇主基础数据人员信息作为右表
         */
-      val dwEmployerBaseinfoPersonDetailRigthRes = dwEmployerBaseinfoPersonDetail.selectExpr("holder_name as holder_name_right","start_date as start_date_right",
+      val dwEmployerBaseinfoPersonDetailRigthRes =
+        dwEmployerBaseinfoPersonDetail.selectExpr("holder_name as holder_name_right","policy_start_date as policy_start_date_right","start_date as start_date_right",
         "end_date as end_date_right","insured_cert_no as insured_cert_no_right")
 
       /**
@@ -141,9 +142,10 @@ object DmEmployerPolicyContinueDetail extends SparkUtil with Until with MysqlUnt
       val dwEmployerBaseinfoPersonDetailRes = dwEmployerBaseinfoPersonDetailLeftRes
         .join(dwEmployerBaseinfoPersonDetailRigthRes,'holder_name==='holder_name_right and 'insured_cert_no==='insured_cert_no_right,"leftouter")
         .selectExpr("policy_id","holder_name","policy_start_date","policy_end_date","start_date","end_date","insured_cert_no",
-          "should_continue_policy_date","should_continue_policy_refer_date","realy_continue_policy_date","holder_name_right","start_date_right","end_date_right","insured_cert_no_right")
+          "should_continue_policy_date","should_continue_policy_refer_date","realy_continue_policy_date","holder_name_right",
+          "policy_start_date_right","policy_start_date_right","start_date_right","end_date_right","insured_cert_no_right")
         .where("start_date_right <= realy_continue_policy_date and end_date_right >= realy_continue_policy_date " +
-          "and start_date <= should_continue_policy_refer_date and end_date >= should_continue_policy_refer_date")
+          "and start_date <= should_continue_policy_refer_date and end_date >= should_continue_policy_refer_date and policy_start_date_right >= policy_end_date ")
 
       /**
         * 注册成临时表
