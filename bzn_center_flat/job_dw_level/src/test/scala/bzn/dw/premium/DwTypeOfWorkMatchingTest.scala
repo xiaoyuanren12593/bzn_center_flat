@@ -222,9 +222,9 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
     val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
       "holder_name",
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-      "insured_subject","sum_premium", "insure_company_name", "short_name",
+      "insured_subject","sum_premium", "insure_company_name", "short_name as insure_company_short_name",
       "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
-      "bzn_work_name","work_name","bzn_work_risk","cast(gs_work_risk as string) as gs_work_risk","recognition", "whether_recognition","plan_recognition","gs_plan_recognition")
+      "bzn_work_name","work_name","bzn_work_risk","cast(gs_work_risk as string) as gs_work_risk","recognition", "whether_recognition","plan_recognition","gs_plan_recognition","getNow() as dw_create_time")
     res
 
   }

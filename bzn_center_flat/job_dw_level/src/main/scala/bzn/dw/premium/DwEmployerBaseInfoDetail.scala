@@ -115,7 +115,7 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
     val res = insuredAndClaimRes.join(odsPolicyProductPlanDetail, insuredAndClaimRes("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"), "leftouter")
       .selectExpr("getUUID() as id","clean(policy_id) as policy_id", "clean(policy_code) as policy_code","policy_start_date",
         "policy_end_date", " clean(holder_name) as holder_name", "clean(insured_subject) as insured_subject","clean(insure_company_name) as insure_company_name",
-        "clean(short_name) as short_name",
+        "clean(short_name) as insure_company_short_name",
         "clean(product_code) as product_code",
         "clean(one_level_pdt_cate) as one_level_pdt_cate", "clean(ent_id) as ent_id ", "clean(ent_name) as ent_name",
         "clean(case when channel_id is null then channelId else channel_id end)as channel_id ", "clean(case when channel_name is null then channelName else channel_name end)as channel_name",

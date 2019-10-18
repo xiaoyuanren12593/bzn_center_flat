@@ -53,9 +53,9 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 读取保单表
 
-    val odsPolicyDetail = hqlContext.sql("select product_code ,policy_code,sum_premium,holder_name,insure_company_name," +
-      "channel_name,policy_create_time,policy_start_date,policy_end_date,order_date,policy_type,num_of_preson_first_policy from odsdb.ods_policy_detail").
-      where("(policy_create_time is not null or policy_start_date is not null) and insure_company_name is not null")
+    val odsPolicyDetail = hqlContext.sql("select product_code ,policy_code,sum_premium,trim(holder_name)as holder_name,insure_company_name," +
+      "channel_name,policy_create_time,policy_start_date,policy_end_date,order_date,policy_type,num_of_preson_first_policy,policy_status from odsdb.ods_policy_detail").
+      where("(policy_create_time is not null or policy_start_date is not null) and insure_company_name is not null and policy_status in (0,1,-1)")
       .map(x => {
         val policyCode = x.getAs[String]("policy_code")
         val insureCode = x.getAs[String]("product_code")
@@ -119,7 +119,8 @@ import org.apache.spark.sql.hive.HiveContext
 
     //体育渠道表
 
-    val odsSportsCustomers = hqlContext.sql("select name,customer_type,sales_name,source from odsdb.ods_sports_customers_dimension")
+    val odsSportsCustomers = hqlContext.sql("select name,customer_type,sales_name,source,type from odsdb.ods_sports_customers_dimension")
+      .where("type = 1")
       .map(x => {
         val name = x.getAs[String]("name")  //客户名称
         var customerType = x.getAs[String]("customer_type") //客户类型
