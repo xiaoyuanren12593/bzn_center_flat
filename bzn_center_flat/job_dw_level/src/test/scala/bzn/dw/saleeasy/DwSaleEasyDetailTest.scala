@@ -48,9 +48,9 @@ import org.apache.spark.{SparkConf, SparkContext}
 
       // 读取保单表
 
-      val odsPolicyDetail = hqlContext.sql("select product_code ,policy_code,sum_premium,holder_name,insure_company_name," +
-        "channel_name,policy_create_time,policy_start_date,policy_end_date,order_date,policy_type,num_of_preson_first_policy from odsdb.ods_policy_detail").
-        where("(policy_create_time is not null or policy_start_date is not null) and insure_company_name is not null")
+      val odsPolicyDetail = hqlContext.sql("select product_code ,policy_code,sum_premium,trim(holder_name)as holder_name,insure_company_name," +
+        "channel_name,policy_create_time,policy_start_date,policy_end_date,order_date,policy_type,num_of_preson_first_policy,policy_status from odsdb.ods_policy_detail").
+        where("(policy_create_time is not null or policy_start_date is not null) and insure_company_name is not null and policy_status in (0,1,-1)")
         .map(x => {
           val policyCode = x.getAs[String]("policy_code")
           val insureCode = x.getAs[String]("product_code")
@@ -107,14 +107,17 @@ import org.apache.spark.{SparkConf, SparkContext}
         .toDF("policy_code", "insure_code", "premium", "holder_name", "insure_company_name", "channel_name", "policy_type",
           "start_date", "end_date", "order_date", "num_pople")
 
-      odsPolicyDetail.show(10)
+      val res1 = odsPolicyDetail.selectExpr("policy_code")
+        .where("policy_code = 'AHAZK79E4C19PAAA1176'")
+
       //读取产品表
       val odsProductDetail = hqlContext.sql("select product_code ,one_level_pdt_cate,product_name from odsdb.ods_product_detail")
 
 
      //体育渠道表
 
-      val odsSportsCustomers = hqlContext.sql("select name,customer_type,sales_name,source from odsdb.ods_sports_customers_dimension")
+      val odsSportsCustomers = hqlContext.sql("select name,customer_type,sales_name,source,type from odsdb.ods_sports_customers_dimension")
+        .where("type = 1")
         .map(x => {
           val name = x.getAs[String]("name")  //客户名称
           var customerType = x.getAs[String]("customer_type") //客户类型
@@ -148,6 +151,7 @@ import org.apache.spark.{SparkConf, SparkContext}
         .selectExpr("getUUID() as id", "policy_code", "cast(premium as decimal(14,4))", "holder_name", "insure_company_name",
           "channel_name", "start_date as policy_start_date", "end_date as policy_end_date", "order_date", "product_name", "policy_type", "source", "customerType", "sales as sales_name",
           "num_pople as num_of_preson", "getNow() as dw_create_time")
+
       res.printSchema()
 
 

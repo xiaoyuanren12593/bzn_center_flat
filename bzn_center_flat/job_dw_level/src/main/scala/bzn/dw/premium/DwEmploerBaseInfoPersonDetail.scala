@@ -173,7 +173,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(case when channel_id is null then channelId else channel_id end) as channel_id ",
         "clean(case when channel_name is null then channelName else channel_name end) as channel_name",
         "clean(insure_company_name) as insure_company_name ",
-        "clean(short_name) as short_name",
+        "clean(short_name) as insure_company_short_name",
         "clean(case when salesman is null then salesName else salesman end) as sale_name",
         "clean(team_name) as team_name",
         "clean(biz_operator) as biz_operator",
