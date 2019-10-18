@@ -159,7 +159,12 @@ object OdsPreservationDetail extends SparkUtil with Until{
       val preserveType = x.getAs[Int]("preserve_type")
       val createTime = x.getAs[java.sql.Timestamp]("create_time")
 
-      var preserveEffectDate = ""
+      var preserveEffectDate = if(preStartDate != null){
+        preStartDate
+      }else{
+        null
+      }
+
       // 生效日期：如果是纯减员  结束时间+1 去前十位  如果是增减员就得到开始时间的前十位，如果是退保使用时effect_date得到生效日期
       if(addPersonCount == 0 && delPersonCount > 0){
         if(preEndDate!=null && preEndDate.length >18){
