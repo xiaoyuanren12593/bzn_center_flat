@@ -88,6 +88,7 @@ object DwPolicyInsuredDayIdDetailTest extends SparkUtil with Until{
       */
     val policyAndProduct = policyAndProductOne.join(cachePolicy,policyAndProductOne("policy_id")===cachePolicy("policy_id_cache"))
       .selectExpr("policy_id","policy_code","day_id")
+
     /**
       * 读取在保人明细表
       */
