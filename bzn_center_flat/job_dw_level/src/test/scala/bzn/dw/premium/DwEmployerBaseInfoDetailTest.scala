@@ -48,7 +48,7 @@ import org.apache.spark.sql.hive.HiveContext
     val odsPolicyDetailTemp: DataFrame = sqlContext.sql("select policy_id,policy_code,holder_name,insured_subject,product_code " +
       ",policy_status,policy_start_date,policy_end_date,insure_company_name,channel_id as channelId," +
       "channel_name as channelName,sales_name as salesName from odsdb.ods_policy_detail")
-      .where("policy_status in (1,0,-1) and policy_id = '6a892d6880524b4788430a5c2a320f88'")
+      .where("policy_status in (1,0,-1) and policy_id = '363715647118643200'")
 
     //读取保险公司表,拿到保险公司简称
     val insuranceCompany = sqlContext.sql("select insurance_company,short_name from odsdb.ods_insurance_company_temp_dimension")
@@ -60,7 +60,6 @@ import org.apache.spark.sql.hive.HiveContext
         "insure_company_name", "short_name", "holder_name", "insured_subject", "product_code",
         "channelId", "channelName",
         "salesName")
-    odsPolicyDetail.show()
 
     //读取企业联系人
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
@@ -85,6 +84,8 @@ import org.apache.spark.sql.hive.HiveContext
     // 将关联结果与保单明细表关联
     val resDetail = odsPolicyDetail.join(enterperiseAndSaleRes, odsPolicyDetail("holder_name") === enterperiseAndSaleRes("ent_name"), "leftouter")
       .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "insure_company_name", "short_name","holder_name", "insured_subject", "product_code","ent_id", "ent_name", "channel_id","channelId", "channel_name","channelName","salesman","salesName" ,"team_name","biz_operator")
+
+    resDetail.show()
 
     //读取产品表
     val odsProductDetail = sqlContext.sql("select product_code as product_code_temp,product_name,one_level_pdt_cate from odsdb.ods_product_detail")
