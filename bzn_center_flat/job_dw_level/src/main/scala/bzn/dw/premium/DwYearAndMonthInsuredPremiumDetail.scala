@@ -92,8 +92,10 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
           "insured_start_date","insured_end_date","sku_charge_type","sku_price")
 
     val odsPolicyInsuredPlanProductRes = odsPolicyInsuredPlanRes.join(odsProductDetail,odsPolicyInsuredPlanRes("product_code_plan")===odsProductDetail("product_code"))
-      .selectExpr("policy_id","policy_code","insured_cert_no","policy_start_date","policy_end_date","holder_name","insured_id","insured_policy_status",
+      .selectExpr("getUUID() as id","policy_id","policy_code","insured_cert_no","policy_start_date","policy_end_date","holder_name","insured_id","insured_policy_status",
         "insured_start_date","insured_end_date","sku_charge_type","sku_price")
+      .repartition(200)
+      .cache()
 
     val yearData: DataFrame = yearPremium(sqlContext,odsPolicyInsuredPlanProductRes)
     val monthData: DataFrame = monthPremium(sqlContext,odsPolicyInsuredPlanProductRes)
@@ -102,7 +104,6 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
       .selectExpr("getUUID() as id","policy_id","cast(sku_day_price as decimal(14,4))","insured_id","insured_cert_no","insured_start_date","insured_end_date",
         "insure_policy_status","day_id","cast(sku_price as decimal(14,4)) as sku_price","holder_name","getNow() as dw_create_time")
 
-    res.printSchema()
     res
   }
 
@@ -157,7 +158,7 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
       })
     }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
       "day_id","sku_price","holder_name")
-    res.printSchema()
+
     res
   }
 
@@ -211,7 +212,7 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
       })
     }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
       "day_id","sku_price","holder_name")
-    res.printSchema()
+
     res
   }
 }

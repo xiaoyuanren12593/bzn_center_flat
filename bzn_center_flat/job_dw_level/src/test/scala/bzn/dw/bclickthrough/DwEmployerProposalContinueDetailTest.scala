@@ -59,7 +59,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
     val odsPolicyDetail =
       sqlContext.sql ("select policy_id,policy_code,product_code,policy_status,policy_start_date,policy_end_date,insure_company_name," +
         "holder_name,preserve_policy_no,datediff(policy_end_date,policy_start_date) as diffDate from odsdb.ods_policy_detail")
-        .where ("policy_status in (1,0,-1)")
+        .where ("policy_status in (1,0,-1) and policy_code = 'HL1100000492001709'")
         .cache ()
 
     /**
@@ -91,7 +91,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
       */
     val odsPreservationDetail =
       sqlContext.sql ("select policy_id,policy_code,preserve_id,preserve_start_date,preserve_end_date,preserve_status,preserve_type from odsdb.ods_preservation_detail")
-        .where("preserve_status = 1 and preserve_type = 2 and (preserve_end_date is not null or preserve_start_date is not null)")
+        .where("preserve_status = 1 and preserve_type = 2 and (preserve_end_date is not null or preserve_start_date is not null) and policy_id = '256723669374603266'")
 
     /***
       * 保单和产品进行关联的到结果
@@ -280,6 +280,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
     val policyProductPlanTempRes = policyProductPlanRes
       .where ("sku_charge_type = '1' and policy_start_date is not null and policy_end_date is not null")
       .where ("insure_company_name like '%众安%'")
+    policyProductPlanTempRes.show()
 
     /**
       * 结果表中对开始和结束时间取出每个月的开始和结束时间，并且得到每个月的月份参照
@@ -365,6 +366,8 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
     })
       .toDF("policy_id_salve", "now_date","effect_month","month_res","should_continue_policy_date", "should_continue_policy_date_is","policy_start_date_every", "policy_end_date_every")
 
+    policyProductPlanEveMonthTempRes.show(1000)
+
     val policyProductPlanEveMonthRes = policyProductPlanTempRes.join(policyProductPlanEveMonthTempRes,policyProductPlanTempRes("policy_id")===policyProductPlanEveMonthTempRes("policy_id_salve"))
       .selectExpr(
         "policy_id",
@@ -387,10 +390,12 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "month_res"
       )
 
+    policyProductPlanEveMonthRes.show(1000)
+
     /**
       * 批单的生效时间
       */
-    val odsPreservationDetailRes = odsPreservationDetail.selectExpr("policy_id","preserve_start_date","preserve_end_date")
+     odsPreservationDetail.selectExpr("policy_id","preserve_start_date","preserve_end_date")
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         var preserveStartDate = x.getAs[java.sql.Timestamp]("preserve_start_date")
@@ -405,6 +410,12 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         (policyId,monthRes,realyContinuePolicyDate,preserveStartDate,preserveEndDate)
       })
       .toDF("policy_id", "month_res", "realy_continue_policy_date","preserve_start_date", "preserve_end_date")
+      .registerTempTable("odsPreservationDetailRes")
+
+    val odsPreservationDetailRes = sqlContext.sql("select policy_id,month_res,max(realy_continue_policy_date) as realy_continue_policy_date," +
+      "max(preserve_start_date) as preserve_start_date,min(preserve_end_date) as preserve_end_date from odsPreservationDetailRes group by policy_id,month_res")
+
+    odsPreservationDetailRes.show()
     val res = policyProductPlanEveMonthRes.join(odsPreservationDetailRes,Seq("policy_id","month_res"),"leftouter")
       .selectExpr(
         "policy_id",
@@ -427,6 +438,7 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
         "effect_month",
         "month_res"
       )
+    res.show()
     res
   }
 
@@ -439,13 +451,14 @@ object DwEmployerProposalContinueDetailTest extends SparkUtil with Until{
     */
   def monthContinueProposalDetail(sqlContext: HiveContext,odsPolicyDetail: DataFrame,policyProductPlanRes:DataFrame) = {
     import sqlContext.implicits._
+
     /**
       * 临时表
       */
     val continueTemp =
       odsPolicyDetail.selectExpr ("policy_id as continue_policy_id", "preserve_policy_no as continue_policy_code",
         "policy_start_date as continue_policy_start_date", "policy_end_date as continue_policy_end_date")
-        .where("continue_policy_code is not null")
+        .where("continue_policy_code is not null ")
 
     val policyProductPlanTempRes = policyProductPlanRes
       .where ("sku_charge_type = '1'")

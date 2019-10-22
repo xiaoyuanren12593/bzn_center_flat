@@ -37,7 +37,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
     * 续投保保单统计
     * @param sqlContext //上下文
     */
-  def continueProposalDetail(sqlContext:HiveContext) = {
+  def continueProposalDetail(sqlContext:HiveContext): DataFrame = {
     import sqlContext.implicits._
     sqlContext.udf.register ("getUUID", () => (java.util.UUID.randomUUID () + "").replace ("-", ""))
     sqlContext.udf.register ("getNow", () => {
@@ -276,7 +276,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
     * @param odsPolicyDetail 保單明細表
     * @param odsPreservationDetail 保全明細表
     */
-  def monthContinuePreserveDetail(sqlContext: HiveContext,odsPolicyDetail: DataFrame,odsPreservationDetail:DataFrame,policyProductPlanRes:DataFrame) = {
+  def monthContinuePreserveDetail(sqlContext: HiveContext,odsPolicyDetail: DataFrame,odsPreservationDetail:DataFrame,policyProductPlanRes:DataFrame): DataFrame = {
     import sqlContext.implicits._
     /**
       * 临时表
@@ -394,7 +394,7 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
     /**
       * 批单的生效时间
       */
-    val odsPreservationDetailRes = odsPreservationDetail.selectExpr("policy_id","preserve_start_date","preserve_end_date")
+    odsPreservationDetail.selectExpr("policy_id","preserve_start_date","preserve_end_date")
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         var preserveStartDate = x.getAs[java.sql.Timestamp]("preserve_start_date")
@@ -409,6 +409,11 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
         (policyId,monthRes,realyContinuePolicyDate,preserveStartDate,preserveEndDate)
       })
       .toDF("policy_id", "month_res", "realy_continue_policy_date","preserve_start_date", "preserve_end_date")
+      .registerTempTable("odsPreservationDetailRes")
+
+    val odsPreservationDetailRes = sqlContext.sql("select policy_id,month_res,max(realy_continue_policy_date) as realy_continue_policy_date," +
+      "max(preserve_start_date) as preserve_start_date,min(preserve_end_date) as preserve_end_date from odsPreservationDetailRes group by policy_id,month_res")
+
     val res = policyProductPlanEveMonthRes.join(odsPreservationDetailRes,Seq("policy_id","month_res"),"leftouter")
       .selectExpr(
         "policy_id",
@@ -439,9 +444,8 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
     * @param sqlContext 上下文
     * @param odsPolicyDetail 保单明细数据
     * @param policyProductPlanRes 结果表
-    * @return
     */
-  def monthContinueProposalDetail(sqlContext: HiveContext,odsPolicyDetail: DataFrame,policyProductPlanRes:DataFrame) = {
+  def monthContinueProposalDetail(sqlContext: HiveContext,odsPolicyDetail: DataFrame,policyProductPlanRes:DataFrame): DataFrame = {
     import sqlContext.implicits._
     /**
       * 临时表
@@ -559,9 +563,9 @@ object DwEmployerProposalContinueDetail extends SparkUtil with Until{
 
   /**
     * 读取公共信息
-    * @param sqlContext
+    * @param sqlContext 上下文
     */
-  def publicInfo(sqlContext:HiveContext) = {
+  def publicInfo(sqlContext:HiveContext): DataFrame = {
     /**
       * 读取企业信息
       */

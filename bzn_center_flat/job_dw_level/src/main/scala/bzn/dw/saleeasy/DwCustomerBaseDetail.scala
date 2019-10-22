@@ -91,9 +91,7 @@ import org.apache.spark.sql.hive.HiveContext
     val policyAndSale  = PolicyTemp.join(saleAndTeamRes,PolicyTemp("holder_name")===saleAndTeamRes("entName"),"leftouter")
       .selectExpr("entId","entName","holder_name","channel_id", "channel_name", "belongs_regional","salesman", "team_name", "biz_operator", "consumer_category","business_source","start_date")
 
-
     //读取城市码表
-
     val odsArea = hqlContext.sql("select code,province, short_name from odsdb.ods_area_info_dimension")
     val dataFrame = policyAndSale.join(odsArea, policyAndSale("belongs_regional") === odsArea("code"), "leftouter")
       .selectExpr( "holder_name as holder", "channel_id", "channel_name","entId","entName", "province", "short_name",

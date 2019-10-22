@@ -110,8 +110,6 @@ import org.apache.spark.sql.hive.HiveContext
         "insured_mobile", "start_date", "end_date",
         "product_code", "policy_status",
         "one_level_pdt_cate", "ent_id", "ent_name",
-
-
         "channel_id", "channelId", "channel_name", "channelName", "salesman", "salesName", "insure_company_name", "short_name", "team_name", "biz_operator")
 
     val res1 = resProductAndInsuredDetail.selectExpr("policy_id", "insured_cert_no", "start_date", "end_date")

@@ -88,8 +88,10 @@ object DwYearAndMonthInsuredPremiumDetailTest extends SparkUtil with Until{
         "insured_start_date","insured_end_date","sku_charge_type","sku_price")
 
     val odsPolicyInsuredPlanProductRes = odsPolicyInsuredPlanRes.join(odsProductDetail,odsPolicyInsuredPlanRes("product_code_plan")===odsProductDetail("product_code"))
-      .selectExpr("policy_id","policy_code","insured_cert_no","policy_start_date","policy_end_date","holder_name","insured_id","insured_policy_status",
+      .selectExpr("getUUID() as id","policy_id","policy_code","insured_cert_no","policy_start_date","policy_end_date","holder_name","insured_id","insured_policy_status",
         "insured_start_date","insured_end_date","sku_charge_type","sku_price")
+      .repartition(200)
+      .cache()
 
     val yearData: DataFrame = yearPremium(sqlContext,odsPolicyInsuredPlanProductRes)
     val monthData: DataFrame = monthPremium(sqlContext,odsPolicyInsuredPlanProductRes)
