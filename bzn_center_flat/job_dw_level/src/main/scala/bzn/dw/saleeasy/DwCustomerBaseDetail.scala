@@ -1,10 +1,11 @@
 package bzn.dw.saleeasy
 
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dw.util.SparkUtil
-import bzn.job.common.Until
+import bzn.job.common.{MysqlUntil, Until}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
@@ -13,7 +14,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/10/21
 * @Describe:
-*/ object DwCustomerBaseDetail  extends SparkUtil with  Until{
+*/ object DwCustomerBaseDetail  extends SparkUtil with  Until with  MysqlUntil{
 
   /**
     *  获取配置信息
@@ -30,6 +31,9 @@ import org.apache.spark.sql.hive.HiveContext
 
     hiveContext.sql("truncate table dwdb.dw_customer_base_detail")
     res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_customer_base_detail")
+
+    saveASMysqlTable(res,"dm_saleseasy_customer_base_detail",SaveMode.Overwrite,
+      "mysql.username.103","mysql.password.103","mysql.driver","mysql_url.103.dmdb")
     sc.stop ()
 
   }
@@ -69,20 +73,40 @@ import org.apache.spark.sql.hive.HiveContext
         "belongs_regional", "two_level_pdt_cate","policy_create_time","policy_update_time")
       .where("two_level_pdt_cate in ('外包雇主','骑士保','大货车') and policy_status in (0,1,-1)")
 
+
     val  odsPolicyDetailRes = policyAndproduct.selectExpr("holder_name","belongs_regional","policy_start_date","insure_company_name")
+    val  odsPolicyDetail = policyAndproduct.selectExpr("holder_name","belongs_regional","policy_start_date","insure_company_name")
+      .map(x=>{
+        val holderName = x.getAs[String]("holder_name")
+        val belongsRegional = x.getAs[String]("belongs_regional")
+        val policyStartDate = x.getAs[Timestamp]("policy_start_date")
 
-    //注册临时表,把时间最大的城市拿上
-    odsPolicyDetailRes.registerTempTable("policyAndSaleRes")
+        ((holderName),(belongsRegional,policyStartDate))
+      }).reduceByKey((x,y)=>{
+      val res = if(x._1 == null){
+        y
+      } else if(y._1== null) {
+        x
+      } else {
+        if(x._2.compareTo(y._2) >0){
+          x
+        }else{
+          y
+        }
+      }
+      res
+    }).map(x=>{
+      (x._1,x._2._1,x._2._2)
+    }).toDF("holderName","belongsRegional","policyStartDate")
+    
+    val odsPolicyDetailSalve = odsPolicyDetail.join(odsPolicyDetailRes, odsPolicyDetail("holderName") === odsPolicyDetailRes("holder_name"), "leftouter")
+      .selectExpr("holderName", "belongsRegional", "policyStartDate", "insure_company_name")
 
-    val odsPolicyDetail = hqlContext.sql("SELECT first_value(belongs_regional) OVER(PARTITION BY holder_name ORDER BY policy_start_date DESC) as belongs_regional,holder_name,policy_start_date,insure_company_name from policyAndSaleRes")
+    odsPolicyDetailSalve.registerTempTable("policyAndSaleTemp")
 
+    val PolicyTemp = hqlContext.sql("select holderName as holder_name ,belongsRegional as belongs_regional," +
+      "min(policyStartDate) as start_date,insure_company_name from policyAndSaleTemp group by holderName,belongsRegional,insure_company_name")
 
-    //注册临时表
-
-    odsPolicyDetail.registerTempTable("policyAndSaleTemp")
-
-    val PolicyTemp = hqlContext.sql("select holder_name,belongs_regional," +
-      "min(policy_start_date) as start_date,insure_company_name from policyAndSaleTemp group by holder_name,belongs_regional,insure_company_name")
 
     //读取客户归属信息表
     val odsEntGuzhuSalesman = hqlContext.sql("select channel_id,channel_name,ent_id as entId," +
@@ -356,45 +380,45 @@ import org.apache.spark.sql.hive.HiveContext
 
 
     resTemp11.registerTempTable("finalResTemp")
-    val resTemp12 = hqlContext.sql(" select getUUID() as id,entId as ent_id,holderName, entName, channel_id, channel_name," +
+    val resTemp12 = hqlContext.sql(" select getUUID() as id,entId as ent_id,holderName, entName, channel_id, case when channel_name  ='直客' then holderName else channel_name end as channel_name," +
       "substring(channel_name,1,5) as channel_short_name, consumer_category,business_source, insure_company_name,province ," +
-      "short_name,salesman,team_name,biz_operator, start_date,curr_insured, counts, channel_curr_insured, premium, res_pay, " +
-      "round(cast(res_pay as DOUBLE)/cast(premium  as DOUBLE),5) as loss_ration ,curr_insured_counts, case_no_counts," +
-      "round(cast(case_no_counts as DOUBLE)/cast(curr_insured_counts *365 as DOUBLE),5) as risk_ration ,disable_level_counts, " +
-      "die_case_counts, final_case_counts ,getNow() as create_time,getNow() as update_time from finalResTemp")
+      "case when short_name ='市辖区' then province else short_name end as city,salesman,team_name,biz_operator, start_date,cast(curr_insured as int) as curr_insured, counts, cast(channel_curr_insured as int) as channel_curr_insured, premium, res_pay, " +
+      "round(cast(res_pay as DOUBLE)/cast(premium  as DOUBLE),5) as loss_ration ,cast(curr_insured_counts as int) as curr_insured_counts, cast(case_no_counts as int) as case_no_counts," +
+      "round(cast(case_no_counts*365 as DOUBLE)/cast((curr_insured_counts) as DOUBLE),5) as risk_ration,cast(disable_level_counts as int) as disable_level_counts, " +
+      "cast(die_case_counts as int) as die_case_counts, cast(final_case_counts as int) as final_case_counts,getNow() as create_time,getNow() as update_time from finalResTemp")
+
 
     val finalRes = resTemp12.selectExpr(
       "id",
       "ent_id",
       "holderName as holder_name",
       "channel_id",
-      "case when channel_name  ='直客' then holderName else channel_name end as channel_name",
-      "channel_short_name",
+      "channel_name",
+      "case when channel_short_name = '直客' then substring(channel_name,1,5) else channel_short_name  end as channel_short_name ",
       "consumer_category",
       "business_source",
       "insure_company_name",
       "province",
-      "short_name",
+      "city",
       "salesman",
       "team_name",
       "biz_operator",
       "start_date",
-      "curr_insured",  //在保人数
-      "counts",   //历史在保峰值
-      "channel_curr_insured", //渠道在保峰值
-      "premium",  //已赚保费
-      "res_pay",
-      "loss_ration",// 赔付率
-      "curr_insured_counts", //累计投保人次
-      "case_no_counts",
-      "risk_ration", //出险率
-      "disable_level_counts",
-      "die_case_counts",
-      "final_case_counts",
+      "case when curr_insured is null then 0 else curr_insured end as curr_insured_counts",  //在保人数
+      "case when counts is null then 0 else counts end as top_history_curr_insured",   //历史在保峰值
+      "case when channel_curr_insured is null then 0 else channel_curr_insured end as top_channel_curr_insured ", //渠道在保峰值
+      "case when premium is null then 0 else premium end as charged_premium",  //已赚保费
+      "case when res_pay is null then 0 else res_pay end as res_pay",
+      "case when loss_ration is null then 0 else loss_ration end as loss_ration",// 赔付率
+      "case when curr_insured_counts is null then 0 else curr_insured_counts end as total_insured_counts ", //累计投保人次
+      "case when case_no_counts is null then 0 else case_no_counts end as case_no_counts ",
+      "case when risk_ration is null then 0 else risk_ration end as risk_ration",
+      "case when disable_level_counts is null then 0 else disable_level_counts end as disable_level_counts ",
+      "case when die_case_counts is null then 0 else die_case_counts end as die_case_counts",
+      "case when final_case_counts is null then 0 else final_case_counts end as final_case_counts",
       "create_time",
       "update_time"
     )
-
     finalRes
   }
 
