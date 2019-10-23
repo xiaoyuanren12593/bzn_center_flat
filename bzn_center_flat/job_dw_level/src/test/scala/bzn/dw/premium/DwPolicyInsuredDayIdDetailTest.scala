@@ -46,8 +46,9 @@ object DwPolicyInsuredDayIdDetailTest extends SparkUtil with Until{
       * 读取保单表
       */
     val odsPolicyDetail =
-      sqlContext.sql("select policy_id, policy_code, product_code, policy_start_date, policy_end_date, policy_status from odsdb.ods_policy_detail")
+      sqlContext.sql("select id,policy_id, policy_code, product_code, policy_start_date, policy_end_date, policy_status from odsdb.ods_policy_detail")
         .where("length(policy_code) > 0 and policy_status in (0,1,-1)")
+        .repartition(200)
         .cache()
 
     /**
@@ -93,8 +94,9 @@ object DwPolicyInsuredDayIdDetailTest extends SparkUtil with Until{
       * 读取在保人明细表
       */
     val odsPolicyInsuredDetail =
-      sqlContext.sql("select policy_id as policy_id_insured,start_date,end_date,insured_cert_no from odsdb.ods_policy_insured_detail")
+      sqlContext.sql("select id,policy_id as policy_id_insured,start_date,end_date,insured_cert_no from odsdb.ods_policy_insured_detail")
         .where("length(policy_id_insured) > 0 and ( start_date is not null or end_date is not null)")
+        .repartition(200)
         .cache()
 
     /**

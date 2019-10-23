@@ -7,7 +7,7 @@ import java.util.Date
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{SQLContext, SaveMode}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable.ArrayBuffer
@@ -30,25 +30,27 @@ object DwPolicyInsuredDayIdDetail extends SparkUtil with Until{
 
     hiveContext.sql("truncate table dwdb.dw_policy_curr_insured_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_policy_curr_insured_detail")
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_policy_curr_insured_detail")
+    //res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_policy_curr_insured_detail")
 
     sc.stop()
   }
 
-  def dwPolicyInsuredDayIdDetail(sqlContext:HiveContext) ={
+  def dwPolicyInsuredDayIdDetail(sqlContext:HiveContext): DataFrame ={
     import sqlContext.implicits._
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
+
     /**
       * 读取保单表
       */
     val odsPolicyDetail =
-      sqlContext.sql("select policy_id, policy_code, product_code, policy_start_date, policy_end_date, policy_status from odsdb.ods_policy_detail")
+      sqlContext.sql("select id,policy_id, policy_code, product_code, policy_start_date, policy_end_date, policy_status from odsdb.ods_policy_detail")
         .where("length(policy_code) > 0 and policy_status in (0,1,-1)")
+        .repartition(200)
         .cache()
 
     /**
@@ -89,12 +91,14 @@ object DwPolicyInsuredDayIdDetail extends SparkUtil with Until{
       */
     val policyAndProduct = policyAndProductOne.join(cachePolicy,policyAndProductOne("policy_id")===cachePolicy("policy_id_cache"))
       .selectExpr("policy_id","policy_code","day_id")
+
     /**
       * 读取在保人明细表
       */
     val odsPolicyInsuredDetail =
-      sqlContext.sql("select policy_id as policy_id_insured,start_date,end_date,insured_cert_no from odsdb.ods_policy_insured_detail")
+      sqlContext.sql("select id,policy_id as policy_id_insured,start_date,end_date,insured_cert_no from odsdb.ods_policy_insured_detail")
         .where("length(policy_id_insured) > 0 and ( start_date is not null or end_date is not null)")
+        .repartition(200)
         .cache()
 
     /**
@@ -150,7 +154,7 @@ object DwPolicyInsuredDayIdDetail extends SparkUtil with Until{
       .map(x => {
         var res: Int = 0
         val ls = x._2.toSet
-        if(!ls.isEmpty){
+        if(ls.nonEmpty){
           res  = ls.size
         }
         if(ls.contains("`")){
@@ -162,6 +166,7 @@ object DwPolicyInsuredDayIdDetail extends SparkUtil with Until{
       })
       .toDF("policy_id","policy_code","day_id","count")
       .selectExpr("getUUID() as id","policy_id","policy_code","day_id","count","getNow() as dw_create_time")
+
     res
   }
 }

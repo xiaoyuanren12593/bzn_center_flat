@@ -138,7 +138,6 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
       "final_payment",
       "res_pay", "dw_create_time"
     )
-
     resEnd
   }
 
