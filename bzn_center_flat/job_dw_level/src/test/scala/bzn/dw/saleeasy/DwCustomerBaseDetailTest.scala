@@ -69,7 +69,7 @@ import org.apache.spark.sql.hive.HiveContext
     //注册临时表,把时间最大的城市拿上
     odsPolicyDetailRes.registerTempTable("policyAndSaleRes")
 
-    val odsPolicyDetail = hqlContext.sql("SELECT first_value(belongs_regional) OVER(PARTITION BY holder_name ORDER BY policy_start_date DESC) from policyAndSaleRes")
+    val odsPolicyDetail = hqlContext.sql("SELECT first_value(belongs_regional) OVER(PARTITION BY holder_name ORDER BY policy_start_date DESC) as belongs_regional,holder_name,policy_start_date,insure_company_name from policyAndSaleRes")
 
 
     //注册临时表
