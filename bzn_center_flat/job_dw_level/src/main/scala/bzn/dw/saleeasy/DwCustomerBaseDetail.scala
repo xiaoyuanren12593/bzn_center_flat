@@ -74,6 +74,7 @@ import org.apache.spark.sql.hive.HiveContext
       .where("two_level_pdt_cate in ('外包雇主','骑士保','大货车') and policy_status in (0,1,-1)")
 
 
+
     val  odsPolicyDetailRes = policyAndproduct.selectExpr("holder_name","belongs_regional","policy_start_date","insure_company_name")
     val  odsPolicyDetail = policyAndproduct.selectExpr("holder_name","belongs_regional","policy_start_date","insure_company_name")
       .map(x=>{
@@ -98,7 +99,7 @@ import org.apache.spark.sql.hive.HiveContext
     }).map(x=>{
       (x._1,x._2._1,x._2._2)
     }).toDF("holderName","belongsRegional","policyStartDate")
-    
+
     val odsPolicyDetailSalve = odsPolicyDetail.join(odsPolicyDetailRes, odsPolicyDetail("holderName") === odsPolicyDetailRes("holder_name"), "leftouter")
       .selectExpr("holderName", "belongsRegional", "policyStartDate", "insure_company_name")
 

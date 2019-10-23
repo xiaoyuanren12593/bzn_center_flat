@@ -64,7 +64,6 @@ import org.apache.spark.sql.hive.HiveContext
         "belongs_regional", "two_level_pdt_cate","policy_create_time","policy_update_time")
       .where("two_level_pdt_cate in ('外包雇主','骑士保','大货车') and policy_status in (0,1,-1)")
 
-
     val  odsPolicyDetailRes = policyAndproduct.selectExpr("holder_name","belongs_regional","policy_start_date","insure_company_name")
     val  odsPolicyDetail = policyAndproduct.selectExpr("holder_name","belongs_regional","policy_start_date","insure_company_name")
        .map(x=>{
@@ -102,6 +101,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     val PolicyTemp = hqlContext.sql("select holder_name,belongs_regional," +
       "min(policy_start_date) as start_date,insure_company_name from policyAndSaleTemp group by holder_name,belongs_regional,insure_company_name")
+
 
 
     //读取客户归属信息表
