@@ -28,7 +28,6 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
     val hiveContext = sparkConf._4
     val oneData = odsPolicyInsuredDetail(hiveContext)
     val twoData = twoOdsPolicyInsuredDetail(hiveContext)
-    oneData.unionAll(twoData).show(10)
 //    oneDate.write.format("parquet").mode("overwrite").save("/xing/data/odsPolicyInsuredDetail")
     sc.stop()
   }
@@ -52,6 +51,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
       * 读取被保人表
       */
     val bPolicySubjectPersonMasterBzncen = sqlContext.sql("select * from sourcedb.b_policy_subject_person_master_bzncen")
+      .where("policy_no = 'P00006639'")
       .selectExpr("id as master_id","policy_no as master_policy_no","name as insured_name","cert_type as insured_cert_type",
         "cert_no","birthday","is_married","sex as gender","tel as insured_mobile","email","industry_name as industry","work_type","job_company",
         "company_name","company_phone","status","start_date as insured_start_date",
@@ -72,6 +72,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
       "  END as insured_status, " +
       "case when (a.`status`='1' and insured_end_date > now() and insured_start_date< now() ) then '1' else '2' end as insure_policy_status " +
       "from bPolicySubjectPersonMasterBzncenTemp as a")
+    bPolicySubjectPersonMasterBzncenTemp.show(1000)
 
     val bPolicySubjectPersonMasterBzncenTempSchema = bPolicySubjectPersonMasterBzncenTemp.schema.map(x=> x.name):+"work_type_new" :+ "name_new"
     val bPolicySubjectPersonMasterBzncenValue = bPolicySubjectPersonMasterBzncenTemp.map(x => {
@@ -90,7 +91,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
       * 读取保单表
       */
     var bPolicyBzncen = readMysqlTable(sqlContext,"b_policy_bzncen")
-      .selectExpr("id as policy_id","policy_no","insurance_policy_no")
+      .selectExpr("id as policy_id","policy_no","insurance_policy_no").where("policy_no = 'P00006639'")
 
     val res = InsuredData.join(bPolicyBzncen,InsuredData("master_policy_no") ===bPolicyBzncen("policy_no"),"leftouter")
       .selectExpr("getUUID() as id","clean(master_id) as insured_id","clean(cast(policy_id as String)) as policy_id","clean(insurance_policy_no) as policy_code",
@@ -107,7 +108,7 @@ object OdsPolicyInsuredDetailTest extends SparkUtil with Until{
     //println("2.0")
     //res.printSchema()
     res
-    //res.show()
+    res.show(1000)
   }
 
   /**

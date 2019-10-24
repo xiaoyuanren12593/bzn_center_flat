@@ -22,6 +22,7 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   **/
 object test {
   def main(args: Array[String]): Unit = {
+    getBeg_End_one_two_month("2018-01-01 00:00:00","2019-12-12 23:23:59").foreach(println)
     var z = 0
     var i = Integer.valueOf(0)
     if(i.equals(null)){
@@ -125,6 +126,34 @@ object test {
     print("2016/11/16 06:57:32.000000000".substring(0, 7).replaceAll("/", ""))
 
 
+  }
+
+
+  //得到2个日期之间的所有月份
+  def getBeg_End_one_two_month(mon3: String, day_time: String): ArrayBuffer[String] = {
+    val sdf = new SimpleDateFormat("yyyy-MM")
+
+    //得到今天的日期
+    val cc = Calendar.getInstance
+    cc.setTime(new Date)
+    val day = cc.getTime
+
+    //得到他们相间的所有日期
+    val arr: ArrayBuffer[String] = ArrayBuffer[String]()
+    val date_start = sdf.parse(mon3)
+    //    val date_start = sdf.parse("20161007")
+    val date_end = sdf.parse(day_time)
+    //    val date_end = sdf.parse("20161008")
+    var date = date_start
+    val cd = Calendar.getInstance //用Calendar 进行日期比较判断
+
+    while (date.getTime <= date_end.getTime) {
+      arr += sdf.format(date)
+      cd.setTime(date)
+      cd.add(Calendar.MONTH, 1); //增加一天 放入集合
+      date = cd.getTime
+    }
+    arr
   }
 
   def getNull(line: String): Int = {
