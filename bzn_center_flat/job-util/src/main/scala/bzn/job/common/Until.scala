@@ -88,6 +88,18 @@ trait Until {
     sim.format(newDate)
   }
 
+  //当前日期+1月
+  def dateAddOneMonth(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.MONTH, 1)
+    val newDate = c.getTime
+    sim.format(newDate)
+  }
+
   //当前日期+90天
   def dateAddNintyDay(date_time: String): String = {
     //    val date_time = "2017-06-06 03:39:09.0"

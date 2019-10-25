@@ -56,11 +56,18 @@ object EveryMonthEmpDataTest extends  SparkUtil with Until{
         .where ("one_level_pdt_cate = '蓝领外包'")
         .cache ()
 
+    val odsEntGuzhuSalesmanDetail =
+      sqlContext.sql("select ent_name,case when channel_name = '直客' then channel_name else '渠道' end as channel_name from odsdb.ods_ent_guzhu_salesman_detail")
+
     /**
       * 保单和产品进行关联 得到产品为蓝领外包（雇主）的所有保单,并算出每日保单信息
       */
-    val policyAndProductTemp = odsPolicyDetail.join (odsProductDetail, odsPolicyDetail ("product_code") === odsProductDetail ("product_code_slave")).cache ()
+    val policyAndProductTemp1 = odsPolicyDetail.join (odsProductDetail, odsPolicyDetail ("product_code") === odsProductDetail ("product_code_slave")).cache ()
       .selectExpr("policy_id","policy_start_date","policy_end_date","holder_name")
+
+    val policyAndProductTemp = policyAndProductTemp1.join(odsEntGuzhuSalesmanDetail,policyAndProductTemp1("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
+      .where("channel_name = '渠道'")
+      .selectExpr("policy_id","policy_start_date","policy_end_date","holder_name","channel_name")
 
 
     val policyAndProductOne = policyAndProductTemp
@@ -79,9 +86,34 @@ object EveryMonthEmpDataTest extends  SparkUtil with Until{
       })
       .distinct()
       .toDF("holder_name","day_id")
-    policyAndProductOne
 
-    policyAndProductOne.rdd.repartition(1).saveAsTextFile("C:\\Users\\xingyuan\\Desktop\\未完成 2\\11.数据仓库项目搭建\\提数\\雇主续投数据1")
+    val policyAndProductTwo = policyAndProductOne.selectExpr("holder_name as holder_name_slave","day_id as day_id_salve")
+    val policyAndProductTwoRes = policyAndProductOne.join(policyAndProductTwo,'holder_name === 'holder_name_slave,"leftouter")
+      .map(x => {
+        val holderName = x.getAs[String]("holder_name")
+        val dayId = x.getAs[String]("day_id")
+        val dayIdSalve = x.getAs[String]("day_id_salve")
+        val count = if(dayIdSalve == null ){
+          0
+        }else if(dateAddOneMonth(dayId) != dayIdSalve){
+          0
+        }else {
+          1
+        }
+        ((holderName,dayId),count)
+      }).reduceByKey(_+_)
+        .map(x => {
+          (x._1._2,(x._2,1))
+        }).reduceByKey((x1,x2) =>{
+          val one = x1._1+x2._1
+          val two = x1._2 + x2._2
+      (one,two)
+    }).map(x => (x._1,x._2._1,x._2._2))
+      .toDF("day_id","count_continue","count")
+
+
+    //policyAndProductOne.rdd.repartition(1).saveAsTextFile("C:\\Users\\xingyuan\\Desktop\\未完成 2\\11.数据仓库项目搭建\\提数\\雇主续投数据1")
+    policyAndProductTwoRes.rdd.repartition(1).saveAsTextFile("C:\\Users\\xingyuan\\Desktop\\未完成 2\\11.数据仓库项目搭建\\提数\\雇主续投数据2")
     policyAndProductOne.show()
   }
 }

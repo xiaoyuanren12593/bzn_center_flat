@@ -22,7 +22,8 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   **/
 object test {
   def main(args: Array[String]): Unit = {
-    getBeg_End_one_two_month("2018-01-01 00:00:00","2019-12-12 23:23:59").foreach(println)
+    getBeg_End_one_two_month("2018-01-01 00:00:00","2019-12-12 23:23:59")
+    println (dateAddOneMonth ("2018-12"))
     var z = 0
     var i = Integer.valueOf(0)
     if(i.equals(null)){
@@ -126,6 +127,18 @@ object test {
     print("2016/11/16 06:57:32.000000000".substring(0, 7).replaceAll("/", ""))
 
 
+  }
+
+  //当前日期+1月
+  def dateAddOneMonth(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.MONTH, 1)
+    val newDate = c.getTime
+    sim.format(newDate)
   }
 
 
