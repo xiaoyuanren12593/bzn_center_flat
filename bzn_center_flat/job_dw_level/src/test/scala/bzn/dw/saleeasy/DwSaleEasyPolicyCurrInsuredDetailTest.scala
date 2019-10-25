@@ -109,11 +109,11 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
       */
     val odsEntGuzhuSalesmanDetail =
       sqlContext.sql ("select ent_id,salesman,biz_operator,consumer_category,channel_id," +
-        "case when channel_name = '直客' then ent_name else channel_name end as channel_name" +
-        " from odsdb.ods_ent_guzhu_salesman_detail")
+        "case when channel_name = '直客' then ent_name else channel_name end as channel_name ," +
+        "case when channel_name ='直客' then channel_name else '渠道' end as customer_type from odsdb.ods_ent_guzhu_salesman_detail")
 
     val entAndChannelRes = odsEnterpriseDetail.join(odsEntGuzhuSalesmanDetail,odsEnterpriseDetail("ent_id_master")===odsEntGuzhuSalesmanDetail("ent_id"))
-      .selectExpr("ent_id","ent_name","salesman","biz_operator","consumer_category","channel_id","channel_name")
+      .selectExpr("ent_id","ent_name","salesman","biz_operator","consumer_category","channel_id","channel_name","customer_type")
 
     /**
       * 读取销售信息表
@@ -125,7 +125,7 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
       * 渠道销售和企业的最终结果
       */
     val entAndChannelAndSaleRes = entAndChannelRes.join(odsEntSalesTeamDimension,entAndChannelRes("salesman")===odsEntSalesTeamDimension("sale_name"),"leftouter")
-      .selectExpr("ent_id","ent_name","salesman","team_name","biz_operator","consumer_category","channel_id","channel_name")
+      .selectExpr("ent_id","ent_name","salesman","team_name","biz_operator","consumer_category","channel_id","channel_name","customer_type")
       .distinct()
 
     /**
@@ -213,6 +213,7 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
         "consumer_category",
         "channel_id",
         "channel_name",
+        "customer_type",
         "policy_create_time",
         "policy_update_time"
       )
@@ -244,6 +245,7 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
         "consumer_category",
         "channel_id",
         "channel_name",
+        "customer_type",
         "count",
         "day_id",
         "substr(day_id,1,6) as new_old_time",
@@ -273,7 +275,6 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
       .toDF("policy_id_slave","new_old_time_slave")
       .distinct()
 
-    newOldTimeRes.show()
 
     val res = resOne.join(newOldTimeRes,resOne("policy_id")===newOldTimeRes("policy_id_slave"),"leftouter")
       .selectExpr(
@@ -303,6 +304,7 @@ object DwSaleEasyPolicyCurrInsuredDetailTest extends SparkUtil with Until{
         "consumer_category",
         "channel_id",
         "channel_name",
+        "customer_type",
         "count as curr_insured",
         "day_id",
         "concat(substr(day_id,1,4),'-',substr(day_id,5,2),'-',substr(day_id,7,2))  as date_time",

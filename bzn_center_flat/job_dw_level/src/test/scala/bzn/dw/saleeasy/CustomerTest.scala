@@ -14,7 +14,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/10/16
 * @Describe:客户基础信息表
-*/ object CsutomerTest extends SparkUtil with  Until {
+*/ object CustomerTest extends SparkUtil with  Until {
 
 
   /**
@@ -68,7 +68,7 @@ import org.apache.spark.sql.hive.HiveContext
     val aaaaaa = policyAndproduct.selectExpr("holder_name","insure_company_name")
     aaaaaa.registerTempTable("bbbbb")
     val ccccc = hqlContext.sql("select holder_name, insure_company_name from bbbbb group by holder_name,insure_company_name ")
-    println(ccccc.count()+"原始数据") //1965
+   // println(ccccc.count()+"原始数据") //1965
 
     // println("雇主产品"+policyAndproduct.count())
 
@@ -187,9 +187,9 @@ import org.apache.spark.sql.hive.HiveContext
       }).toDF("policy_id", "product_code", "holder_name", "policy_status", "day_id","curr_insured" ,"two_level_pdt_cate", "channel_name", "ent_name", "salesman","now_time")
       .where("two_level_pdt_cate in ('外包雇主','骑士保','大货车') and policy_status in (0,1,-1) and day_id <= now_time")
 
-    //将res3注册成临时表
+    //将res4注册成临时表
     val res4 = res3.selectExpr("policy_id", "product_code", "holder_name", "policy_status",
-      "day_id", "curr_insured", "two_level_pdt_cate", "case when trim(channel_name) ='直客' then trim(ent_name) else trim(channel_name) end as holder_company ", "ent_name", "salesman", "now_time")
+      "day_id", "curr_insured", "two_level_pdt_cate", "case when trim(channel_name) ='直客' then trim(ent_name) else trim(channel_name) end as holder_company", "ent_name", "salesman", "now_time")
     res4.registerTempTable("resTemp")
 
     val res5 = hqlContext.sql("select day_id,sum(curr_insured) as curr_insured, holder_company from resTemp group by day_id,holder_company")
@@ -222,20 +222,27 @@ import org.apache.spark.sql.hive.HiveContext
         val nowTime = getNowTime().substring(0, 10).replaceAll("-", "")
         (policyID, productCode, holderName, policyStatus, dayID, count, twoLevel,companyName, nowTime)
 
-      }).toDF("policy_id", "product_code", "holder_name", "policy_status", "day_id", "curr_insured", "two_level_pdt_cate","company_name","now_time")
+      }).toDF("policy_id", "product_code", "holder_name", "policy_status", "day_id", "curr_insured",
+      "two_level_pdt_cate","company_name","now_time")
       .where("two_level_pdt_cate in ('外包雇主','骑士保','大货车') and policy_status in (0,1,-1) and day_id <= now_time")
     //将df3 注册成临时表
     df3.registerTempTable("dfTemp")
 
-    val df4 = hqlContext.sql("select holder_name,max(curr_insured) as counts from dfTemp group by holder_name")
+    val df4Temp = hqlContext.sql("select holder_name,sum(curr_insured) as count,day_id from dfTemp group by holder_name,day_id")
 
-    println(df4.count()+"历史在保峰值")//1670  总雇主数1672
+   // 将df4 注册成临时表
+
+    df4Temp.registerTempTable("topTemp")
+
+    val  df4 = hqlContext.sql("select max(count) as counts,holder_name from topTemp group by holder_name")
+
+   // println(df4.count()+"历史在保峰值")//1670  总雇主数1672
     /**
       * 累计投保人次
       */
 
     val currInsuredCounts = hqlContext.sql("select holder_name,sum(curr_insured) as curr_insured_counts,company_name from dfTemp group by holder_name,company_name")
-    println(currInsuredCounts.count()+"累计投保人次") //1963
+  //  println(currInsuredCounts.count()+"累计投保人次") //1963
     /**
       * 已赚保费
       */
@@ -250,7 +257,7 @@ import org.apache.spark.sql.hive.HiveContext
     .where("two_level_pdt_cate in ('外包雇主','骑士保','大货车') and policy_status in (0,1,-1)")
     tem1.registerTempTable("aaaaaa")
     val vvvvv = hqlContext.sql("select holder_name from aaaaaa group by insure_company_name,holder_name")
-    println(vvvvv.count()+"未判断时间的已赚保费的雇主个数")  //1965
+   // println(vvvvv.count()+"未判断时间的已赚保费的雇主个数")  //1965
     //将上述结果关联每日已赚保费表
 
     val tem2 = tem1.join(dwPolicyPremium, tem1("policy_id") === dwPolicyPremium("id"), "leftouter")
@@ -273,7 +280,7 @@ import org.apache.spark.sql.hive.HiveContext
     tem2.registerTempTable("peimiumTemp")
    // println(tem2.count()+"未分组")
     val tem3 = hqlContext.sql("select holder_name,company_name,cast(sum(premium) as decimal(14,4)) as premium from peimiumTemp group by holder_name,company_name")
-   println(tem3.count()+"已赚保费") //1958
+   //println(tem3.count()+"已赚保费") //1958
 
     /**
       * 在保人数
@@ -299,10 +306,10 @@ import org.apache.spark.sql.hive.HiveContext
     Dframe.registerTempTable("currInsureTemp")
 
    val sssssssssss = hqlContext.sql("select sum(curr_insured) from currInsureTemp")
-    println(sssssssssss.show()+"1024当日在保人数")
+   // println(sssssssssss.show()+"1024当日在保人数")
     val currInsureRes = hqlContext.sql("select holder_name,sum(curr_insured) as curr_insured from currInsureTemp group by holder_name,insure_company")
 
-    println(currInsureRes.count()+"在保人数") //1179
+    //println(currInsureRes.count()+"在保人数") //1179
     //读取理赔表
     val policyClaim = hqlContext.sql("select policy_id as id,ent_name,ent_id,disable_level,case_type,case_status,res_pay,case_no from dwdb.dw_policy_claim_detail")
 
@@ -318,7 +325,7 @@ import org.apache.spark.sql.hive.HiveContext
     //读取理赔表,拿出企业级别的预估赔付
     val odsClaimDetail = hqlContext.sql("select cast(sum(res_pay) as decimal(14,4)) as res_pay,holder_name,insure_company_name as insure_company " +
       "from policyAndClaimTemp group by holder_name,insure_company_name")
-       println(odsClaimDetail.count()+"预估赔付") //1965
+       //println(odsClaimDetail.count()+"预估赔付") //1965
 
     //拿到企业级别的案件号
     val caseCounts = hqlContext.sql("select count(case_no) as case_no_counts,holder_name,insure_company_name as company_name from policyAndClaimTemp group by holder_name,insure_company_name")
@@ -337,13 +344,13 @@ import org.apache.spark.sql.hive.HiveContext
     //企业级别的结案案件数
 
     val finalLevel = hqlContext.sql("SELECT holder_name,count(case_type) as final_case_counts,insure_company_name as company_name3  from policyAndClaimTemp WHERE  case_status IS NOT NULL GROUP BY holder_name,insure_company_name")
-    println(finalLevel.count()+"结案件数")
-sys.exit()
+ //   println(finalLevel.count()+"结案件数")
+//sys.exit()
 
 
     //resTemp1 关联在保人数
 
-    val resTemp2 = resTemp1.join(currInsureRes, 'holderName ==='holder_name and 'insure_company_name==='insure_company, "leftouter")
+    val resTemp2 = resTemp1.join(currInsureRes, 'holderName ==='holder_name and 'insure_company_name==='insure_company , "leftouter")
       .selectExpr( "holderName", "start_date",  "province", "short_name", "channel_id", "channel_name", "entId",
         "entName", "salesman", "team_name", "biz_operator", "consumer_category", "business_source", "curr_insured","insure_company_name")
 

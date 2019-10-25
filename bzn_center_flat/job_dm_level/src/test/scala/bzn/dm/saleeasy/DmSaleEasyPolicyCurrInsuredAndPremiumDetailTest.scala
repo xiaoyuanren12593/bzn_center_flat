@@ -23,10 +23,7 @@ import org.apache.spark.{SparkConf, SparkContext}
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = DmSaleEasyPolicyCurrInsuredAndPremium(hiveContext)
-
-    writeClickHouseTable(res,"dm_saleeasy_policy_curr_insured_premium_detail",SaveMode.Overwrite,
-      "clickhouse.url","clickhouse.username","clickhouse.password")
-
+    res.printSchema()
     sc.stop()
 
   }
@@ -53,7 +50,7 @@ import org.apache.spark.{SparkConf, SparkContext}
     val dayIdInsure = sqlContext.sql("select policy_id,policy_code,product_code,policy_start_date,policy_end_date," +
       "insure_company_name,insurant_company_name,product_name,two_level_pdt_cate,holder_province,holder_city," +
       "sku_coverage,sku_ratio,sku_charge_type,sku_price,sku_append,profession_type,ent_id,ent_name," +
-      "salesman,team_name,biz_operator,consumer_category,channel_id,channel_name,curr_insured,day_id,date_time," +
+      "salesman,team_name,biz_operator,consumer_category,channel_id,channel_name,customer_type,curr_insured,day_id,date_time," +
       "is_old_customer,policy_create_time,policy_update_time from dwdb.dw_saleeasy_policy_curr_insured_detail")
 
     /**
@@ -90,6 +87,7 @@ import org.apache.spark.{SparkConf, SparkContext}
         "consumer_category",
         "channel_id",
         "channel_name",
+        "customer_type",
         "curr_insured",
         "premium",
         "day_id",
@@ -160,6 +158,7 @@ import org.apache.spark.{SparkConf, SparkContext}
         "consumer_category",
         "channel_id",
         "channel_name",
+        "customer_type",
         "curr_insured",
         "premium",
         "day_id",
