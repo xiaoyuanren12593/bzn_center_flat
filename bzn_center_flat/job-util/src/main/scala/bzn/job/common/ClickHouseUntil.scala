@@ -76,8 +76,8 @@ trait ClickHouseUntil {
     res
       .write.mode(SaveMode.Append)
       .option("batchsize","50000")
-      .option("isolationLevel","NONE")
-      .option("numPartitions","1")
+      .option("isolationLevel","NONE") //设置事务
+      .option("numPartitions","1")//设置并发
       .jdbc(prop.getProperty("url"),table,prop)
 
   }

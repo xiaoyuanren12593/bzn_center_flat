@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Date：2019/10/15
 * @Describe:
 */
- object  DwSaleEasyDetailTest extends  SparkUtil with Until{
+ object  DwSaleEasySportsDetailTest extends  SparkUtil with Until{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName

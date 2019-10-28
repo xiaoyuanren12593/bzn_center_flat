@@ -14,7 +14,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/10/15
 * @Describe:
-*/ object DwSaleEasyDetail  extends  SparkUtil with Until{
+*/ object DwSaleEasySportsDetail  extends  SparkUtil with Until{
 
   /**
     *
@@ -27,8 +27,8 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = SaleEasy(hiveContext)
-    hiveContext.sql("truncate table dwdb.dw_sale_easy_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_sale_easy_detail")
+    hiveContext.sql("truncate table dwdb.dw_saleeasy_sports_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_saleeasy_sports_detail")
     sc.stop()
   }
 
