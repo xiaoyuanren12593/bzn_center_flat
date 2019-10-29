@@ -51,7 +51,6 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
 
     val onePlanRes = getOnePlanDetail(sqlContext)
     val twoPlanRes = getTwoPlanDetail(sqlContext)
-
     val unionRes = onePlanRes.unionAll(twoPlanRes)
       .where("policy_status in (0,1,-1)")
       .selectExpr("policy_code","sku_id","product_code","sku_coverage",
@@ -63,54 +62,22 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
       */
     val policy_product_plan_his = readMysqlTable(sqlContext,"policy_product_plan_his")
       .selectExpr("policy_code as policy_code_master","sku_coverage as sku_coverage_master","sku_append as sku_append_master",
-        "sku_ratio as sku_ratio_master","sku_price as sku_price_master","sku_charge_type as sku_charge_type_master",
-        "tech_service_rate","economic_rate")
+        "sku_ratio as sku_ratio_master","sku_price as sku_price_master","sku_charge_type as sku_charge_type_master")
 
-    /**
-      * 读取历史方案配置表 并计算出手续费率git
-      */
-    val policy_product_plan_his_rate = readMysqlTable(sqlContext,"policy_product_plan_his")
-      .selectExpr("policy_code","tech_service_rate","economic_rate")
-      .map(x => {
-        val policyCode = x.getAs[String]("policy_code")
-        val techServiceRate = x.getAs[java.math.BigDecimal]("tech_service_rate")
-        val economicRate = x.getAs[java.math.BigDecimal]("economic_rate")
-        var commissionRate = ""
-
-        if(techServiceRate == null){
-          if(economicRate == null){
-            commissionRate = null
-          }else{
-            commissionRate = economicRate.toString
-          }
-        }else{
-          if(economicRate == null){
-            commissionRate = techServiceRate.toString
-          }else{
-            commissionRate = (techServiceRate.add(economicRate)).toString
-          }
-        }
-        (policyCode,commissionRate)
-      })
-      .toDF("policy_code","commission_rate")
-
-    val policy_product_plan_his_105 = policy_product_plan_his.join(policy_product_plan_his_rate,policy_product_plan_his("policy_code_master") === policy_product_plan_his_rate("policy_code"))
-      .selectExpr("policy_code_master","sku_coverage_master","sku_append_master","sku_ratio_master","sku_price_master","sku_charge_type_master",
-        "tech_service_rate as tech_service_rate_master","economic_rate as economic_rate_master","commission_rate as commission_rate_master")
     /**
       * 如果policy_code_master不是null：以policy_product_plan_his_105他的值为准
       */
-    val resTemp = unionRes.join(policy_product_plan_his_105,unionRes("policy_code") === policy_product_plan_his_105("policy_code_master"),"leftouter")
+    val resTemp = unionRes.join(policy_product_plan_his,unionRes("policy_code") === policy_product_plan_his("policy_code_master"),"leftouter")
       .selectExpr("getUUID() as id","policy_code","product_code",
         "case when policy_code_master is not null then sku_coverage_master else sku_coverage end as sku_coverage",
         "case when policy_code_master is not null then sku_append_master else sku_append end as sku_append",
         "case when policy_code_master is not null then sku_ratio_master else sku_ratio end as sku_ratio",
         "case when policy_code_master is not null then sku_price_master else sku_price end as sku_price",
         "case when policy_code_master is not null then sku_charge_type_master else sku_charge_type end as sku_charge_type",
-        "case when policy_code_master is not null then tech_service_rate_master else tech_service_rate end as tech_service_rate",
-        "case when policy_code_master is not null then economic_rate_master else economic_rate end as economic_rate",
+        "tech_service_rate",
+        "economic_rate",
         "commission_discount_rate",
-        "case when policy_code_master is not null then commission_rate_master else commission_rate end as commission_rate",
+        "commission_rate",
         "getNow() as dw_create_time")
       .cache()
 
@@ -130,7 +97,7 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
       */
     val secondRes = resTemp.where("product_code <> 'LGB000001' and product_code <> '17000001'")
 
-    val res = firstRes.unionAll(secondRes).unionAll(threeRes)
+    val resUnion = firstRes.unionAll(secondRes).unionAll(threeRes)
       .selectExpr(
         "id",
         "clean(policy_code) as policy_code",
@@ -145,6 +112,87 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
         "commission_discount_rate",
         "cast(clean(commission_rate) as decimal(14,4)) as commission_rate",
         "dw_create_time")
+
+    /**
+      * 读取维护费率表
+      */
+    val odsProduceRateDimension =
+      sqlContext.sql("select product_code as product_code_slave,economic_rate as economic_rate_salve,tech_service_rate as tech_service_rate_slave from odsdb.ods_product_rate_dimension")
+
+    val res = resUnion.join(odsProduceRateDimension,resUnion("product_code") === odsProduceRateDimension("product_code_slave"),"leftouter")
+      .selectExpr(
+        "id",
+        "policy_code",
+        "product_code",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "sku_price",
+        "sku_charge_type",
+        "case when tech_service_rate is null then tech_service_rate_slave else tech_service_rate end as tech_service_rate",
+        "case when economic_rate is null then economic_rate_salve else economic_rate end as economic_rate",
+        "commission_discount_rate",
+        "commission_rate",
+        "dw_create_time"
+      )
+      .map(x => {
+        val id = x.getAs[String]("id")
+        val policyCode = x.getAs[String]("policy_code")
+        val productCode = x.getAs[String]("product_code")
+        val skuCoverage = x.getAs[java.math.BigDecimal]("sku_coverage")
+        val skuAppend = x.getAs[String]("sku_append")
+        val skuRatio = x.getAs[String]("sku_ratio")
+        val skuPrice = x.getAs[java.math.BigDecimal]("sku_price")
+        val skuChargeType = x.getAs[String]("sku_charge_type")
+        val techServiceRate = x.getAs[java.math.BigDecimal]("tech_service_rate")
+        val economicRate = x.getAs[java.math.BigDecimal]("economic_rate")
+        val commissionDiscountRate = x.getAs[String]("commission_discount_rate")
+
+        val dwCreateTime = x.getAs[String]("dw_create_time")
+        val commissionRate = if(techServiceRate == null){
+          if(economicRate == null){
+            null
+          }else{
+            economicRate
+          }
+        }else{
+          if(economicRate == null){
+            techServiceRate
+          }else{
+            techServiceRate.add(economicRate)
+          }
+        }
+        (id,policyCode,productCode,skuCoverage,skuAppend,skuRatio,skuPrice,skuChargeType,techServiceRate,economicRate,commissionDiscountRate,commissionRate,dwCreateTime)
+      })
+      .toDF(
+        "id",
+        "policy_code",
+        "product_code",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "sku_price",
+        "sku_charge_type",
+        "tech_service_rate",
+        "economic_rate",
+        "commission_discount_rate",
+        "commission_rate",
+        "dw_create_time")
+      .selectExpr(
+        "id",
+        "policy_code",
+        "product_code",
+        "cast(sku_coverage as decimal(14,4)) as sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "cast(sku_price as decimal(14,4)) as sku_price",
+        "sku_charge_type",
+        "cast(tech_service_rate as decimal(14,4)) as tech_service_rate",
+        "cast(economic_rate as decimal(14,4)) as economic_rate",
+        "cast(commission_discount_rate as decimal(14,4)) as commission_discount_rate",
+        "cast(commission_rate as decimal(14,4)) as commission_rate",
+        "dw_create_time"
+      )
 
     res
   }
