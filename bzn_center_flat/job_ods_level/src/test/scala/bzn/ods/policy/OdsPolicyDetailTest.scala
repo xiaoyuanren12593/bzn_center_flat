@@ -63,9 +63,9 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "proposal_no as order_id","product_code",
         "proposal_no as order_code","user_code as user_id","first_insure_premium as first_premium","sum_premium as premium",
         "status","sell_channel_code as channel_id",
-        "sell_channel_name as channel_name","start_date","end_date","proposal_time as order_date",
+        "sell_channel_name as channel_name","start_date","end_date","start_date as effect_date","proposal_time as order_date",
         "continued_policy_no","insurance_name","premium_price",
-        "first_insure_master_num","create_time","update_time","commission_discount_percent","policy_source_code","policy_source_name","big_policy")
+        "first_insure_master_num","create_time","update_time","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type")
       .cache()
 
     /**
@@ -184,13 +184,14 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
 
     val bPolicyBzncenTemp = bPolicyBzncen.join(continuedPolicyNo,bPolicyBzncen("continued_policy_no") ===continuedPolicyNo("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","master_policy_no","policy_code","policy_type","order_id","product_code","order_code","user_id","first_premium","premium",
-        "status","channel_id","channel_name","start_date","end_date","order_date","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "status","channel_id","channel_name","start_date","end_date","effect_date","order_date","commission_discount_percent","policy_source_code"
+        ,"policy_source_name","big_policy","invoice_type",
         "case when continued_policy_no is null then continued_policy_no else policy_code_slave end as continued_policy_no",
         "insurance_name","premium_price","first_insure_master_num","create_time","update_time")
 
     val bPolicyBzncenTemp2 = bPolicyBzncenTemp.join(bPolicyPayBzncen, bPolicyBzncenTemp("master_policy_no") === bPolicyPayBzncen("pay_policy_no"), "leftouter")
       .selectExpr("policy_id","holder_name","master_policy_no","policy_code","policy_type","order_id","product_code","order_code","user_id","first_premium","premium",
-        "status","channel_id","channel_name","start_date","end_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type",
         "continued_policy_no", "insurance_name","premium_price","first_insure_master_num","create_time","update_time")
 
     /**
@@ -198,7 +199,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val bPolicyHolderCompany = bPolicyBzncenTemp2.join(bPolicyHolderCompanyUnion,bPolicyBzncenTemp2("master_policy_no") ===bPolicyHolderCompanyUnion("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","name as holder_company_person_name","master_policy_no","policy_code","policy_type","order_id","product_code","order_code","user_id","first_premium","premium",
-        "status","channel_id","channel_name","start_date","end_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type",
         "continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num","create_time","update_time")
 
     /**
@@ -206,7 +207,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val bPolicyHolderCompanyProductTemp = bPolicyHolderCompany.join(bsProductBzncen,bPolicyHolderCompany("product_code")===bsProductBzncen("product_code_2"),"leftouter")
       .selectExpr("policy_id","holder_name","holder_company_person_name","master_policy_no","policy_code","policy_type","order_id","product_code","product_name","order_code","user_id","first_premium","premium",
-        "status","channel_id","channel_name","start_date","end_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type",
         "continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num","create_time","update_time")
 
     /**
@@ -219,8 +220,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val bPolicyHolderCompanyProductInsured = bPolicyHolderCompanyProduct.join(bPolicySubject,bPolicyHolderCompanyProduct("master_policy_no") ===bPolicySubject("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","holder_company_person_name","master_policy_no","policy_code","policy_type","order_id","product_code","product_name",
-        "order_code","user_id","first_premium","premium","insured_name","status","channel_id","channel_name","start_date","end_date","order_date","pay_way",
-        "commission_discount_percent","policy_source_code","policy_source_name","big_policy","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num",
+        "order_code","user_id","first_premium","premium","insured_name","status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_way",
+        "commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num",
         "create_time","update_time")
 
     bPolicyHolderCompanyProductInsured.registerTempTable("bPolicyHolderCompanyProductTemp")
@@ -233,7 +234,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       "case when a.holder_company_person_name = null then a.holder_name ELSE a.holder_company_person_name end as holder_name_new from bPolicyHolderCompanyProductTemp a")
       .selectExpr("getUUID() as id","order_id","order_code","user_id","product_code","product_name","policy_id","policy_code","policy_type","first_premium",
         "premium as sum_premium","holder_name_new as holder_name","insured_name as insured_subject","start_date as policy_start_date",
-        "end_date as policy_end_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","policy_status","continued_policy_no as preserve_policy_no",
+        "end_date as policy_end_date","effect_date as policy_effect_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","policy_status","continued_policy_no as preserve_policy_no",
         "insurance_name as insure_company_name","belongArea as belongs_regional","industry_code as belongs_industry","channel_id","channel_name",
         "product_code as sku_id","first_insure_master_num as num_of_preson_first_policy","create_time as policy_create_time",
         "update_time as policy_update_time","getNow() as dw_create_time")
@@ -257,7 +258,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       bPolicyHolderCompanyProductNew.join(odsProductDetail,bPolicyHolderCompanyProductNew("product_code")===odsProductDetail("product_code_slave"),"leftouter")
         .selectExpr("id","order_id","order_code","user_id","product_code","product_name","policy_id ","policy_code","policy_type",
           "case when product_code_slave is not null then sum_premium else first_premium end first_premium","sum_premium",
-          "holder_name","insured_subject","policy_start_date","policy_end_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","policy_status",
+          "holder_name","insured_subject","policy_start_date","policy_end_date","policy_effect_date","order_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","policy_status",
           "preserve_policy_no","insure_company_name","belongs_regional","belongs_industry","channel_id","channel_name","num_of_preson_first_policy",
           "policy_create_time","policy_update_time","dw_create_time")
 
@@ -288,12 +289,14 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "clean(insured_subject) as insured_subject",
         "policy_start_date",
         "policy_end_date",
+        "policy_effect_date",
         "order_date",
         "case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
         "commission_discount_percent",
         "policy_source_code",
         "policy_source_name",
         "big_policy",
+        "invoice_type",
         "policy_status",
         "clean(preserve_policy_no) as preserve_policy_no",
         "clean(insure_company_name) as insure_company_name",
@@ -321,11 +324,13 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "case when insured_subject is null then holder_name else insured_subject end as insured_subject",
         "policy_start_date",
         "policy_end_date",
+        "policy_effect_date",
         "pay_way",
         "commission_discount_percent",
         "policy_source_code",
         "policy_source_name",
         "big_policy",
+        "invoice_type",
         "policy_status",
         "preserve_policy_no",
         "order_date",
@@ -383,7 +388,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       */
     val odrPolicyBznprd: DataFrame = readMysqlTable(sqlContext,"odr_policy_bznprd")
       .selectExpr("id as master_policy_id","policy_code","order_id","policy_type","insure_code","premium","status","channelId","channel_name",
-        "start_date","end_date","'' as pay_way","'' as commission_discount_percent","'' as policy_source_code","'' as policy_source_name","'' as big_policy","renewal_policy_code","order_date",
+        "start_date","end_date","effect_date","'' as pay_way","'' as commission_discount_percent","'' as policy_source_code","'' as policy_source_name","'' as big_policy","invoice_type","renewal_policy_code","order_date",
         "insure_company_name","create_time","update_time")
 
     /**
@@ -501,32 +506,35 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val orderPolicyTemp = odrOrderInfoBznprd.join(odrPolicyBznprd,odrOrderInfoBznprd("master_order_id") === odrPolicyBznprd("order_id"),"leftouter")
       .where("order_id is not null")
       .selectExpr("master_order_id","policy_type","order_code","user_id","pay_amount_master","master_policy_id","policy_code","insure_code","premium","status",
-        "channelId","channel_name","sales_name","start_date","end_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "channelId","channel_name","sales_name","start_date","end_date","effect_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name",
+        "big_policy",
+        "invoice_type",
         "renewal_policy_code","order_date","insure_company_name","create_time","update_time")
 
     val orderPolicy = orderPolicyTemp.join(policyFirstPremiumBznprd,orderPolicyTemp("master_policy_id")===policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
       .selectExpr("master_order_id","policy_type","order_code","user_id","case when policy_id_premium is not null then pay_amount else pay_amount_master end as pay_amount",
-        "master_policy_id","policy_code","insure_code","premium","status","channelId","channel_name","sales_name","start_date","end_date","pay_way","commission_discount_percent",
-        "policy_source_code","policy_source_name","big_policy",
+        "master_policy_id","policy_code","insure_code","premium","status","channelId","channel_name","sales_name","start_date","end_date","effect_date","pay_way","commission_discount_percent",
+        "policy_source_code","policy_source_name","big_policy","invoice_type",
         "renewal_policy_code","order_date","insure_company_name","create_time","update_time")
 
     val orderPolicyProductTemp = orderPolicy.join(pdtProductBznprd,orderPolicy("insure_code") === pdtProductBznprd("product_code"),"leftouter")
       .selectExpr("master_order_id","policy_type","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","status",
-        "channelId","channel_name","sales_name","start_date","end_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "channelId","channel_name","sales_name","start_date","end_date","effect_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type",
         "renewal_policy_code","order_date","insure_company_name","create_time","update_time")
 
     val orderPolicyProduct = orderPolicyProductTemp
 
     val orderPolicyProductHolder = orderPolicyProduct.join(odrPolicyHolderBznprd,orderPolicyProduct("master_policy_id") === odrPolicyHolderBznprd("policy_id"),"leftouter")
       .selectExpr("master_order_id","policy_type","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium",
-        "holder_subject","status","channelId","channel_name","sales_name","start_date","end_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
+        "holder_subject","status","channelId","channel_name","sales_name","start_date","end_date","effect_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name",
+        "big_policy","invoice_type",
         "renewal_policy_code","order_date",
         "insure_company_name","belongArea","create_time","update_time")
 
     val orderPolicyProductHolderInsurant = orderPolicyProductHolder.join(odrPolicyInsurantBznprd,orderPolicyProductHolder("master_policy_id") === odrPolicyInsurantBznprd("policy_id"),"leftouter")
       .selectExpr("master_order_id","policy_type","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","holder_subject",
-        "insured_subject","status","channelId","channel_name","sales_name","start_date","end_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name","big_policy",
-        "renewal_policy_code","order_date",
+        "insured_subject","status","channelId","channel_name","sales_name","start_date","end_date","effect_date","pay_way","commission_discount_percent","policy_source_code","policy_source_name",
+        "big_policy","invoice_type", "renewal_policy_code","order_date",
         "insure_company_name","belongArea","create_time","update_time")
 
     val orderPolicyProductHolderInsurantItemOrder = orderPolicyProductHolderInsurant.join(odrOrderItemInfoBznprd,orderPolicyProductHolderInsurant("master_order_id") === odrOrderItemInfoBznprd("order_id"),"leftouter")
@@ -544,11 +552,13 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "insured_subject",
         "start_date as policy_start_date",
         "end_date as policy_end_date",
+        "effect_date as policy_effect_date",
         "pay_way",
         "case when commission_discount_percent = '' then null end as commission_discount_percent " ,
         "case when policy_source_code = '' then null end as policy_source_code",
         "case when policy_source_name = '' then null end as policy_source_name",
         "case when big_policy = '' then null end as big_policy",
+        "invoice_type",
         "case when `status` = 1 then 1  when `status` = 0 then 0 else 99  end  as policy_status",
         "renewal_policy_code as preserve_policy_no",
         "order_date",
@@ -590,10 +600,10 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "sum_premium",
         "trim(holder_name) as holder_name",
         "case when clean(insured_subject) is null then trim(holder_name) else clean(insured_subject) end as insured_subject",
-        "policy_start_date","policy_end_date",
+        "policy_start_date","policy_end_date","policy_effect_date",
         "case when getNull(pay_way) = 9 then null else getNull(pay_way) end  as pay_way",
         "commission_discount_percent",
-        "policy_source_code","policy_source_name","big_policy",
+        "policy_source_code","policy_source_name","big_policy", "invoice_type",
         "policy_status",
         "clean(preserve_policy_no) as preserve_policy_no",
         "order_date",
