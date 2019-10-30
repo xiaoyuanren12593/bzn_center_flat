@@ -27,8 +27,8 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
     val res = DwPolicyPremiumDetail(hiveContext)
     hiveContext.sql("truncate table dwdb.dw_policy_premium_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_policy_premium_detail")
-    res.cache()
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_policy_premium_detail")
+//    res.cache()
+    //res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_policy_premium_detail")
     sc.stop()
   }
 

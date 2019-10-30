@@ -94,7 +94,7 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
       .selectExpr("holder_name","(add_person_count-del_person_count) as insured_count")
 
     /**
-      * 2.0 业管批单表
+      * 2.0 业管表
       */
     val tablebTpProposalStreamingbBznbusi = "t_proposal_streaming_bznbusi"
     val tpProposalStreamingbBznbusi = readMysqlTable(sqlContext: SQLContext, tablebTpProposalStreamingbBznbusi: String,user:String,pass:String,driver:String,url:String)
