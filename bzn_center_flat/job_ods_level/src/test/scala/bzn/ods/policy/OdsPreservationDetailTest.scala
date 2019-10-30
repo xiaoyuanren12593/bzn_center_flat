@@ -63,7 +63,7 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
       .withColumn("temp_inc_dec_order_no",bPolicyPreserveBznprdOne("inc_dec_order_no"))
 
     val bPolicyPreserveBznprdTemp = bPolicyPreserveBznprd
-      .selectExpr("inc_dec_order_no as temp_inc_dec_order_no","effective_date","add_person_count","del_person_count","preserve_type","create_time")
+      .selectExpr("inc_dec_order_no as temp_inc_dec_order_no","add_person_count","del_person_count","preserve_type","create_time")
 
     /**
       * 读取保单表
@@ -89,14 +89,14 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
       * 保全与保单关联得到保单id
       */
     val bPolicyInfo = bPolicyPreserveBznprd.join(bPolicyBzncen,bPolicyPreserveBznprd("temp_policy_no") ===bPolicyBzncen("b_policy_no"),"leftouter")
-      .selectExpr("preserve_id","policy_no","insurance_policy_no","temp_policy_no","policy_id","inc_dec_order_no","temp_inc_dec_order_no","add_batch_code",
+      .selectExpr("preserve_id","policy_no","insurance_policy_no","effective_date","temp_policy_no","policy_id","inc_dec_order_no","temp_inc_dec_order_no","add_batch_code",
         "add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
 
     /**
       * 上结果与保全人员清单表关联  得到 保全生效的开始时间和结束时间
       */
     val bPolicyInfoMasterInfo = bPolicyInfo.join(bPolicyPreservationSubjectPersonMasterBzncen,Seq("temp_policy_no", "temp_inc_dec_order_no"),"leftouter")
-      .selectExpr("preserve_id","policy_no","insurance_policy_no","policy_id","inc_dec_order_no" ,"add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
+      .selectExpr("preserve_id","policy_no","insurance_policy_no","policy_id","inc_dec_order_no" ,"effective_date","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
         "del_person_count","pre_start_date","pre_end_date","preserve_type","pay_status","create_time","update_time")
       .distinct()
       .registerTempTable("bPolicyInfoMasterInfoTemp")
@@ -187,14 +187,14 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
     .toDF("temp_inc_dec_order_no", "preserve_start_date","preserve_end_date","preserve_effect_date")
 
     val resTemp = sqlContext.sql("select * from bPolicyInfoMasterInfoTemp")
-      .selectExpr("preserve_id","insurance_policy_no as policy_code","policy_id","inc_dec_order_no" ,"add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
+      .selectExpr("preserve_id","insurance_policy_no as policy_code","policy_id","inc_dec_order_no" ,"effective_date","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium","del_person_count","preserve_type","pay_status","create_time","update_time")
     val res = resTemp.join(tep_five,resTemp("inc_dec_order_no") ===tep_five("temp_inc_dec_order_no"),"leftouter")
       .selectExpr("preserve_id","policy_id","policy_code","add_batch_code","add_premium","add_person_count","del_batch_code","del_premium",
-        "del_person_count","preserve_start_date","preserve_end_date","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
+        "del_person_count","effective_date","preserve_start_date","preserve_end_date","preserve_effect_date","preserve_type","pay_status","create_time","update_time","getNow() as dw_create_time")
       .distinct()
       .selectExpr("getUUID() as id","clean(cast(preserve_id as String)) as preserve_id","clean(cast(policy_id as String)) as policy_id","policy_code","1 as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","del_batch_code","cast(del_premium as decimal(14,4)) as del_premium",
-        "del_person_count","cast(preserve_start_date as Timestamp) as preserve_start_date","cast(preserve_end_date as Timestamp) as preserve_end_date","preserve_effect_date",
+        "del_person_count","cast(effective_date as Timestamp) as effective_date","cast(preserve_start_date as Timestamp) as preserve_start_date","cast(preserve_end_date as Timestamp) as preserve_end_date","preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 when preserve_type = 5 then 3 else -1 end as preserve_type",
         "case when pay_status = 1 then 1 when pay_status = 2 then 0 else -1 end pay_status","create_time","update_time","getNow() as dw_create_time")
 
@@ -371,7 +371,7 @@ object OdsPreservationDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","clean(preserve_id) as preserve_id","case when id is null then clean(policy_id) else clean(id) end as policy_id","clean(policy_code) as policy_code",
         "case when status in (4,5) then 1 when status = 6 then 0 else -1 end as preserve_status",
         "clean(add_batch_code) as add_batch_code","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","clean(del_batch_code) as del_batch_code",
-        "cast(del_premium as decimal(14,4)) as del_premium","del_person_count",
+        "cast(del_premium as decimal(14,4)) as del_premium","del_person_count","cast(''  as Timestamp) as effective_date",
         "cast(preserve_start_date as Timestamp) as preserve_start_date","cast(preserve_end_date as Timestamp) as preserve_end_date","preserve_effect_date",
         "case when preserve_type = 1 then 1 when preserve_type = 2 then 2 else -1 end as preserve_type",
         "case when getDefault() = '' then -1 end as pay_status","create_time","update_time","getNow() as dw_create_time")
