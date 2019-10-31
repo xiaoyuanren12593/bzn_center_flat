@@ -25,14 +25,16 @@ import org.apache.spark.sql.hive.HiveContext
    /* val res = EmployerPolicyDetai(hqlContext)
 
     hqlContext.sql("truncate table dwdb.dw_employer_parameter_policy_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_employer_parameter_policy_detail")
+    res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_employer_parameter_policy_detail")
 */
 
-    val res = EmployerPolicyDetail(hqlContext)
+   // val res = EmployerPolicyDetail(hqlContext)
 
-    hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_intermediate")
-    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
-
+   // hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_intermediate")
+    //res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
+    val res1 = EmployerPreserveDetail(hqlContext)
+    res1.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
+    sc.stop()
   }
 
 
@@ -44,6 +46,7 @@ import org.apache.spark.sql.hive.HiveContext
     */
   def EmployerPolicyDetail(hqlContext:HiveContext): DataFrame ={
     import hqlContext.implicits._
+    hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register ("getUUID", () => (java.util.UUID.randomUUID () + "").replace ("-", ""))
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -133,16 +136,16 @@ import org.apache.spark.sql.hive.HiveContext
 
 
 
-    val res=  hqlContext.sql("select getUUID() as id, '' as batch_no, policy_code as policy_no, '' as preserve_id,'' as add_batch_code,'' as del_batch_code,'' as preserve_status,data_source,product_desc as project_name," +
-      "product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),trim(channel_name)) as channel_name,salesman as business_owner,team_name as business_region,''as business_source," +
+    val res=  hqlContext.sql("select getUUID() as id, clean('') as batch_no, policy_code as policy_no, clean('') as preserve_id,clean('') as add_batch_code,clean('') as del_batch_code,clean('') as preserve_status,data_source,product_desc as project_name," +
+      "product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),trim(channel_name)) as channel_name,salesman as business_owner,team_name as business_region,clean('') as business_source," +
       "cast(if(preserve_policy_no is null,1,2) as string) as business_type,if(policy_start_date >=policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day," +
       "biz_operator as operational_name,holder_name,insured_subject as insurer_name,sku_price as plan_price,sku_coverage as plan_coverage,sku_append as plan_append, cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate," +
-      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type,insure_company_name as underwriting_company,policy_effect_date, cast('' as timestamp)as policy_start_time,policy_start_date as policy_effective_time,policy_end_date as policy_expire_time,cast(policy_status as string) as policy_status," +
-      "first_premium as premium_total,'' as premium_pay_status,cast(invoice_type as string) as premium_invoice_type,'' as economy_company,economic_rate as economy_rates,round(cast(first_premium * economic_rate as decimal(14,4)),4) as economy_fee," +
-      "tech_service_rate as technical_service_rates,round(cast(first_premium * tech_service_rate as decimal(14,4)),4) as technical_service_fee,cast('' as decimal(14,4)) as consulting_service_rates,cast('' as decimal(14,4)) as consulting_service_fee,cast('' as timestamp) as service_fee_check_time," +
-      "'' as service_fee_check_status,'' as has_brokerage,case when commission_discount_rate is  null then 0 else commission_discount_rate end as brokerage_ratio," +
+      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type,insure_company_name as underwriting_company,policy_effect_date, cast(clean('') as timestamp)as policy_start_time,policy_start_date as policy_effective_time,policy_end_date as policy_expire_time,cast(policy_status as string) as policy_status," +
+      "first_premium as premium_total,clean('') as premium_pay_status,cast(invoice_type as string) as premium_invoice_type,clean('') as economy_company,economic_rate as economy_rates,round(cast(first_premium * economic_rate as decimal(14,4)),4) as economy_fee," +
+      "tech_service_rate as technical_service_rates,round(cast(first_premium * tech_service_rate as decimal(14,4)),4) as technical_service_fee,cast(clean('') as decimal(14,4)) as consulting_service_rates,cast(clean('') as decimal(14,4)) as consulting_service_fee,cast(clean('') as timestamp) as service_fee_check_time," +
+      "clean('') as service_fee_check_status,clean('') as has_brokerage,case when commission_discount_rate is  null then 0 else commission_discount_rate end as brokerage_ratio," +
       "round(cast(case when (first_premium * commission_discount_rate) is not null then (first_premium * commission_discount_rate) else 0 end as decimal(14,4)),4) as brokerage_fee," +
-      "'' as brokerage_pay_status,'' as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast('' as int) as operator from policyAndProductPlanRes")
+      "clean('') as brokerage_pay_status,clean('') as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast(clean('') as int) as operator from policyAndProductPlanRes")
     res
 
   }
@@ -154,6 +157,8 @@ import org.apache.spark.sql.hive.HiveContext
     */
   def EmployerPreserveDetail(hqlContext:HiveContext): DataFrame ={
     import hqlContext.implicits._
+    hqlContext.udf.register("clean", (str: String) => clean(str))
+    hqlContext.udf.register ("getUUID", () => (java.util.UUID.randomUUID () + "").replace ("-", ""))
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
       //设置日期格式
@@ -250,19 +255,24 @@ import org.apache.spark.sql.hive.HiveContext
 
 
 
-
-    val res = hqlContext.sql("select preserve_id,policy_code as policy_no,add_batch_code,del_batch_code,cast((add_premium + del_premium) as decimal(14,4)) as premium_total,effective_date as policy_effect_date,preserve_start_date as policy_start_time," +
-      "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date end) end as policy_effective_time, " +
-      "preserve_end_date as policy_expire_time,preserve_status,policy_status,insure_company_name as underwriting_company,if(trim(channel_name)='直客',trim(ent_name),channel_name)  as channel_name," +
-      "holder_name,insured_subject as insurer_name,case source_system when '1.0' then '1' when '2.0' then '2' else source_system end as data_source," +
-      "case pay_status when 1 then 0 when 2 then 1 when 3 then 3 else pay_status end as premium_pay_status,if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type,invoice_type as premium_invoice_type," +
-      "case preserve_type when 1 then 0 when 2 then 2 when 5 then 5 else preserve_type end as business_type,sku_price as plan_price,if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio)))  as plan_disability_rate," +
-      "sku_append  as plan_append,sku_coverage as plan_coverage,economic_rate as economy_rates, round(cast((add_premium + del_premium) * economic_rate as decimal(14,4)),4) as economy_fee, tech_service_rate as technical_service_rates,round(cast((add_premium + del_premium) * tech_service_rate as decimal(14,4)),4) as technical_service_fee," +
-      "product_desc as project_name,insure_code as product_code,product_name,salesman as business_owner,team_name as business_region,biz_operator as operational_name," +
+    val res = hqlContext.sql("select getUUID() as id,clean('') as batch_no,policy_code as policy_no,preserve_id, add_batch_code,del_batch_code,cast(preserve_status as string) as preserve_status," +
+      "case source_system when '1.0' then '1' when '2.0' then '2' else source_system end as data_source,product_desc as project_name," +
+      "insure_code as product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),channel_name)  as channel_name,salesman as business_owner," +
+      "team_name as business_region,clean('') as business_source,cast(case preserve_type when 1 then 0 when 2 then 2 when 5 then 5 else preserve_type end as string) as business_type," +
       "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_start_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day," +
-      "case when commission_discount_rate is null then 0 else commission_discount_rate end as brokerage_ratio, cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee,getNow() as create_time,getNow() as update_time from preservePolicyRes ")
+      "biz_operator as operational_name,holder_name,insured_subject as insurer_name,sku_price as plan_price,sku_coverage as plan_coverage,sku_append  as plan_append," +
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate," +
+      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type," +
+      "insure_company_name as underwriting_company,effective_date as policy_effect_date, preserve_start_date as policy_start_time," +
+      "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date end) end as policy_effective_time," +
+      "preserve_end_date as policy_expire_time,cast(policy_status as string) as policy_status,cast((add_premium + del_premium) as decimal(14,4)) as premium_total,cast(case pay_status when 1 then 0 when 2 then 1 when 3 then 3 else pay_status end as string) as premium_pay_status," +
+      "cast(invoice_type as string) as premium_invoice_type,clean('') as economy_company,economic_rate as economy_rates,round(cast((add_premium + del_premium) * economic_rate as decimal(14,4)),4) as economy_fee," +
+      "tech_service_rate as technical_service_rates,round(cast((add_premium + del_premium) * tech_service_rate as decimal(14,4)),4) as technical_service_fee," +
+      "cast(clean('') as decimal(14,4)) as consulting_service_rates,cast(clean('') as decimal(14,4)) as consulting_service_fee,cast(clean('') as timestamp) as service_fee_check_time," +
+      "clean('') as service_fee_check_status,clean('') as has_brokerage,case when commission_discount_rate is null then 0 else commission_discount_rate end as brokerage_ratio," +
+      "cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee,clean('') as brokerage_pay_status," +
+      "clean('') as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast(clean('') as int) as operator from preservePolicyRes ")
     res
-
 
 
 
