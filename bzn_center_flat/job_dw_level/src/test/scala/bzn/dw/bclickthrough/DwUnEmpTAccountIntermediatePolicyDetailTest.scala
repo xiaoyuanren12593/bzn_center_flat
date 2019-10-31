@@ -49,20 +49,24 @@ object DwUnEmpTAccountIntermediatePolicyDetailTest extends SparkUtil with Until{
     val odsPolicyProductPlanDetail = sqlContext.sql("select policy_code as policy_code_slave,sku_coverage,sku_charge_type,sku_ratio,sku_price,sku_append,tech_service_rate,economic_rate,commission_discount_rate from odsdb.ods_policy_product_plan_detail")
 
     /**
+      * 产品表  '体育','场景','员福','健康'
+      */
+    val odsSportProductDetail = odsProductDetail.where("business_line in ('体育','场景','员福','健康')")
+
+    /**
+      * 读取体育销售表
+      */
+    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave from  odsdb.ods_sports_customers_dimension")
+
+    /**
       * 读取销售团队表
       */
     val odsEntSalesTeamDimension = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
-      * 读取保全表
+      * 保单表和产品方案表进行关联
       */
-    val odsPreservationDetail = sqlContext.sql("select preserve_id,add_batch_code,add_premium,del_premium,del_batch_code,effective_date,preserve_start_date," +
-      "preserve_end_date,preserve_status,pay_status,policy_code as policy_code_preserve,create_time,preserve_type from odsdb.ods_preservation_detail")
-      .where("preserve_status = 1")
 
-    /**
-      * 保单表和产品表进行关联
-      */
     val policyAndPlanRes = odsPolicyDetail.join(odsPolicyProductPlanDetail,odsPolicyDetail("policy_code")===odsPolicyProductPlanDetail("policy_code_slave"),"leftouter")
       .selectExpr(
         "policy_code",
@@ -92,9 +96,74 @@ object DwUnEmpTAccountIntermediatePolicyDetailTest extends SparkUtil with Until{
       )
 
     /**
+      * 结果与产品表进行关联
+      */
+    val policyAndPlanAndProductRes = policyAndPlanRes.join(odsSportProductDetail,policyAndPlanRes("product_code")===odsSportProductDetail("product_code_slave"))
+      .selectExpr(
+        "policy_code",
+        "source_system",
+        "policy_status",
+        "policy_effect_date",
+        "policy_start_date",
+        "policy_end_date",
+        "policy_create_time",
+        "insure_company_name",
+        "channel_id",
+        "channel_name",
+        "sales_name",
+        "first_premium",
+        "holder_name",
+        "insured_subject",
+        "invoice_type",
+        "product_code",
+        "product_name",
+        "product_desc",
+        "business_line",
+        "sku_coverage",
+        "sku_charge_type",
+        "sku_ratio",
+        "sku_price",
+        "sku_append",
+        "tech_service_rate",
+        "economic_rate",
+        "commission_discount_rate"
+      )
+
+    val policyAndPlanAndProductSportsSaleRes = policyAndPlanAndProductRes.join(odsSportsCustomersDimension,policyAndPlanAndProductRes("channel_name")===odsSportsCustomersDimension("name"),"leftouter")
+      .selectExpr(
+        "policy_code",
+        "source_system",
+        "policy_status",
+        "policy_effect_date",
+        "policy_start_date",
+        "policy_end_date",
+        "policy_create_time",
+        "insure_company_name",
+        "channel_id",
+        "channel_name",
+        "case when sales_name is null and business_line = '体育' then sales_name_slave else sales_name end as sales_name",
+        "first_premium",
+        "holder_name",
+        "insured_subject",
+        "invoice_type",
+        "product_code",
+        "product_name",
+        "product_desc",
+        "business_line",
+        "sku_coverage",
+        "sku_charge_type",
+        "sku_ratio",
+        "sku_price",
+        "sku_append",
+        "tech_service_rate",
+        "economic_rate",
+        "commission_discount_rate"
+      )
+
+    /**
       * 上结果与团队表进行关联
       */
-    val policyAndPlanAndTeamRes = policyAndPlanRes.join(odsEntSalesTeamDimension,policyAndPlanRes("sales_name")===odsEntSalesTeamDimension("sale_name"),"leftouter")
+    val policyAndPlanAndTeamRes = policyAndPlanAndProductSportsSaleRes.join(odsEntSalesTeamDimension,policyAndPlanAndProductSportsSaleRes("sales_name")===odsEntSalesTeamDimension("sale_name"),"leftouter")
       .selectExpr(
         "policy_code",
         "source_system",
@@ -113,6 +182,9 @@ object DwUnEmpTAccountIntermediatePolicyDetailTest extends SparkUtil with Until{
         "insured_subject",
         "invoice_type",
         "product_code",
+        "product_name",
+        "product_desc",
+        "business_line",
         "sku_coverage",
         "sku_charge_type",
         "sku_ratio",
@@ -126,7 +198,7 @@ object DwUnEmpTAccountIntermediatePolicyDetailTest extends SparkUtil with Until{
     /**
       *获取体育保单数据信息
       */
-    val resPolicy = getSportsScenMemberHealthPolicyDetail(sqlContext,policyAndPlanAndTeamRes,odsProductDetail)
+    val resPolicy = getSportsScenMemberHealthPolicyDetail(sqlContext,policyAndPlanAndTeamRes)
     resPolicy.printSchema()
 
   }
@@ -135,12 +207,11 @@ object DwUnEmpTAccountIntermediatePolicyDetailTest extends SparkUtil with Until{
     * 获取体育保单数据信息
     * @param sqlContext 上下文
     */
-  def getSportsScenMemberHealthPolicyDetail(sqlContext:HiveContext,policyAndPlanAndTeamRes:DataFrame,odsProductDetail:DataFrame): DataFrame = {
+  def getSportsScenMemberHealthPolicyDetail(sqlContext:HiveContext,policyAndPlanAndTeamRes:DataFrame): DataFrame = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
-    val odsSportProductDetail = odsProductDetail.where("business_line in ('体育','场景','员福','健康')")
 
-    val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes.join(odsSportProductDetail,policyAndPlanAndTeamRes("product_code")===odsSportProductDetail("product_code_slave"))
+    val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
       .where("policy_start_date>='2019-01-01 00:00:00'")
       .selectExpr(
         "getUUID() as id",
@@ -193,109 +264,4 @@ object DwUnEmpTAccountIntermediatePolicyDetailTest extends SparkUtil with Until{
       )
     policyAndPlanAndTeamAndProductRes
   }
-
-  /**
-    * 体育，员福，场景的批单信息
-    * @param sqlContext 上下文
-    * @param policyAndPlanAndTeamRes 保单与方案团队结果
-    * @param odsProductDetail 产品表
-    * @param odsPreservationDetail 保全表
-    * @return
-    */
-  def getSportsScenMemberPreserveDetail(sqlContext:HiveContext,policyAndPlanAndTeamRes:DataFrame,odsProductDetail:DataFrame,odsPreservationDetail:DataFrame): DataFrame = {
-    sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
-    sqlContext.udf.register("clean", (str: String) => clean(str))
-    val odsSportProductDetail = odsProductDetail.where("business_line in ('体育','场景','员福')")
-
-    val policyAndPlanAndTeamAndProductRes =  policyAndPlanAndTeamRes.join(odsSportProductDetail,policyAndPlanAndTeamRes("product_code")===odsSportProductDetail("product_code_slave"))
-      .selectExpr(
-        "policy_code",
-        "source_system",
-        "policy_status",
-        "policy_effect_date",
-        "policy_start_date",
-        "policy_end_date",
-        "policy_create_time",
-        "insure_company_name",
-        "channel_id",
-        "channel_name",
-        "sales_name",
-        "team_name",
-        "first_premium",
-        "holder_name",
-        "insured_subject",
-        "invoice_type",
-        "business_line",
-        "product_code",
-        "product_name",
-        "product_desc",
-        "sku_coverage",
-        "sku_charge_type",
-        "sku_ratio",
-        "sku_price",
-        "sku_append",
-        "tech_service_rate",
-        "economic_rate",
-        "commission_discount_rate"
-      )
-
-    val policyAndPlanAndTeamAndProductPreserveRes = policyAndPlanAndTeamAndProductRes.join(odsPreservationDetail,policyAndPlanAndTeamAndProductRes("policy_code")===odsPreservationDetail("policy_code_preserve"))
-      .where("if(preserve_start_date is null," +
-        "if(preserve_end_date is not null and preserve_end_date>create_time,preserve_end_date,create_time)," +
-        "if(preserve_start_date >= create_time,preserve_start_date,create_time)) >= '2019-01-01 00:00:00'")
-      .selectExpr(
-        "getUUID() as id",
-        "clean('')  as batch_no",
-        "policy_code as policy_no",
-        "preserve_id",
-        "cast(preserve_status as string) as preserve_status",
-        "add_batch_code",
-        "del_batch_code",
-        "source_system as data_source",
-        "business_line as project_name",
-        "product_code",
-        "product_name",
-        "product_desc as product_detail",
-        "channel_name",
-        "sales_name as business_owner",
-        "team_name as business_region",
-        "clean('')  as business_source",
-        "cast(preserve_type as string) as business_type",
-        "if(preserve_start_date is null," +
-          "if(preserve_end_date is not null and preserve_end_date>create_time,preserve_end_date,create_time)," +
-          "if(preserve_start_date >= create_time,preserve_start_date,create_time)) as performance_accounting_day",
-        "holder_name",
-        "insured_subject as insurer_name",
-        "insure_company_name as underwriting_company",
-        "effective_date as policy_effect_date",
-        "preserve_start_date as policy_effective_time",
-        "preserve_end_date as policy_expire_time",
-        "cast(policy_status as string) as policy_status",
-        "sku_coverage as plan_coverage",
-        "cast((if(add_premium is null,0,add_premium) + if(del_premium is null,0,del_premium)) as decimal(14,4)) as premium_total",
-        "cast(pay_status as string) as premium_pay_status",//保费实收状态
-        "clean('')  as behalf_number",
-        "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-        "'天津中策' as economy_company",
-        "economic_rate as economy_rates",
-        "cast(((if(add_premium is null,0,add_premium) + if(del_premium is null,0,del_premium)) * economic_rate) as decimal(14,4)) as economy_fee",
-        "tech_service_rate as technical_service_rates",
-        "cast(((if(add_premium is null,0,add_premium) + if(del_premium is null,0,del_premium)) * tech_service_rate) as decimal(14,4)) as technical_service_fee",
-        "clean('')  as consulting_service_rates",
-        "clean('')  as consulting_service_fee",
-        "clean('')  as service_fee_check_time",
-        "clean('')  as service_fee_check_status",
-        "clean('')  as has_brokerage",
-        "commission_discount_rate as brokerage_ratio",
-        "cast(((if(add_premium is null,0,add_premium) + if(del_premium is null,0,del_premium)) * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
-        "clean('')  as brokerage_pay_status",
-        "clean('')  as remake",
-        "now() as create_time",
-        "now() as update_time",
-        "cast(clean('') as int) as operator"
-      )
-
-    policyAndPlanAndTeamAndProductPreserveRes
-  }
-
 }
