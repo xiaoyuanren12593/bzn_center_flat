@@ -143,8 +143,7 @@ object DwUnEmpTAccountIntermediatePreserveHealthDetail extends SparkUtil with Un
       .selectExpr(
         "policy_code",
         "source_system",
-        "policy_status",
-        "policy_effect_date",
+        "policy_status"_date",
         "policy_start_date",
         "policy_end_date",
         "policy_create_time",
