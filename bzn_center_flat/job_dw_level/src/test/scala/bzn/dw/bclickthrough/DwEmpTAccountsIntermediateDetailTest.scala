@@ -16,14 +16,14 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/10/29
 * @Describe:
-*/ object DwEmpTAccountsIntermediateDetailTest  extends SparkUtil with Until{
+*/ object DwEmpTAccountsIntermediateDetailTest  extends SparkUtil with Until {
 
   def main(args: Array[String]): Unit = {
-      System.setProperty("HADOOP_USER_NAME", "hdfs")
-      val appName = this.getClass.getName
-      val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    System.setProperty("HADOOP_USER_NAME", "hdfs")
+    val appName = this.getClass.getName
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
 
-      val sc = sparkConf._2
+    val sc = sparkConf._2
     val hqlContext = sparkConf._4
     EmployerPolicyDetai(hqlContext)
 
@@ -33,12 +33,13 @@ import org.apache.spark.sql.hive.HiveContext
 
   /**
     * 添加保单数据
+    *
     * @param hqlContext
     */
-  def EmployerPolicyDetai(hqlContext:HiveContext): Unit ={
+  def EmployerPolicyDetai(hqlContext: HiveContext): Unit = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
-    hqlContext.udf.register ("getUUID", () => (java.util.UUID.randomUUID () + "").replace ("-", ""))
+    hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
@@ -47,7 +48,7 @@ import org.apache.spark.sql.hive.HiveContext
       date + ""
     })
     /**
-      *  读取保单明细表
+      * 读取保单明细表
       */
 
     val odsPolicyDetail = hqlContext.sql("select distinct policy_code,case source_system when '1.0' then '1' when '2.0' then '2' end as data_source," +
@@ -66,9 +67,9 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 保单明细表关联客户归属信息表
       */
-    val policyAndGuzhuRes = odsPolicyDetail.join(odsEntGuzhuDetail,'holder_name==='ent_name,"leftouter")
-      .selectExpr("policy_code","product_code","data_source","policy_status","policy_effect_date","policy_start_date","policy_end_date","insure_company_name","first_premium",
-        "holder_name","insured_subject","invoice_type","salesman","ent_name","channel_name","biz_operator","business_source","preserve_policy_no","policy_create_time")
+    val policyAndGuzhuRes = odsPolicyDetail.join(odsEntGuzhuDetail, 'holder_name === 'ent_name, "leftouter")
+      .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date", "insure_company_name", "first_premium",
+        "holder_name", "insured_subject", "invoice_type", "salesman", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no", "policy_create_time")
     //policyAndGuzhuRes.printSchema()
 
 
@@ -83,8 +84,8 @@ import org.apache.spark.sql.hive.HiveContext
       */
 
     val policyAndGuzhuSalve = policyAndGuzhuRes.join(odsEntSalesTeam, 'salesman === 'sale_name, "leftouter")
-      .selectExpr("policy_code","product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
-        "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name","channel_name", "biz_operator","business_source","preserve_policy_no","policy_create_time")
+      .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
+        "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no", "policy_create_time")
 
     /**
       * 读取方案类别表
@@ -96,10 +97,10 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 将上述结果关联方案类别表
       */
-    val policyAndProductPlan = policyAndGuzhuSalve.join(odsPolicyProductPlanDetail,'policy_code==='policy_code_salve,"leftouter")
-      .selectExpr("policy_code","product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
-        "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name","channel_name","biz_operator","business_source",
-        "sku_price","sku_ratio","sku_append","sku_coverage","economic_rate","tech_service_rate","sku_charge_type","preserve_policy_no","commission_discount_rate","policy_create_time")
+    val policyAndProductPlan = policyAndGuzhuSalve.join(odsPolicyProductPlanDetail, 'policy_code === 'policy_code_salve, "leftouter")
+      .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
+        "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source",
+        "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "sku_charge_type", "preserve_policy_no", "commission_discount_rate", "policy_create_time")
 
     /**
       * 读取产品表
@@ -112,10 +113,10 @@ import org.apache.spark.sql.hive.HiveContext
       * 关联产品表
       */
     val resTemp = policyAndProductPlan.join(odsProductDetail, 'product_code === 'insure_code, "leftouter")
-      .selectExpr("policy_code", "product_code", "product_desc", "product_name","two_level_pdt_cate","data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
-        "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name","channel_name","biz_operator","business_source","sku_price", "sku_ratio","sku_append","sku_coverage",
+      .selectExpr("policy_code", "product_code", "product_desc", "product_name", "two_level_pdt_cate", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
+        "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "sku_price", "sku_ratio", "sku_append", "sku_coverage",
         "economic_rate",
-        "tech_service_rate","sku_charge_type","preserve_policy_no","commission_discount_rate","policy_create_time")
+        "tech_service_rate", "sku_charge_type", "preserve_policy_no", "commission_discount_rate", "policy_create_time")
       .where("policy_code !='' and policy_status in(0, 1) and policy_start_date >=cast('2019-01-01' as timestamp) and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
 
     /**
@@ -126,8 +127,7 @@ import org.apache.spark.sql.hive.HiveContext
     resTemp.registerTempTable("policyAndProductPlanRes")
 
 
-
-    val res=  hqlContext.sql("select getUUID() as id, clean('') as batch_no, policy_code as policy_no, clean('') as preserve_id,clean('') as add_batch_code,clean('') as del_batch_code,clean('') as preserve_status,data_source,product_desc as project_name," +
+    val res = hqlContext.sql("select getUUID() as id, clean('') as batch_no, policy_code as policy_no, clean('') as preserve_id,clean('') as add_batch_code,clean('') as del_batch_code,clean('') as preserve_status,data_source,product_desc as project_name," +
       "product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),trim(channel_name)) as channel_name,salesman as business_owner,team_name as business_region,business_source," +
       "cast(if(preserve_policy_no is null,1,2) as string) as business_type,if(policy_start_date >=policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day," +
       "biz_operator as operational_name,holder_name,insured_subject as insurer_name,sku_price as plan_price,sku_coverage as plan_coverage,sku_append as plan_append, cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate," +
@@ -145,9 +145,10 @@ import org.apache.spark.sql.hive.HiveContext
 
   /**
     * 添加批单数据
+    *
     * @param hqlContext
     */
-  def EmployerPreserveDetail(hqlContext:HiveContext): Unit ={
+  def EmployerPreserveDetail(hqlContext: HiveContext): Unit = {
     import hqlContext.implicits._
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -176,7 +177,7 @@ import org.apache.spark.sql.hive.HiveContext
       */
 
     val policyAndPreserveDetailRes = odsPolicyPreserveDetail.join(odsPolicyDetail, 'policy_id === 'policy_id_salve, "leftouter")
-      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date","preserve_end_date", "effective_date",
+      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject", "policy_status")
 
 
@@ -188,9 +189,9 @@ import org.apache.spark.sql.hive.HiveContext
 
     //关联产品方案表
     val preserveAndPorductPlan = policyAndPreserveDetailRes.join(productPlan, 'policy_code === 'policy_code_salve, "leftouter")
-      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date","preserve_end_date", "effective_date",
+      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject", "policy_status",
-        "sku_charge_type", "sku_price", "sku_ratio","sku_append","sku_coverage", "economic_rate", "tech_service_rate","commission_discount_rate")
+        "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate")
 
     /**
       * 读取销售表和团队表
@@ -206,16 +207,15 @@ import org.apache.spark.sql.hive.HiveContext
       * 关联 销售表和团队表
       */
     val preserveAndSale = preserveAndPorductPlan.join(odsEntGuzhuSale, 'holder_name === 'ent_name, "leftouter")
-      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date","preserve_end_date", "effective_date",
+      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
-        "policy_status", "sku_charge_type","sku_price", "sku_ratio","sku_append","sku_coverage",  "economic_rate", "tech_service_rate", "commission_discount_rate","salesman", "biz_operator","business_source", "ent_name","channel_name")
+        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name")
 
 
     val preserveAndsaleAndTeam = preserveAndSale.join(odsEntSaleTeam, 'salesman === 'sale_name, "leftouter")
-      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date","preserve_end_date","effective_date",
+      .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
-        "policy_status","sku_charge_type", "sku_price", "sku_ratio","sku_append","sku_coverage",  "economic_rate", "tech_service_rate","commission_discount_rate", "salesman", "biz_operator","business_source", "ent_name","channel_name", "team_name")
-
+        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name")
 
 
     /**
@@ -232,25 +232,22 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code",
         "case when add_premium is null then 0 else add_premium end as add_premium",
         "case when del_premium is null then 0 else del_premium end as del_premium",
-        "preserve_start_date","preserve_end_date","effective_date",
+        "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
-        "policy_status","sku_charge_type", "sku_price", "sku_ratio","sku_append","sku_coverage",  "economic_rate", "tech_service_rate","commission_discount_rate", "salesman", "biz_operator","business_source", "ent_name","channel_name", "team_name", "product_desc", "product_name", "two_level_pdt_cate")
-        .where("policy_status in (0,1,-1) and if(preserve_start_date is null," +
-          "if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
-          "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
+        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name", "product_desc", "product_name", "two_level_pdt_cate")
+      .where("policy_status in (0,1,-1) and if(preserve_start_date is null," +
+        "if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
+        "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
 
 
     resTemp.registerTempTable("preservePolicyRes")
-
-
-
 
 
     val res = hqlContext.sql("select getUUID() as id,clean('') as batch_no,policy_code as policy_no,preserve_id, add_batch_code,del_batch_code,cast(preserve_status as string) as preserve_status," +
       "case source_system when '1.0' then '1' when '2.0' then '2' else source_system end as data_source,product_desc as project_name," +
       "insure_code as product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),channel_name)  as channel_name,salesman as business_owner," +
       "team_name as business_region,business_source,cast(case preserve_type when 1 then 0 when 2 then 2 when 5 then 5 else preserve_type end as string) as business_type," +
-      "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_start_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day," +
+      "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day," +
       "biz_operator as operational_name,holder_name,insured_subject as insurer_name,sku_price as plan_price,sku_coverage as plan_coverage,sku_append  as plan_append," +
       "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate," +
       "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type," +
@@ -269,12 +266,4 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
 
-
-
-
-
-
-
-
 }
-

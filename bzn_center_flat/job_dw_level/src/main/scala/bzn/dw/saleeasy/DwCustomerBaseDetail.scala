@@ -31,9 +31,8 @@ import org.apache.spark.sql.hive.HiveContext
 
     hiveContext.sql("truncate table dwdb.dw_customer_base_detail")
     res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_customer_base_detail")
-
     saveASMysqlTable(res, "dm_saleseasy_customer_base_detail", SaveMode.Overwrite,
-      "mysql.username.103", "mysql.password.103", "mysql.driver", "mysql_url.103.dmdb")
+      "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql.url.106.dmdb")
     sc.stop()
 
   }

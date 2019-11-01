@@ -3,17 +3,19 @@ package bzn.dw.saleeasy
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import bzn.dw.util.SparkUtil
-import bzn.job.common.Until
+import bzn.job.common.{MysqlUntil, Until}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 /*
 * @Author:liuxiang
 * @Date：2019/10/16
 * @Describe:客户基础信息表
-*/ object DwCustomerBaseDetailTest extends SparkUtil with Until {
+*/
+object DwCustomerBaseDetailTest extends SparkUtil with Until with MysqlUntil {
 
 
   /**
@@ -29,7 +31,9 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = CustomerBase(hiveContext)
-
+    saveASMysqlTable(res, "dm_saleseasy_customer_base_detail", SaveMode.Overwrite,
+      "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql.url.106.dmdb")
+    sc.stop()
   }
 
   /**
@@ -38,7 +42,7 @@ import org.apache.spark.sql.hive.HiveContext
     */
 
 
-  def CustomerBase(hqlContext: HiveContext): Unit = {
+  def CustomerBase(hqlContext: HiveContext) = {
     import hqlContext.implicits._
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
@@ -416,6 +420,7 @@ import org.apache.spark.sql.hive.HiveContext
       "update_time"
     )
     finalRes.printSchema()
+    finalRes
   }
 
 
