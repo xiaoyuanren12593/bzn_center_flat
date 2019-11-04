@@ -4,11 +4,12 @@ package bzn.dw.bclickthrough
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.EmployerPreserveDetail
 import bzn.dw.bclickthrough.DwUnEmpTAccountIntermediatePolicyDetail.clean
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 
@@ -25,9 +26,13 @@ import org.apache.spark.sql.hive.HiveContext
 
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
-    EmployerPolicyDetai(hqlContext)
+    val  res = EmployerPolicyDetai(hqlContext)
+    hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_intermediate")
+    val res1 =  EmployerPreserveDetail(hqlContext)
+    res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
+    res1.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
+    sc.stop()
 
-    EmployerPreserveDetail(hqlContext)
   }
 
 
@@ -36,7 +41,7 @@ import org.apache.spark.sql.hive.HiveContext
     *
     * @param hqlContext
     */
-  def EmployerPolicyDetai(hqlContext: HiveContext): Unit = {
+  def EmployerPolicyDetai(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -137,8 +142,7 @@ import org.apache.spark.sql.hive.HiveContext
       "clean('') as service_fee_check_status,clean('') as has_brokerage,case when commission_discount_rate is  null then 0 else commission_discount_rate end as brokerage_ratio," +
       "round(cast(case when (first_premium * commission_discount_rate) is not null then (first_premium * commission_discount_rate) else 0 end as decimal(14,4)),4) as brokerage_fee," +
       "clean('') as brokerage_pay_status,clean('') as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast(clean('') as int) as operator from policyAndProductPlanRes")
-    res.printSchema()
-
+    res
 
   }
 
@@ -148,7 +152,7 @@ import org.apache.spark.sql.hive.HiveContext
     *
     * @param hqlContext
     */
-  def EmployerPreserveDetail(hqlContext: HiveContext): Unit = {
+  def EmployerPreserveDetail(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -260,7 +264,7 @@ import org.apache.spark.sql.hive.HiveContext
       "clean('') as service_fee_check_status,clean('') as has_brokerage,case when commission_discount_rate is null then 0 else commission_discount_rate end as brokerage_ratio," +
       "cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee,clean('') as brokerage_pay_status," +
       "clean('') as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast(clean('') as int) as operator from preservePolicyRes ")
-    res.printSchema()
+    res
 
 
   }
