@@ -24,9 +24,9 @@ import org.apache.spark.sql.hive.HiveContext
     val hqlContext = sparkConf._4
     val  res = EmployerPolicyDetail(hqlContext)
     hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_intermediate")
-    val res1 =  EmployerPreserveDetail(hqlContext)
+   // val res1 =  EmployerPreserveDetail(hqlContext)
     res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
-    res1.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
+    //res1.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
     sc.stop()
   }
 
