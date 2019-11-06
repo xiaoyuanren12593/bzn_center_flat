@@ -47,7 +47,6 @@ trait MysqlUntil {
   def saveASMysqlTable(dataFrame: DataFrame, tableName: String, saveMode: SaveMode,user:String,pass:String,driver:String,url:String) = {
     var table = tableName
     val properties: Properties = getProPerties()
-    println("12313213"+properties.getProperty(driver))
     val prop = new Properties //配置文件中的key 与 spark 中的 key 不同 所以 创建prop 按照spark 的格式 进行配置数据库
     prop.setProperty("user", properties.getProperty(user))
     prop.setProperty("password", properties.getProperty(pass))

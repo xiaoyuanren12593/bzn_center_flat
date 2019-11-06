@@ -4,8 +4,7 @@ package bzn.dw.bclickthrough
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.EmployerPreserveDetail
-import bzn.dw.bclickthrough.DwUnEmpTAccountIntermediatePolicyDetail.clean
+import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.{clean, sparkConfInfo}
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
@@ -26,11 +25,14 @@ import org.apache.spark.sql.hive.HiveContext
 
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
-    val  res = EmployerPolicyDetai(hqlContext)
-    hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_intermediate")
-    val res1 =  EmployerPreserveDetail(hqlContext)
-    res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
-    res1.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_intermediate")
+    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext)
+
+
+    AddPolicyRes.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_detail")
+    val res1 = TAccountsEmployerAddPreserve(hqlContext)
+    res1.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_detail")
+
+
     sc.stop()
 
   }
@@ -41,7 +43,7 @@ import org.apache.spark.sql.hive.HiveContext
     *
     * @param hqlContext
     */
-  def EmployerPolicyDetai(hqlContext: HiveContext): DataFrame = {
+  def TAccountsEmployerAddPolicy(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -67,7 +69,6 @@ import org.apache.spark.sql.hive.HiveContext
 
     val odsEntGuzhuDetail = hqlContext.sql("select salesman,ent_name,biz_operator,channel_name,business_source from odsdb.ods_ent_guzhu_salesman_detail")
     //odsEntGuzhuDetail.printSchema()
-
 
     /**
       * 保单明细表关联客户归属信息表
@@ -110,39 +111,161 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取产品表
       */
-
     val odsProductDetail = hqlContext.sql("select product_desc,product_code as insure_code,product_name,two_level_pdt_cate from odsdb.ods_product_detail")
 
 
     /**
       * 关联产品表
       */
-    val resTemp = policyAndProductPlan.join(odsProductDetail, 'product_code === 'insure_code, "leftouter")
+    val resTempRes = policyAndProductPlan.join(odsProductDetail, 'product_code === 'insure_code, "leftouter")
       .selectExpr("policy_code", "product_code", "product_desc", "product_name", "two_level_pdt_cate", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "sku_price", "sku_ratio", "sku_append", "sku_coverage",
         "economic_rate",
         "tech_service_rate", "sku_charge_type", "preserve_policy_no", "commission_discount_rate", "policy_create_time")
-      .where("policy_code !='' and policy_status in(0, 1) and policy_start_date >=cast('2019-01-01' as timestamp) and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
+      .where("policy_code !='' and policy_status in(0,1) and policy_start_date >=cast('2019-01-01' as timestamp) and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
+
+
+    val res = resTempRes.selectExpr(
+      "getUUID() as id",
+      "'' as batch_no",
+      "policy_code as policy_no",
+      "'' as preserve_id",
+      "'' as add_batch_code",
+      "'' as del_batch_code",
+      "'' as preserve_status",
+      "data_source",
+      "product_desc as project_name",
+      "product_code",
+      "product_name",
+      "if(trim(channel_name)='直客',trim(ent_name),trim(channel_name)) as channel_name",
+      "salesman as business_owner",
+      "team_name as business_region",
+      "business_source",
+      "cast(if(preserve_policy_no is null,1,2) as string) as business_type",
+      "if(policy_start_date >=policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day",
+      "biz_operator as operational_name",
+      "holder_name",
+      "insured_subject as insurer_name",
+      "sku_price as plan_price",
+      "sku_coverage as plan_coverage",
+      "sku_append as plan_append",
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate",
+      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
+      "insure_company_name as underwriting_company",
+      "policy_effect_date",
+      "cast('' as timestamp) as policy_start_time",
+      "policy_start_date as policy_effective_time",
+      "policy_end_date as policy_expire_time",
+      "cast(policy_status as string) as policy_status",
+      "first_premium as premium_total",
+      "'' as premium_pay_status",
+      "'' as economy_company",
+      "cast(invoice_type as string) as premium_invoice_type",
+      "economic_rate as economy_rates",
+      "cast(first_premium * economic_rate as decimal(14,4)) as economy_fee",
+      "tech_service_rate as technical_service_rates",
+      "cast(first_premium * tech_service_rate as decimal(14,4)) as technical_service_fee",
+      "cast('' as decimal(14,4)) as consulting_service_rates",
+      "cast('' as decimal(14,4)) as consulting_service_fee",
+      "cast('' as timestamp) as service_fee_check_time",
+      "'' as service_fee_check_status",
+      "'' as has_brokerage",
+      "case when commission_discount_rate is  null then 0 else commission_discount_rate end as brokerage_ratio",
+      "cast(case when (first_premium * commission_discount_rate) is not null then (first_premium * commission_discount_rate) else 0 end as decimal(14,4)) as brokerage_fee",
+      "'' as brokerage_pay_status",
+      "'' as remake",
+      "cast(getNow() as timestamp) as create_time",
+      "cast(getNow() as timestamp) as update_time",
+      "cast('' as int) as operator")
+
 
     /**
       * 将结果注册成临时表
       */
+    res.registerTempTable("t_accounts_employer_intermediate_temp")
+
+    /**
+      * 读取保单和批单的数据
+      */
+    val dwTaccountEmployerIntermeditae = hqlContext.sql("select distinct policy_no,batch_no,preserve_id,add_batch_code,del_batch_code,preserve_status,data_source,project_name,product_code,product_name,channel_name,business_owner,business_region,business_source," +
+      "business_type,performance_accounting_day,operational_name,holder_name,insurer_name,plan_price,plan_coverage,plan_append,plan_disability_rate,plan_pay_type,underwriting_company,policy_effect_date,policy_effective_time,policy_start_time," +
+      "policy_expire_time,policy_status,premium_total,premium_pay_status,premium_invoice_type,economy_company,economy_rates,economy_fee,technical_service_rates,technical_service_fee,consulting_service_rates,consulting_service_fee,service_fee_check_time," +
+      "service_fee_check_status,has_brokerage,brokerage_ratio,brokerage_fee,brokerage_pay_status,remake,create_time,update_time,operator from t_accounts_employer_intermediate_temp")
+
+    /**
+      * 读取业务表的数据
+      */
+
+    val dwTAccountsEmployerDetail = hqlContext.sql("select policy_no as policy_no_salve from dwdb.dw_t_accounts_employer_detail")
 
 
-    resTemp.registerTempTable("policyAndProductPlanRes")
+    /**
+      * 关联两个表 过滤出保单数据的增量数据
+      */
+    val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
+      .selectExpr("policy_no", "batch_no", "policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
+        "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
+        "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
+        "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status", "premium_invoice_type", "economy_company",
+        "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee", "consulting_service_rates", "consulting_service_fee", "service_fee_check_time",
+        "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee", "brokerage_fee", "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
+      .where("add_batch_code is null and del_batch_code is null and policy_no_salve is null")
 
 
-    val res = hqlContext.sql("select getUUID() as id, clean('') as batch_no, policy_code as policy_no, clean('') as preserve_id,clean('') as add_batch_code,clean('') as del_batch_code,clean('') as preserve_status,data_source,product_desc as project_name," +
-      "product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),trim(channel_name)) as channel_name,salesman as business_owner,team_name as business_region,business_source," +
-      "cast(if(preserve_policy_no is null,1,2) as string) as business_type,if(policy_start_date >=policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day," +
-      "biz_operator as operational_name,holder_name,insured_subject as insurer_name,sku_price as plan_price,sku_coverage as plan_coverage,sku_append as plan_append, cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate," +
-      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type,insure_company_name as underwriting_company,policy_effect_date, cast(clean('') as timestamp)as policy_start_time,policy_start_date as policy_effective_time,policy_end_date as policy_expire_time,cast(policy_status as string) as policy_status," +
-      "first_premium as premium_total,clean('') as premium_pay_status,cast(invoice_type as string) as premium_invoice_type,clean('') as economy_company,economic_rate as economy_rates,round(cast(first_premium * economic_rate as decimal(14,4)),4) as economy_fee," +
-      "tech_service_rate as technical_service_rates,round(cast(first_premium * tech_service_rate as decimal(14,4)),4) as technical_service_fee,cast(clean('') as decimal(14,4)) as consulting_service_rates,cast(clean('') as decimal(14,4)) as consulting_service_fee,cast(clean('') as timestamp) as service_fee_check_time," +
-      "clean('') as service_fee_check_status,clean('') as has_brokerage,case when commission_discount_rate is  null then 0 else commission_discount_rate end as brokerage_ratio," +
-      "round(cast(case when (first_premium * commission_discount_rate) is not null then (first_premium * commission_discount_rate) else 0 end as decimal(14,4)),4) as brokerage_fee," +
-      "clean('') as brokerage_pay_status,clean('') as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast(clean('') as int) as operator from policyAndProductPlanRes")
-    res
+    //增量数据
+    val res1 = resTemp.selectExpr(
+      "getUUID() as id",
+      "clean(batch_no) as batch_no",
+      "clean(policy_no) as policy_no",
+      "clean(preserve_id) as preserve_id",
+      "clean(add_batch_code) as add_batch_code",
+      "clean(del_batch_code) as del_batch_code",
+      "clean(preserve_status) as preserve_status",
+      "clean(data_source) as data_source",
+      "clean(project_name) as project_name",
+      "clean(product_code) as product_code",
+      "clean(product_name) as product_name",
+      "clean(channel_name) as channel_name",
+      "clean(business_owner)  as business_owner",
+      "clean(business_region) as business_region",
+      "clean(business_source) as business_source",
+      "clean(business_type) as business_type",
+      "performance_accounting_day",
+      "clean(operational_name) as operational_name",
+      "clean(holder_name) as holder_name",
+      "clean(insurer_name) as insurer_name",
+      "plan_price",
+      "plan_coverage",
+      "clean(plan_append) as plan_append",
+      "plan_disability_rate",
+      "clean(plan_pay_type) as plan_pay_type",
+      "clean(underwriting_company) as underwriting_company",
+      "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
+      "clean('') as cur_policy_status",
+      "policy_status",
+      "premium_total",
+      "clean(premium_pay_status) as premium_pay_status",
+      "clean('') as has_behalf",
+      "clean('') as behalf_status",
+      "clean(premium_invoice_type) as premium_invoice_type",
+      "clean(economy_company) as economy_company",
+      "economy_rates",
+      "economy_fee",
+      "technical_service_rates",
+      "technical_service_fee",
+      "case when consulting_service_rates = '' then null else consulting_service_rates end as consulting_service_rates",
+      "case when consulting_service_fee = '' then null else consulting_service_fee end as consulting_service_fee",
+      "service_fee_check_time",
+      "clean(service_fee_check_status) as service_fee_check_status",
+      "clean(has_brokerage) as has_brokerage",
+      "brokerage_ratio",
+      "brokerage_fee",
+      "clean(brokerage_pay_status)  as brokerage_pay_status",
+      "clean(remake) as remake", "create_time", "update_time",
+      "case when operator = '' then null else operator end as operator")
+
+    res1
+
 
   }
 
@@ -152,8 +275,9 @@ import org.apache.spark.sql.hive.HiveContext
     *
     * @param hqlContext
     */
-  def EmployerPreserveDetail(hqlContext: HiveContext): DataFrame = {
+  def TAccountsEmployerAddPreserve(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
+    hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
       //设置日期格式
@@ -232,7 +356,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 关联产品表
       */
-    val resTemp = preserveAndsaleAndTeam.join(odsPolicyProduct, 'insure_code === 'product_code, "leftouter")
+    val resTempRes = preserveAndsaleAndTeam.join(odsPolicyProduct, 'insure_code === 'product_code, "leftouter")
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code",
         "case when add_premium is null then 0 else add_premium end as add_premium",
         "case when del_premium is null then 0 else del_premium end as del_premium",
@@ -244,30 +368,143 @@ import org.apache.spark.sql.hive.HiveContext
         "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
 
 
-    resTemp.registerTempTable("preservePolicyRes")
+    val res = resTempRes.selectExpr(
+      "getUUID() as id",
+      "'' as batch_no",
+      "policy_code as policy_no",
+      "preserve_id",
+      "add_batch_code",
+      "del_batch_code",
+      "cast(preserve_status as string) as preserve_status",
+      "case source_system when '1.0' then '1' when '2.0' then '2' else source_system end as data_source",
+      "product_desc as project_name",
+      "insure_code as product_code",
+      "product_name",
+      "if(trim(channel_name)='直客',trim(ent_name),channel_name)  as channel_name",
+      "salesman as business_owner",
+      "team_name as business_region",
+      "business_source",
+      "cast(case preserve_type when 1 then 0 when 2 then 2 when 5 then 5 else preserve_type end as string) as business_type",
+      "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day",
+      "biz_operator as operational_name",
+      "holder_name",
+      "insured_subject as insurer_name",
+      "sku_price as plan_price",
+      "sku_coverage as plan_coverage",
+      "sku_append  as plan_append",
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate",
+      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
+      "insure_company_name as underwriting_company",
+      "effective_date as policy_effect_date",
+      "preserve_start_date as policy_start_time",
+      "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date end) end as policy_effective_time",
+      "preserve_end_date as policy_expire_time",
+      "cast(policy_status as string) as policy_status",
+      "cast((add_premium + del_premium) as decimal(14,4)) as premium_total",
+      "cast(case pay_status when 1 then 0 when 2 then 1 when 3 then 3 else pay_status end as string) as premium_pay_status",
+      "cast(invoice_type as string) as premium_invoice_type",
+      "'' as economy_company",
+      "economic_rate as economy_rates",
+      "cast((add_premium + del_premium) * economic_rate as decimal(14,4))as economy_fee",
+      "tech_service_rate as technical_service_rates",
+      "round(cast((add_premium + del_premium) * tech_service_rate as decimal(14,4)),4) as technical_service_fee",
+      "cast('' as decimal(14,4)) as consulting_service_rates",
+      "cast('' as decimal(14,4)) as consulting_service_fee",
+      "cast(getNow() as timestamp) as service_fee_check_time",
+      "'' as service_fee_check_status",
+      "'' as has_brokerage",
+      "case when commission_discount_rate is null then 0 else commission_discount_rate end as brokerage_ratio",
+      "cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee",
+      "'' as brokerage_pay_status",
+      "'' as remake",
+      "cast(getNow() as timestamp) as create_time",
+      "cast(getNow() as timestamp) as update_time",
+      "cast('' as int) as operator")
+    res.registerTempTable("t_accounts_employer_intermediate_temp")
 
 
-    val res = hqlContext.sql("select getUUID() as id,clean('') as batch_no,policy_code as policy_no,preserve_id, add_batch_code,del_batch_code,cast(preserve_status as string) as preserve_status," +
-      "case source_system when '1.0' then '1' when '2.0' then '2' else source_system end as data_source,product_desc as project_name," +
-      "insure_code as product_code,product_name,if(trim(channel_name)='直客',trim(ent_name),channel_name)  as channel_name,salesman as business_owner," +
-      "team_name as business_region,business_source,cast(case preserve_type when 1 then 0 when 2 then 2 when 5 then 5 else preserve_type end as string) as business_type," +
-      "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day," +
-      "biz_operator as operational_name,holder_name,insured_subject as insurer_name,sku_price as plan_price,sku_coverage as plan_coverage,sku_append  as plan_append," +
-      "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate," +
-      "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type," +
-      "insure_company_name as underwriting_company,effective_date as policy_effect_date, preserve_start_date as policy_start_time," +
-      "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date end) end as policy_effective_time," +
-      "preserve_end_date as policy_expire_time,cast(policy_status as string) as policy_status,cast((add_premium + del_premium) as decimal(14,4)) as premium_total,cast(case pay_status when 1 then 0 when 2 then 1 when 3 then 3 else pay_status end as string) as premium_pay_status," +
-      "cast(invoice_type as string) as premium_invoice_type,clean('') as economy_company,economic_rate as economy_rates,round(cast((add_premium + del_premium) * economic_rate as decimal(14,4)),4) as economy_fee," +
-      "tech_service_rate as technical_service_rates,round(cast((add_premium + del_premium) * tech_service_rate as decimal(14,4)),4) as technical_service_fee," +
-      "cast(clean('') as decimal(14,4)) as consulting_service_rates,cast(clean('') as decimal(14,4)) as consulting_service_fee,cast(clean('') as timestamp) as service_fee_check_time," +
-      "clean('') as service_fee_check_status,clean('') as has_brokerage,case when commission_discount_rate is null then 0 else commission_discount_rate end as brokerage_ratio," +
-      "cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee,clean('') as brokerage_pay_status," +
-      "clean('') as remake,cast(getNow() as timestamp) as create_time,cast(getNow() as timestamp) as update_time,cast(clean('') as int) as operator from preservePolicyRes ")
-    res
+    /**
+      * 读取保单和批单的数据
+      */
+    val dwTaccountEmployerIntermeditae = hqlContext.sql("select distinct policy_no,batch_no,preserve_id,add_batch_code,del_batch_code,preserve_status,data_source,project_name,product_code,product_name,channel_name,business_owner,business_region,business_source," +
+      "business_type,performance_accounting_day,operational_name,holder_name,insurer_name,plan_price,plan_coverage,plan_append,plan_disability_rate,plan_pay_type,underwriting_company,policy_effect_date,policy_effective_time,policy_start_time," +
+      "policy_expire_time,policy_status,premium_total,premium_pay_status,premium_invoice_type,economy_company,economy_rates,economy_fee,technical_service_rates,technical_service_fee,consulting_service_rates,consulting_service_fee,service_fee_check_time," +
+      "service_fee_check_status,has_brokerage,brokerage_ratio,brokerage_fee,brokerage_pay_status,remake,create_time,update_time,operator from dwdb.dw_t_accounts_employer_intermediate")
 
+    /**
+      * 读取业务表的数据
+      */
+
+    val dwTAccountsEmployerDetail = hqlContext.sql("select policy_no as policy_no_salve,preserve_id as preserve_id_salve from dwdb.dw_t_accounts_employer_detail")
+
+    /**
+      * 关联两个表 拿到批单数据的增量数据
+      */
+    val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
+      .selectExpr("policy_no", "batch_no", "policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source",
+        "project_name", "product_code", "product_name", "channel_name",
+        "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
+        "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
+        "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status",
+        "premium_invoice_type", "economy_company",
+        "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee", "consulting_service_rates", "consulting_service_fee", "service_fee_check_time",
+        "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee", "brokerage_fee", "brokerage_pay_status", "remake", "create_time",
+        "update_time", "operator")
+      .where("preserve_id is not null and policy_no_salve is null")
+
+
+    val res1 = resTemp.selectExpr(
+      "getUUID() as id",
+      "clean(batch_no) as batch_no",
+      "clean(policy_no) as policy_no",
+      "clean(preserve_id) as preserve_id",
+      "clean(add_batch_code) as add_batch_code",
+      "clean(del_batch_code) as del_batch_code",
+      "clean(preserve_status) as preserve_status",
+      "clean(data_source) as data_source",
+      "clean(project_name) as project_name",
+      "clean(product_code) as product_code",
+      "clean(product_name) as product_name",
+      "clean(channel_name) as channel_name",
+      "clean(business_owner)  as business_owner",
+      "clean(business_region) as business_region",
+      "clean(business_source) as business_source",
+      "clean(business_type) as business_type",
+      "performance_accounting_day",
+      "clean(operational_name) as operational_name",
+      "clean(holder_name) as holder_name",
+      "clean(insurer_name) as insurer_name",
+      "plan_price",
+      "plan_coverage",
+      "clean(plan_append) as plan_append",
+      "plan_disability_rate",
+      "clean(plan_pay_type) as plan_pay_type",
+      "clean(underwriting_company) as underwriting_company",
+      "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
+      "clean('') as cur_policy_status",
+      "policy_status",
+      "premium_total",
+      "clean(premium_pay_status) as premium_pay_status",
+      "clean('') as has_behalf",
+      "clean('') as behalf_status",
+      "clean(premium_invoice_type) as premium_invoice_type",
+      "clean(economy_company) as economy_company",
+      "economy_rates",
+      "economy_fee",
+      "technical_service_rates",
+      "technical_service_fee",
+      "case when consulting_service_rates = '' then null else consulting_service_rates end as consulting_service_rates",
+      "case when consulting_service_fee = '' then null else consulting_service_fee end as consulting_service_fee",
+      "service_fee_check_time",
+      "service_fee_check_status",
+      "clean(has_brokerage) as has_brokerage",
+      "brokerage_ratio",
+      "brokerage_fee",
+      "clean(brokerage_pay_status)  as brokerage_pay_status",
+      "clean(remake) as remake", "create_time", "update_time",
+      "case when operator = '' then null else operator end as operator")
+
+    res1
 
   }
-
-
 }
