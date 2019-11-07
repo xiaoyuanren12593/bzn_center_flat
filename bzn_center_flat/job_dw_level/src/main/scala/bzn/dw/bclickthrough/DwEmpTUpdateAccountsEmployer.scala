@@ -41,7 +41,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取最新的业务表
       */
 
-    val dwTAccountsEmployerDetail = hqlContext.sql("select * from dwdb.dw_t_accounts_employer_detail")
+    val dwTAccountsEmployerDetail = hqlContext.sql("select * from dwdb.dw_t_accounts_employer_test_presever_detail")
 
 
     /**

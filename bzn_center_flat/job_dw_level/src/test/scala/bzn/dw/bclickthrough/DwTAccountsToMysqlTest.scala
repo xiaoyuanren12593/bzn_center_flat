@@ -24,7 +24,7 @@ object DwTAccountsToMysqlTest extends SparkUtil with Until with MysqlUntil {
     //读取hive的表
 
 
-    val res = hqlContext.sql("select * from dwdb.dw_t_update_accounts_employer_detail")
+    val res = hqlContext.sql("select * from dwdb.dw_t_update_accounts_employer_detail").drop("id")
 
     saveASMysqlTable(res, "t_accounts_employer_test", SaveMode.Overwrite, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
