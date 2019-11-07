@@ -9,6 +9,8 @@ object Dependencies {
 
   val clickhouseConnector =  "cc.blynk.clickhouse" % "clickhouse4j" % "1.0.0"
 
+  val c3p0 = "com.mchange" % "c3p0" % "0.9.5.2"
+
   // val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.4.4"
 
   val jedis = "redis.clients" % "jedis" % "2.9.0"
@@ -93,4 +95,7 @@ object Dependencies {
 
   //--------------------------------------------机器学习+图计算----------------------------------------------------------------
   val bznMLLibGraphXDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided, sparkMllib, sparkGraphX)
+
+  //--------------------------------------------spark streaming 实时计算----------------------------------------------------------------
+  val bznSparkStreamingDepsProvided  = Seq(c3p0,mysqlConnectorJava,clickhouseConnector, fastjson, sparkHiveProvided,sparkStreaming,sparkStreamingKafka,sparkCsv)
 }

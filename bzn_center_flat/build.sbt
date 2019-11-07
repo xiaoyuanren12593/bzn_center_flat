@@ -137,6 +137,22 @@ lazy val bznCPersonLabel = (project in file("job_c_Person_label"))
     assemblyJarName in assembly := "bznCPerson.jar"
   )
 
+// c端标签模块
+lazy val bznSparkStreaming = (project in file("job_spark_streaming"))
+  .dependsOn(jobUtil)
+  .settings(
+    libraryDependencies ++= bznSparkStreamingDepsProvided.map(
+      _.excludeAll(ExclusionRule(organization = "org.mortbay.jetty"))
+    ).map(
+      _.excludeAll(ExclusionRule(organization = "javax.servlet"))
+    ))
+  .settings(commonSettings)
+  .settings(commonAssemblySettings)
+  .settings(
+    //定义jar包的名字
+    assemblyJarName in assembly := "bznSparkStreaming.jar"
+  )
+
 // 机器学习模块
 lazy val bznMLLibGraphX = (project in file("job_mllib_graphx"))
   .dependsOn(jobUtil)
