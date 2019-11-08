@@ -1,6 +1,6 @@
 package utils
 
-import java.sql.{DatabaseMetaData, Date, ResultSet, Timestamp}
+import java.sql.{Date, Timestamp}
 import java.util.Properties
 
 import org.apache.log4j.Logger
@@ -24,7 +24,6 @@ object MySQLUtils {
   def saveDFtoDBUsePool(tableName: String, resultDateFrame: DataFrame) {
     val colNumbers = resultDateFrame.columns.length
     val sql = getInsertSql(tableName, colNumbers)
-    println (sql)
     val columnDataTypes = resultDateFrame.schema.fields.map(_.dataType)
     resultDateFrame.foreachPartition(partitionRecords => {
       val conn = MySQLPoolManager.getMysqlManager.getConnection //从连接池中获取一个连接
@@ -35,7 +34,7 @@ object MySQLUtils {
         partitionRecords.foreach(record => {
           //注意:setString方法从1开始，record.getString()方法从0开始
           for (i <- 1 to colNumbers) {
-            val value: Any = record.get(i - 1)
+            val value = record.get(i - 1)
             val dateType = columnDataTypes(i - 1)
             if (value != null) { //如何值不为空,将类型转换为String
               preparedStatement.setString(i, value.toString)
@@ -248,8 +247,9 @@ object MySQLUtils {
             val fieldIndex = record.fieldIndex(updateColumns(i - 1))
             val value = record.get(fieldIndex)
             val dataType = columnDataTypes(fieldIndex)
-            println(s"@@ $fieldIndex,$value,$dataType")
+            //println(s"@@ $fieldIndex,$value,$dataType")
             if (value != null) { //如何值不为空,将类型转换为String
+              println (dataType+"    "+record.getAs[Int](fieldIndex))
               dataType match {
                 case _: ByteType => preparedStatement.setInt(colNumbers + i, record.getAs[Int](fieldIndex))
                 case _: ShortType => preparedStatement.setInt(colNumbers + i, record.getAs[Int](fieldIndex))
@@ -264,7 +264,8 @@ object MySQLUtils {
                 case _ => throw new RuntimeException(s"nonsupport ${dataType} !!!")
               }
             } else { //如果值为空,将值设为对应类型的空值
-              metaData.absolute(colNumbers+i)
+              metaData.absolute(fieldIndex)
+              println (updateColumns.length)
               preparedStatement.setNull(colNumbers+i, metaData.getInt("DATA_TYPE"))
             }
           }
@@ -293,8 +294,8 @@ object MySQLUtils {
     */
   def createTableIfNotExist(tableName: String, df: DataFrame): AnyVal = {
     val con = MySQLPoolManager.getMysqlManager.getConnection
-    val metaData: DatabaseMetaData = con.getMetaData
-    val colResultSet: ResultSet = metaData.getColumns(null, "%", tableName, "%")
+    val metaData = con.getMetaData
+    val colResultSet = metaData.getColumns(null, "%", tableName, "%")
     //如果没有该表,创建数据表
     if (!colResultSet.next()) {
       //构建建表字符串
