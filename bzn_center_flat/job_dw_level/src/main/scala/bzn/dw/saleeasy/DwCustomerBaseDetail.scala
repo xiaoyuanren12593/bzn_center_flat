@@ -319,7 +319,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     //企业级别的结案案件数
 
-    val finalLevel = hqlContext.sql("SELECT holder_name,count(case_type) as final_case_counts,insure_company_name as company_name3  from policyAndClaimTemp WHERE  case_status IS NOT NULL GROUP BY holder_name,insure_company_name")
+    val finalLevel = hqlContext.sql("SELECT holder_name,count(case_status) as final_case_counts,insure_company_name as company_name3  from policyAndClaimTemp WHERE  case_status IS NOT NULL GROUP BY holder_name,insure_company_name")
 
 
     //resTemp1 关联在保人数

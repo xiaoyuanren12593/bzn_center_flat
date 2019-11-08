@@ -31,8 +31,9 @@ object DwCustomerBaseDetailTest extends SparkUtil with Until with MysqlUntil {
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = CustomerBase(hiveContext)
-    saveASMysqlTable(res, "dm_saleseasy_customer_base_detail", SaveMode.Overwrite,
+    /*saveASMysqlTable(res, "dm_saleseasy_customer_base_detail", SaveMode.Overwrite,
       "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql.url.106.dmdb")
+    */
     sc.stop()
   }
 
@@ -181,6 +182,8 @@ object DwCustomerBaseDetailTest extends SparkUtil with Until with MysqlUntil {
     res5.registerTempTable("res_temp")
     val res6 = hqlContext.sql("select holder_company,max(curr_insured) as channel_curr_insured from res_temp group by holder_company")
 
+    println(res6.count())
+    sys.exit()
     /**
       * 历史在保峰值
       */
@@ -217,13 +220,12 @@ object DwCustomerBaseDetailTest extends SparkUtil with Until with MysqlUntil {
     df4Temp.registerTempTable("topTemp")
 
     val df4 = hqlContext.sql("select max(count) as counts,holder_name from topTemp group by holder_name")
-
+    println(df4.count())
     /**
       * 累计投保人次
       */
 
     val currInsuredCounts = hqlContext.sql("select holder_name,sum(curr_insured) as curr_insured_counts,company_name from dfTemp group by holder_name,company_name")
-
 
     /**
       * 已赚保费
@@ -260,6 +262,7 @@ object DwCustomerBaseDetailTest extends SparkUtil with Until with MysqlUntil {
 
     val tem3 = hqlContext.sql("select holder_name,cast(sum(premium) as decimal(14,4)) as premium,company_name from peimiumTemp group by holder_name,company_name")
 
+
     /**
       * 在保人数
       */
@@ -284,7 +287,6 @@ object DwCustomerBaseDetailTest extends SparkUtil with Until with MysqlUntil {
     Dframe.registerTempTable("currInsureTemp")
 
     val currInsureRes = hqlContext.sql("select holder_name,sum(curr_insured) as curr_insured,insure_company from currInsureTemp group by holder_name,insure_company")
-
 
     //读取理赔表
     val policyClaim = hqlContext.sql("select policy_id as id,ent_name,ent_id,disable_level,case_type,case_status,res_pay,case_no from dwdb.dw_policy_claim_detail")
