@@ -16,7 +16,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/10/29
 * @Describe:
-*/ object DwEmpTAccountsIntermediateDetailTest  extends SparkUtil with Until with  MysqlUntil{
+*/ object DwEmpTAccountsIntermediateDetailTest extends SparkUtil with Until {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -25,9 +25,9 @@ import org.apache.spark.sql.hive.HiveContext
 
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
-    val sqlContext = sparkConf._3
-    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext,sqlContext)
-
+    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext)
+    hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_test_detail")
+    AddPolicyRes.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_test_detail")
     sc.stop()
 
   }
@@ -38,9 +38,9 @@ import org.apache.spark.sql.hive.HiveContext
     *
     * @param hqlContext
     */
-  def TAccountsEmployerAddPolicy(hqlContext: HiveContext,sqlContext:SQLContext): DataFrame = {
+  def TAccountsEmployerAddPolicy(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
-    sqlContext.udf.register("clean", (str: String) => clean(str))
+    hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -56,14 +56,12 @@ import org.apache.spark.sql.hive.HiveContext
     val odsPolicyDetail = hqlContext.sql("select distinct policy_code,case source_system when '1.0' then '1' when '2.0' then '2' end as data_source," +
       "policy_status,policy_effect_date,policy_start_date,policy_end_date,product_code,insure_company_name,f" +
       "irst_premium,holder_name,insured_subject,invoice_type,preserve_policy_no,policy_create_time from odsdb.ods_policy_detail")
-    //odsPolicyDetail.printSchema()
 
     /**
       * 读取客户归属表
       */
 
     val odsEntGuzhuDetail = hqlContext.sql("select salesman,ent_name,biz_operator,channel_name,business_source from odsdb.ods_ent_guzhu_salesman_detail")
-    //odsEntGuzhuDetail.printSchema()
 
     /**
       * 保单明细表关联客户归属信息表
@@ -71,8 +69,6 @@ import org.apache.spark.sql.hive.HiveContext
     val policyAndGuzhuRes = odsPolicyDetail.join(odsEntGuzhuDetail, 'holder_name === 'ent_name, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date", "insure_company_name", "first_premium",
         "holder_name", "insured_subject", "invoice_type", "salesman", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no", "policy_create_time")
-    //policyAndGuzhuRes.printSchema()
-
 
     /**
       * 读取销售团队表
@@ -193,10 +189,11 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取业务表的数据
       */
-     val dwTAccountsEmployerDetailTemp = readMysqlTable(sqlContext,"t_accounts_employer_test","mysql.username.103",
-  "mysql.password.103","mysql.driver","mysql_url.103.odsdb")
 
-    val dwTAccountsEmployerDetail = dwTAccountsEmployerDetailTemp.selectExpr("policy_no as policy_no_salve")
+    val dwTAccountsEmployerDetailTemp = hqlContext.sql("select * from dwdb.dw_t_accounts_employer_detail").cache()
+
+    val dwTAccountsEmployerDetail = dwTAccountsEmployerDetailTemp.selectExpr("policy_no as policy_no_salve").cache()
+
 
     /**
       * 关联两个表 过滤出保单数据的增量数据
@@ -219,7 +216,6 @@ import org.apache.spark.sql.hive.HiveContext
 
 
     val frame = dwTAccountsEmployerDetailTemp.unionAll(resTemp)
-   // println(dwTAccountsEmployerDetailTemp.count())
 
     //增量数据
     val res1 = frame.selectExpr(
@@ -249,7 +245,10 @@ import org.apache.spark.sql.hive.HiveContext
       "plan_disability_rate",
       "clean(plan_pay_type) as plan_pay_type",
       "clean(underwriting_company) as underwriting_company",
-      "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
+      "policy_effect_date",
+      "policy_start_time",
+      "policy_effective_time",
+      "policy_expire_time",
       "clean(cur_policy_status) as cur_policy_status",
       "policy_status",
       "premium_total",
@@ -272,7 +271,10 @@ import org.apache.spark.sql.hive.HiveContext
       "clean(brokerage_pay_status)  as brokerage_pay_status",
       "clean(remake) as remake", "create_time", "update_time",
       "operator")
-
     res1
+
+
   }
+
+
 }

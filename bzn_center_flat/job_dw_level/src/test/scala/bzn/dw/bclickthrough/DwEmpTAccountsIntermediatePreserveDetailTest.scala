@@ -14,8 +14,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/7
 * @Describe:
-*/ object DwEmpTAccountsIntermediatePreserveTestDetail  extends SparkUtil with Until {
-
+*/ object DwEmpTAccountsIntermediatePreserveDetailTest  extends SparkUtil with Until {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -24,8 +23,8 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val AddPolicyRes = TAccountsEmployerAddPreserve(hqlContext)
-   //hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_detail")
-   //AddPolicyRes.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_detail")
+    hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_test_presever_detail")
+    AddPolicyRes.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_test_presever_detail")
     sc.stop()
 
   }
@@ -205,7 +204,6 @@ import org.apache.spark.sql.hive.HiveContext
 
     val dwTAccountsEmployerDetail = dwTAccountsEmployerDetailTemp.selectExpr("policy_no as policy_no_salve","preserve_id as preserve_id_salve").cache()
 
-
     /**
       * 关联两个表 拿到批单数据的增量数据
       */
@@ -214,7 +212,7 @@ import org.apache.spark.sql.hive.HiveContext
         "project_name", "product_code", "product_name", "channel_name",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
-        "policy_effect_date", "policy_start_time", "policy_effective_time", "cur_policy_status","policy_expire_time", "policy_status", "premium_total", "premium_pay_status",
+        "policy_effect_date", "policy_start_time", "policy_effective_time","policy_expire_time","cur_policy_status", "policy_status", "premium_total", "premium_pay_status",
         "has_behalf","behalf_status",
         "premium_invoice_type", "economy_company",
         "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee", "consulting_service_rates", "consulting_service_fee", "service_fee_check_time",
@@ -226,17 +224,16 @@ import org.apache.spark.sql.hive.HiveContext
       "project_name", "product_code", "product_name", "channel_name",
       "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
       "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
-      "policy_effect_date", "policy_start_time", "policy_effective_time","cur_policy_status", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status",
+      "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time","cur_policy_status", "policy_status", "premium_total", "premium_pay_status",
       "has_behalf","behalf_status",
       "premium_invoice_type", "economy_company",
       "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee", "consulting_service_rates", "consulting_service_fee", "service_fee_check_time",
       "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",  "brokerage_pay_status", "remake", "create_time",
       "update_time", "operator")
-println(resTemp.count())
-    val frame = dwTAccountsEmployerDetailTemp.unionAll(resTemp)
-println(frame.count())
 
-    val res1 = resTemp.selectExpr(
+    val frame = dwTAccountsEmployerDetailTemp.unionAll(resTemp)
+
+    val res1 = frame.selectExpr(
       "getUUID() as id",
       "clean(batch_no) as batch_no",
       "clean(policy_no) as policy_no",
@@ -263,7 +260,10 @@ println(frame.count())
       "plan_disability_rate",
       "clean(plan_pay_type) as plan_pay_type",
       "clean(underwriting_company) as underwriting_company",
-      "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
+      "policy_effect_date",
+      "policy_start_time",
+      "policy_effective_time",
+      "policy_expire_time",
       "clean(cur_policy_status) as cur_policy_status",
       "policy_status",
       "premium_total",

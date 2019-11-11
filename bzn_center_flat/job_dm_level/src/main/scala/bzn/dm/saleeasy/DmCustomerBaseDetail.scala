@@ -32,6 +32,8 @@ import org.apache.spark.sql.hive.HiveContext
     val res = CustomerBase(hqlContext)
     hqlContext.sql("truncate table dmdb.dm_customer_base_detail")
     res.write.mode(SaveMode.Append).saveAsTable("dmdb.dm_customer_base_detail")
+    saveASMysqlTable(res, "dm_saleseasy_customer_base_detail", SaveMode.Overwrite,
+      "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql_url.106.dmdb")
 
 
     sc.stop()
