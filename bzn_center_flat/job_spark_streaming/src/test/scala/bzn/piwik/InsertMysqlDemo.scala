@@ -1,9 +1,10 @@
-import java.sql.{Date, Timestamp}
+package bzn.piwik
 
-import InsertMysqlDemo.CardMember
+import java.sql.{Date,Timestamp}
+
+import bzn.utils.MySQLUtils
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
-import utils.MySQLUtils
 
 /**
   * Created with IntelliJ IDEA.
@@ -21,15 +22,17 @@ object InsertMysqlDemo {
     val hiveContext = new SQLContext(sparkContext)
     import hiveContext.implicits._
     val memberSeq = Seq(
-      //CardMember(1, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "123223", 0.32f),
-      CardMember(2, null, new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), null, 0.362f)
+      CardMember(1, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
+      CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
+      CardMember(3, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
+      CardMember(4, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
+      CardMember(5, "季卡", null, 12, false, null, null, 0.95f)
       //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
     )
-    val memberDF = memberSeq.toDF()
+    val memberDF = memberSeq.toDF().repartition(5)
     //MySQLUtils.saveDFtoDBCreateTableIfNotExist("member_test", memberDF)
-    MySQLUtils.insertOrUpdateDFtoDBUsePool("member_test", memberDF, Array("user", "salary"))
-    MySQLUtils.getDFFromMysql(hiveContext, "member_test", null)
-
+    MySQLUtils.insertOrUpdateDFtoDBUsePool("member_test", memberDF, Array("expire","duration","date","card_type","user", "salary"))
+    MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
 
     sparkContext.stop()
   }

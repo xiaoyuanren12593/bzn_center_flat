@@ -1,4 +1,4 @@
-package utils
+package bzn.utils
 
 import java.sql.Connection
 
@@ -6,9 +6,9 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
 
 /**
   * Created with IntelliJ IDEA.
-  * Author: fly_elephant@163.com
-  * Description:MySQL连接池管理类
-  * Date: Created in 2018-11-17 12:43
+  * Author:
+  * Description:MySQL DDL 和DML 工具类
+  * Date: Created in 2019-11-12
   */
 object MySQLPoolManager {
   var mysqlManager: MysqlPool = _
