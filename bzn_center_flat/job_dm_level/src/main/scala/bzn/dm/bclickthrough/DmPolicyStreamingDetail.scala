@@ -31,6 +31,7 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
   def getHolderInfo(sqlContext:HiveContext) = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     import sqlContext.implicits._
+
     /**
       * 读取每天新增的数据
       */

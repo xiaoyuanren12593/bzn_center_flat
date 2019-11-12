@@ -1,4 +1,4 @@
-package utils
+package bzn.utils
 
 import java.sql.{Date, Timestamp}
 import java.util.Properties
@@ -8,9 +8,9 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 /**
   * Created with IntelliJ IDEA.
-  * Author: fly_elephant@163.com
+  * Author:
   * Description:MySQL DDL 和DML 工具类
-  * Date: Created in 2018-11-17 12:43
+  * Date: Created in 2019-11-12
   */
 object MySQLUtils {
   val logger: Logger = Logger.getLogger(getClass.getSimpleName)
@@ -106,6 +106,7 @@ object MySQLUtils {
     */
   def getDFFromMysql(sqlContext: SQLContext, mysqlTableName: String, queryCondition: String): DataFrame = {
     val (jdbcURL, userName, passWord) = getMySQLInfo
+
     val prop = new Properties()
     prop.put("user", userName)
     prop.put("password", passWord)
@@ -209,10 +210,11 @@ object MySQLUtils {
     val colNumbers = resultDateFrame.columns.length
     val sql = getInsertOrUpdateSql(tableName, resultDateFrame.columns, updateColumns)
     val columnDataTypes = resultDateFrame.schema.fields.map(_.dataType)
-    println("############## sql = " + sql)
+   // println("############## sql = " + sql)
     resultDateFrame.foreachPartition(partitionRecords => {
       val conn = MySQLPoolManager.getMysqlManager.getConnection //从连接池中获取一个连接
       val preparedStatement = conn.prepareStatement(sql)
+      println("")
       val metaData = conn.getMetaData.getColumns(null, "%", tableName, "%") //通过连接获取表名对应数据表的元数据
       try {
         conn.setAutoCommit(false)
@@ -240,7 +242,6 @@ object MySQLUtils {
               metaData.absolute(i)
               preparedStatement.setNull(i, metaData.getInt("DATA_TYPE"))
             }
-
           }
           //设置需要更新的字段值
           for (i <- 1 to updateColumns.length) {
@@ -249,7 +250,6 @@ object MySQLUtils {
             val dataType = columnDataTypes(fieldIndex)
             //println(s"@@ $fieldIndex,$value,$dataType")
             if (value != null) { //如何值不为空,将类型转换为String
-              println (dataType+"    "+record.getAs[Int](fieldIndex))
               dataType match {
                 case _: ByteType => preparedStatement.setInt(colNumbers + i, record.getAs[Int](fieldIndex))
                 case _: ShortType => preparedStatement.setInt(colNumbers + i, record.getAs[Int](fieldIndex))
@@ -265,7 +265,6 @@ object MySQLUtils {
               }
             } else { //如果值为空,将值设为对应类型的空值
               metaData.absolute(fieldIndex)
-              println (updateColumns.length)
               preparedStatement.setNull(colNumbers+i, metaData.getInt("DATA_TYPE"))
             }
           }
@@ -321,7 +320,6 @@ object MySQLUtils {
       )
       sb.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8")
       val sql_createTable = sb.deleteCharAt(sb.lastIndexOf(',')).toString()
-      println(sql_createTable)
       val statement = con.createStatement()
       statement.execute(sql_createTable)
     }
