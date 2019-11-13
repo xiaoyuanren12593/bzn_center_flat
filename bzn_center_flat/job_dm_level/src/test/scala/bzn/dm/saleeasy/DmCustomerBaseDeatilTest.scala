@@ -48,9 +48,13 @@ import org.apache.spark.sql.hive.HiveContext
       (date + "")
     })
 
-    //读取雇主基础信息表(投保人级别)
-    val dwCustomerHolder = hqlContext.sql("select ent_id,ent_name,holder_name,channel_id,channel_name,start_date,province,city,salesman,team_name,biz_operator," +
-      "consumer_category,business_source,insure_company_name from dwdb.dw_customer_base_holder_detail")
+    //读取雇主基础信息表
+
+    val dwCustomerHolder = hqlContext.sql("select holder_name,insure_company_name,ent_id,ent_name,channel_id,channel_name,sale_name as salesman,max(policy_start_date) as start_date,team_name," +
+      "biz_operator,consumer_category,business_source,holder_province as province,holder_city as city" +
+      " from dwdb.dw_employer_baseinfo_detail group by holder_name,ent_id,ent_name,channel_id,channel_name,sale_name,team_name,biz_operator," +
+      "consumer_category,business_source,holder_province,holder_city,insure_company_name")
+
 
     //读取客户信息表(保单级别)
     val dwEmpBaseInfo = hqlContext.sql("select policy_id ,holder_name,channel_name,insure_company_name from dwdb.dw_employer_baseinfo_detail")
@@ -85,7 +89,6 @@ import org.apache.spark.sql.hive.HiveContext
     topChannelInsured.registerTempTable("TopChannelInsuredEveryDay")
 
     val channelInsuredOfTop = hqlContext.sql("select holder_company,max(curr_insured) as channel_curr_insured_top from TopChannelInsuredEveryDay group by holder_company")
-    println(channelInsuredOfTop.count())
 
 
     //历史在保峰值
@@ -299,9 +302,9 @@ val resTemp1 = dwCustomerHolder.join(insuredIntraday,'holder_name==='holder_name
       "team_name",
       "biz_operator",
       "start_date",
-      "case when curr_insured_count is null then 0 else curr_insured_count end as curr_insured_count", //在保人数
-      "case when history_top_insured is null then 0 else history_top_insured end as history_top_insured", //历史在保峰值
-      "case when channel_curr_insured_top is null then 0 else channel_curr_insured_top end as channel_curr_insured_top ", //渠道在保峰值
+      "case when curr_insured_count is null then 0 else curr_insured_count end as curr_insured_counts", //在保人数
+      "case when history_top_insured is null then 0 else history_top_insured end as top_history_curr_insured", //历史在保峰值
+      "case when channel_curr_insured_top is null then 0 else channel_curr_insured_top end as top_channel_curr_insured ", //渠道在保峰值
       "case when charged_premium is null then 0 else charged_premium end as charged_premium", //已赚保费
       "case when res_pay is null then 0 else res_pay end as res_pay",//预估赔付
       "case when loss_ration is null then 0 else loss_ration end as loss_ration", // 赔付率
