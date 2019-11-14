@@ -24,13 +24,13 @@ import org.apache.spark.sql.hive.HiveContext
     val hqlContext = sparkConf._4
     val sqlContext = sparkConf._3
     val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
-    // AddPolicyRes.printSchema()
-    saveASMysqlTable(AddPolicyRes, "t_accounts_employer_test", SaveMode.Append, "mysql.username.103",
+
+    saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
 
     val preRes = TAccountsEmployerAddPreserve(hqlContext,sqlContext)
 
-    saveASMysqlTable(preRes, "t_accounts_employer_test", SaveMode.Append, "mysql.username.103",
+    saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
 
     sc.stop()
@@ -287,7 +287,6 @@ import org.apache.spark.sql.hive.HiveContext
 
     val update = updateTemp.join(odsPolicyDetailTemp, 'policy_no === 'policy_code, "leftouter")
       .selectExpr(
-        "id",
         "policy_no",
         "data_source",
         "project_name",
@@ -600,7 +599,6 @@ import org.apache.spark.sql.hive.HiveContext
 
     val update = updateTemp.join(odsPolicyDetailTemp, 'policy_no === 'policy_code, "leftouter")
       .selectExpr(
-        "id",
         "policy_no",
         "preserve_id",
         "add_batch_code",

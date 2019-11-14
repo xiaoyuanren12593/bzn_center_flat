@@ -9,7 +9,7 @@ import bzn.dw.premium.DwTypeOfWorkClaimDetailTest.{getBeginTime, getFormatTime}
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 /*
@@ -27,6 +27,8 @@ import org.apache.spark.sql.hive.HiveContext
     val hiveContext = sparkConf._4
     val res = EmployerBaseInfoPersonDetail(hiveContext)
      res.printSchema()
+    hiveContext.sql("truncate table dwdb.dw_employer_baseinfo_person_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_employer_baseinfo_person_detail")
 
     sc.stop()
   }

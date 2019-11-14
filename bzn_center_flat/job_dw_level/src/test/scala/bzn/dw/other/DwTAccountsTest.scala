@@ -2,6 +2,8 @@ package bzn.dw.other
 
 import java.text.SimpleDateFormat
 import java.util.Date
+
+import bzn.dw.other.DwTAccounts.saveASMysqlTable
 import bzn.dw.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
 import org.apache.hadoop.hbase.client.Append
@@ -13,7 +15,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/6
 * @Describe:
-*/ object DwTAccountsTest extends SparkUtil with Until with MysqlUntil{
+*/ object DwTAccountsTest extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -23,18 +25,16 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val sqlContext = sparkConf._3
-  val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
-   // AddPolicyRes.printSchema()
-    saveASMysqlTable(AddPolicyRes, "t_accounts_employer_test", SaveMode.Append, "mysql.username.103",
+    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
+    saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    println("第一批")
 
-    println("cccc")
-    val preRes = TAccountsEmployerAddPreserve(hqlContext,sqlContext)
 
-    saveASMysqlTable(preRes, "t_accounts_employer_test", SaveMode.Append, "mysql.username.103",
+    val preRes = TAccountsEmployerAddPreserve(hqlContext, sqlContext)
+    saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
-println("ddd")
-
+    println("第二批")
     sc.stop()
 
   }
@@ -45,7 +45,7 @@ println("ddd")
     *
     * @param hqlContext
     */
-  def TAccountsEmployerAddPolicy(hqlContext: HiveContext,sqlContext:SQLContext): DataFrame = {
+  def TAccountsEmployerAddPolicy(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -192,11 +192,11 @@ println("ddd")
       * 关联两个表 过滤出保单数据的增量数据
       */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
-      .selectExpr("policy_no","policy_no_salve", "data_source", "project_name", "product_code", "product_name", "channel_name",
+      .selectExpr("policy_no", "policy_no_salve", "data_source", "project_name", "product_code", "product_name", "channel_name",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_invoice_type",
-        "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",  "service_fee_check_time","brokerage_ratio", "brokerage_fee", "create_time", "update_time")
+        "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee", "service_fee_check_time", "brokerage_ratio", "brokerage_fee", "create_time", "update_time")
       .where("policy_no_salve is null")
 
 
@@ -223,7 +223,7 @@ println("ddd")
       "plan_disability_rate",
       "clean(plan_pay_type) as plan_pay_type",
       "clean(underwriting_company) as underwriting_company",
-      "policy_effect_date",  "policy_effective_time", "policy_expire_time",
+      "policy_effect_date", "policy_effective_time", "policy_expire_time",
       "policy_status",
       "premium_total",
       "clean(premium_invoice_type) as premium_invoice_type",
@@ -288,7 +288,6 @@ println("ddd")
 
     val update = updateTemp.join(odsPolicyDetailTemp, 'policy_no === 'policy_code, "leftouter")
       .selectExpr(
-        "id",
         "policy_no",
         "data_source",
         "project_name",
@@ -326,19 +325,16 @@ println("ddd")
     update
 
 
-
-
-
-
   }
 
 
   /**
     * 批单数据
+    *
     * @param hqlContext
     * @return
     */
-  def TAccountsEmployerAddPreserve(hqlContext: HiveContext,sqlContext:SQLContext): DataFrame = {
+  def TAccountsEmployerAddPreserve(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -491,18 +487,18 @@ println("ddd")
 
     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
-      .selectExpr("policy_no as policy_no_salve","preserve_id as preserve_id_salve")
+      .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
 
     /**
       * 关联两个表 拿到批单数据的增量数据
       */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
-      .selectExpr("policy_no","policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
+      .selectExpr("policy_no", "policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
         "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status", "premium_invoice_type",
         "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
-       "brokerage_ratio", "brokerage_fee", "brokerage_fee",  "create_time", "update_time")
+        "brokerage_ratio", "brokerage_fee", "brokerage_fee", "create_time", "update_time")
       .where("preserve_id is not null and policy_no_salve is null")
 
 
@@ -582,7 +578,7 @@ println("ddd")
         "plan_disability_rate",
         "plan_pay_type",
         "underwriting_company",
-        "policy_effect_date","policy_start_time", "policy_effective_time", "policy_expire_time",
+        "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
         "policy_status",
         "premium_total",
         "premium_pay_status",
@@ -601,7 +597,6 @@ println("ddd")
 
     val update = updateTemp.join(odsPolicyDetailTemp, 'policy_no === 'policy_code, "leftouter")
       .selectExpr(
-        "id",
         "policy_no",
         "preserve_id",
         "add_batch_code",
@@ -647,4 +642,4 @@ println("ddd")
   }
 
 
-  }
+}

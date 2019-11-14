@@ -164,9 +164,9 @@ object DwTypeOfWorkMatchingDetail extends SparkUtil with Until {
         val bznWorkRisk = x.getAs[String]("bzn_work_risk")
         val gsWrokRisk = x.getAs[String]("gs_work_risk")
         val res = if (gsWrokRisk == "" || gsWrokRisk == null) -1 else if
-        (gsWrokRisk != null && gsWrokRisk.split(",")(0) =="S") 0
+        (gsWrokRisk != null && gsWrokRisk.split("|")(0) =="S") 0
         else{
-          val restemp = gsWrokRisk.split(",")(0).toInt
+          val restemp = gsWrokRisk.split("|")(0).toInt
           restemp
         }
 
