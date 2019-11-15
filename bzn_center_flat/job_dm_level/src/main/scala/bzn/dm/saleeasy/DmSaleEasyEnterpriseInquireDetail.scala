@@ -13,7 +13,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/8
 * @Describe:
-*/ object DmCustomerBaseDetail extends SparkUtil with Until with MysqlUntil {
+*/ object DmSaleEasyEnterpriseInquireDetail extends SparkUtil with Until with MysqlUntil {
 
   /**
     * 获取配置信息
@@ -21,8 +21,6 @@ import org.apache.spark.sql.hive.HiveContext
     * @param args
     */
   def main(args: Array[String]): Unit = {
-
-
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
     val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
@@ -30,11 +28,10 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val res = CustomerBase(hqlContext)
-    hqlContext.sql("truncate table dmdb.dm_customer_base_detail")
-    res.write.mode(SaveMode.Append).saveAsTable("dmdb.dm_customer_base_detail")
+    hqlContext.sql("truncate table dmdb.dm_saleeasy_enterprise_inquire_detail")
+    res.write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_enterprise_inquire_detail")
     saveASMysqlTable(res, "dm_saleseasy_customer_base_detail", SaveMode.Overwrite,
       "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql_url.106.dmdb")
-
 
     sc.stop()
 

@@ -13,7 +13,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/8
 * @Describe:
-*/ object DmCustomerBaseDeatilTest extends SparkUtil with Until with MysqlUntil {
+*/ object DmSaleEasyEnterpriseInquireDetailTest extends SparkUtil with Until with MysqlUntil {
 
   /**
     * 获取配置信息

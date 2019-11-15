@@ -25,15 +25,15 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val sqlContext = sparkConf._3
-    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
-    saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
-    println("第一批")
-
+   /* val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
+    AddPolicyRes.printSchema()*/
+  /*  saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
+      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
 
     val preRes = TAccountsEmployerAddPreserve(hqlContext, sqlContext)
-    saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+   /* saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
+      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
+
     println("第二批")
     sc.stop()
 
@@ -235,7 +235,6 @@ import org.apache.spark.sql.hive.HiveContext
       "brokerage_ratio",
       "brokerage_fee",
       "create_time", "update_time")
-
     //更新数据
 
     /**
@@ -405,7 +404,6 @@ import org.apache.spark.sql.hive.HiveContext
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
         "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name")
 
-
     /**
       * 读取产品表
       */
@@ -423,10 +421,10 @@ import org.apache.spark.sql.hive.HiveContext
         "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
         "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name", "product_desc", "product_name", "two_level_pdt_cate")
-      .where("policy_status in (0,1,-1) and if(preserve_start_date is null," +
-        "if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
+      .where("policy_status in (0,1,-1) and if(preserve_start_date is null,if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
         "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
-
+    val sssssss = resTempRes.selectExpr("preserve_id").where("preserve_id = '372050090338160640'")
+    sssssss.show(100)
 
     val res = resTempRes.selectExpr(
       "getUUID() as id",
@@ -470,6 +468,7 @@ import org.apache.spark.sql.hive.HiveContext
       "cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee",
       "cast(getNow() as timestamp) as create_time",
       "cast(getNow() as timestamp) as update_time")
+
     res.registerTempTable("t_accounts_employer_intermediate_temp")
 
 
@@ -488,18 +487,17 @@ import org.apache.spark.sql.hive.HiveContext
     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
-
     /**
       * 关联两个表 拿到批单数据的增量数据
       */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
-      .selectExpr("policy_no", "policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
+      .selectExpr("policy_no", "policy_no_salve", "preserve_id","preserve_id_salve", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
         "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status", "premium_invoice_type",
         "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "brokerage_ratio", "brokerage_fee", "brokerage_fee", "create_time", "update_time")
-      .where("preserve_id is not null and policy_no_salve is null")
+      .where("preserve_id is not null and preserve_id_salve is null")
 
 
     val res1 = resTemp.selectExpr(
@@ -540,7 +538,6 @@ import org.apache.spark.sql.hive.HiveContext
       "brokerage_ratio",
       "brokerage_fee",
       "create_time", "update_time")
-
     //更新数据
 
     /**

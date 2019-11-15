@@ -495,13 +495,13 @@ import org.apache.spark.sql.hive.HiveContext
       * 关联两个表 拿到批单数据的增量数据
       */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
-      .selectExpr("policy_no","policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
+      .selectExpr("policy_no","policy_no_salve", "preserve_id","preserve_id_salve", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
         "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status", "premium_invoice_type",
         "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "brokerage_ratio", "brokerage_fee", "brokerage_fee",  "create_time", "update_time")
-      .where("preserve_id is not null and policy_no_salve is null")
+      .where("preserve_id is not null and preserve_id_salve is null")
 
 
     val res1 = resTemp.selectExpr(
