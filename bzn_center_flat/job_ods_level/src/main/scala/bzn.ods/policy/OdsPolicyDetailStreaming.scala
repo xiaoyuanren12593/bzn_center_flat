@@ -38,40 +38,6 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
     val url  = "mysql.url.106"
 
     /**
-      * 1.0保单表
-      */
-    val tableOdrPolicyStreamingBznprd = "odr_policy_streaming_bznprd"
-    val odrPolicyStreamingBznprd = readMysqlTable(sqlContext: SQLContext, tableOdrPolicyStreamingBznprd: String,user:String,pass:String,driver:String,url:String)
-      .selectExpr("id","order_id","policy_code","channel_id","channel_name","people_num","insure_code","create_time","update_time")
-
-    /**
-      * 1.0投保人表
-      */
-    val tableOdrPolicyHolderStreamingBznprd = "odr_policy_holder_streaming_bznprd"
-    val odrPolicyHolderStreamingBznprd = readMysqlTable(sqlContext: SQLContext, tableOdrPolicyHolderStreamingBznprd: String,user:String,pass:String,driver:String,url:String)
-      .selectExpr("name","policy_id")
-
-    /**
-      * 1.0订单表
-      */
-    val tableOdrOrderInfoStreamingBznprd = "odr_order_info_streaming_bznprd"
-    val odrOrderInfoStreamingBznprd = readMysqlTable(sqlContext: SQLContext, tableOdrOrderInfoStreamingBznprd: String,user:String,pass:String,driver:String,url:String)
-      .selectExpr("id","status")
-
-    /**
-      * 保单与投保人数据关联
-      */
-    val odrPolicyStreamingBznprdHolder = odrPolicyStreamingBznprd.join(odrPolicyHolderStreamingBznprd,odrPolicyStreamingBznprd("id")===odrPolicyHolderStreamingBznprd("policy_id"),"leftouter")
-      .selectExpr("name","order_id","policy_code","channel_id","channel_name","people_num","insure_code","create_time","update_time")
-
-    /**
-      * 上述结果与订单数据关联
-      */
-    val odrPolicyStreamingBznprdHolderOrder = odrPolicyStreamingBznprdHolder.join(odrOrderInfoStreamingBznprd,odrPolicyStreamingBznprdHolder("order_id")===odrOrderInfoStreamingBznprd("id"),"leftouter")
-      .where("length(name) > 0")
-      .selectExpr("name as holder_name","policy_code","channel_id","channel_name","status","people_num as insured_count","insure_code as product_code","create_time","update_time")
-
-    /**
       * 2.0 业管保单表
       */
     val tablebTpProposalStreamingbBznbusi = "t_proposal_streaming_bznbusi"
@@ -83,15 +49,14 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
         "sell_channel_code as channel_id",
         "sell_channel_name as channel_name",
         "status",
+        "payment_status",//支付状态
+        "ledger_status",//实收状态
         "case when first_insure_master_num is null then 0 else first_insure_master_num end as insured_count",
         "product_code",
         "create_time","update_time"
       )
 
-    /**
-      * 1.0保单和批单进行合并
-      */
-    val res = odrPolicyStreamingBznprdHolderOrder.unionAll(tpProposalStreamingbBznbusi)
+    val res = tpProposalStreamingbBznbusi
       .selectExpr(
         "getUUID() as id",
         "clean(holder_name) as holder_name",
@@ -99,6 +64,8 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
         "clean(channel_id) as channel_id",
         "clean(channel_name) as channel_name",
         "status",
+        "payment_status",//支付状态
+        "ledger_status",//实收状态
         "insured_count",
         "clean(product_code) as product_code",
         "create_time",

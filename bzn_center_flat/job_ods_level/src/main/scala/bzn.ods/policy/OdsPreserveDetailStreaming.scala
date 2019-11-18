@@ -36,39 +36,17 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
     val url  = "mysql.url.106"
 
     /**
-      * 1.0业管批单表
-      */
-    val tablePlcPolicyPreserveStreamingBznprd = "plc_policy_preserve_streaming_bznprd"
-    val plcPolicyPreserveStreamingBznprd = readMysqlTable(sqlContext: SQLContext, tablePlcPolicyPreserveStreamingBznprd: String,user:String,pass:String,driver:String,url:String)
-      .selectExpr("id","policy_id as policy_id_master","policy_code","status","add_person_count","del_person_count","create_time","update_time")
-
-    /**
-      * 1.0投保人表
-      */
-    val tableOdrPolicyHolderStreamingBznprd = "odr_policy_holder_streaming_bznprd"
-    val odrPolicyHolderStreamingBznprd = readMysqlTable(sqlContext: SQLContext, tableOdrPolicyHolderStreamingBznprd: String,user:String,pass:String,driver:String,url:String)
-      .selectExpr("name","policy_id")
-
-    val onePreserveRes = plcPolicyPreserveStreamingBznprd.join(odrPolicyHolderStreamingBznprd,plcPolicyPreserveStreamingBznprd("policy_id_master")===odrPolicyHolderStreamingBznprd("policy_id"),"leftouter")
-      .where("length(name) > 0")
-      .selectExpr(
-        "id",
-        "name as holder_name","policy_code","status","create_time","update_time",
-        "case when add_person_count is null then 0 else add_person_count end as add_person_count",
-        "case when del_person_count is null then 0 else del_person_count end as del_person_count","create_time","update_time")
-      .selectExpr("id","holder_name","policy_code","status","'' as channel_id","'' as channel_name","(add_person_count-del_person_count) as insured_count","create_time","update_time")
-
-    /**
       * 2.0业管批单表
       */
     val tableBPolicyPreservationStreamingBznbusi = "b_policy_preservation_streaming_bznbusi"
     val bPolicyPreservationStreamingBznbusi = readMysqlTable(sqlContext: SQLContext, tableBPolicyPreservationStreamingBznbusi: String,user:String,pass:String,driver:String,url:String)
       .where("business_type = 2")
-      .selectExpr("id","holder_name","insurance_policy_no as policy_code","status","sell_channel_code as channel_id","sell_channel_name as channel_name",
+      .selectExpr("id","inc_dec_order_no","holder_name","insurance_policy_no as policy_code","status","sell_channel_code as channel_id","sell_channel_name as channel_name",
         "case when inc_revise_sum is null then 0 else inc_revise_sum end as inc_revise_sum",
         "case when dec_revise_sum is null then 0 else dec_revise_sum end as dec_revise_sum","create_time","update_time"
       ).selectExpr(
       "cast(id as string) as id",
+      "inc_dec_order_no",
       "holder_name",
       "policy_code",
       "status",
@@ -79,10 +57,11 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
       "update_time"
     )
 
-    val res = bPolicyPreservationStreamingBznbusi.unionAll(onePreserveRes)
+    val res = bPolicyPreservationStreamingBznbusi
       .selectExpr(
         "getUUID() as id",
         "id as preserve_id",
+        "inc_dec_order_no",
         "clean(holder_name) as holder_name",
         "clean(policy_code) as policy_code",
         "status",

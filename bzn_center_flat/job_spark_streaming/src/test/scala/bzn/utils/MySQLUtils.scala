@@ -5,7 +5,7 @@ import java.util.Properties
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 /**
   * Created with IntelliJ IDEA.
   * Author:
@@ -161,6 +161,63 @@ object MySQLUtils {
   }
 
   /**
+    * 删除表中的数据
+    * @param sqlContext
+    * @param tableName
+    * @return
+    */
+  def deleteMysqlTableDataBatch(sqlContext: SQLContext,resultDateFrame:DataFrame, tableName: String) = {
+    val conn = MySQLPoolManager.getMysqlManager.getConnection //从连接池中获取一个连接
+    val colNumbers = resultDateFrame.columns.length
+    val sql = getDeleteSql(tableName)
+    val columnDataTypes = resultDateFrame.schema.fields.map(_.dataType)
+    println("############## sql = " + sql)
+    resultDateFrame.foreachPartition(partitionRecords => {
+      val conn = MySQLPoolManager.getMysqlManager.getConnection //从连接池中获取一个连接
+      val preparedStatement = conn.prepareStatement(sql)
+      val metaData = conn.getMetaData.getColumns(null, "%", tableName, "%") //通过连接获取表名对应数据表的元数据
+      try {
+        conn.setAutoCommit(false)
+        partitionRecords.foreach(record => {
+          //注意:setString方法从1开始，record.getString()方法从0开始
+          for (i <- 1 to colNumbers) {
+            val value = record.get(i - 1)
+            val dateType = columnDataTypes(i - 1)
+            if (value != null) { //如何值不为空,将类型转换为String
+              preparedStatement.setString(i, value.toString)
+              dateType match {
+                case _: ByteType => preparedStatement.setInt(i, record.getAs[Int](i - 1))
+                case _: ShortType => preparedStatement.setInt(i, record.getAs[Int](i - 1))
+                case _: IntegerType => preparedStatement.setInt(i, record.getAs[Int](i - 1))
+                case _: LongType => preparedStatement.setLong(i, record.getAs[Long](i - 1))
+                case _: BooleanType => preparedStatement.setInt(i, if (record.getAs[Boolean](i - 1)) 1 else 0)
+                case _: FloatType => preparedStatement.setFloat(i, record.getAs[Float](i - 1))
+                case _: DoubleType => preparedStatement.setDouble(i, record.getAs[Double](i - 1))
+                case _: StringType => preparedStatement.setString(i, record.getAs[String](i - 1))
+                case _: TimestampType => preparedStatement.setTimestamp(i, record.getAs[Timestamp](i - 1))
+                case _: DateType => preparedStatement.setDate(i, record.getAs[Date](i - 1))
+                case _ => throw new RuntimeException(s"nonsupport ${dateType} !!!")
+              }
+            } else { //如果值为空,将值设为对应类型的空值
+              metaData.absolute(i)
+              preparedStatement.setNull(i, metaData.getInt("DATA_TYPE"))
+            }
+          }
+          preparedStatement.addBatch()
+        })
+        //preparedStatement.executeBatch()
+        conn.commit()
+      } catch {
+        case e: Exception => println(s"@@ insertOrUpdateDFtoDBUsePool ${e.getMessage}")
+        // do some log
+      } finally {
+        preparedStatement.close()
+        conn.close()
+      }
+    })
+  }
+
+  /**
     * 保存DataFrame 到 MySQL中，如果表不存在的话，会自动创建
     * @param tableName
     * @param resultDateFrame
@@ -183,8 +240,8 @@ object MySQLUtils {
     * @return
     */
   def getInsertOrUpdateSql(tableName: String, cols: Array[String], updateColumns: Array[String]): String = {
-    val colNumbers = cols.length
-    var sqlStr = "insert into " + tableName + " values("
+    val colNumbers = cols.length-1
+    var sqlStr = "insert into "+tableName+" values("
     for (i <- 1 to colNumbers) {
       sqlStr += "?"
       if (i != colNumbers) {
@@ -201,20 +258,29 @@ object MySQLUtils {
   }
 
   /**
+    * 拼装delete SQL 语句
+    * @param tableName
+    * @return
+    */
+  def getDeleteSql(tableName: String): String = {
+    val sqlStr = "delete from "+tableName+" where ? = ?"
+    sqlStr
+  }
+
+  /**
     * 通过insertOrUpdate的方式把DataFrame写入到MySQL中，注意：此方式，必须对表设置主键
     * @param tableName
     * @param resultDateFrame
     * @param updateColumns
     */
   def insertOrUpdateDFtoDBUsePool(tableName: String, resultDateFrame: DataFrame, updateColumns: Array[String]) {
-    val colNumbers = resultDateFrame.columns.length
+    val colNumbers = resultDateFrame.columns.length-1
     val sql = getInsertOrUpdateSql(tableName, resultDateFrame.columns, updateColumns)
     val columnDataTypes = resultDateFrame.schema.fields.map(_.dataType)
-   // println("############## sql = " + sql)
+    println("############## sql = " + sql)
     resultDateFrame.foreachPartition(partitionRecords => {
       val conn = MySQLPoolManager.getMysqlManager.getConnection //从连接池中获取一个连接
       val preparedStatement = conn.prepareStatement(sql)
-      println("")
       val metaData = conn.getMetaData.getColumns(null, "%", tableName, "%") //通过连接获取表名对应数据表的元数据
       try {
         conn.setAutoCommit(false)

@@ -1,6 +1,5 @@
 package bzn.dm.bclickthrough
 
-import bzn.dm.bclickthrough.DmEmployerProposalContinueDetail.saveASMysqlTable
 import bzn.dm.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -30,20 +29,34 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
 
   def getHolderInfo(sqlContext:HiveContext) = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     import sqlContext.implicits._
 
     /**
       * 读取每天新增的数据
       */
     val dwPolicyStreamingDetail =
-      sqlContext.sql("select channel_id,channel_name,ent_id,ent_name,sale_name,biz_operator,0 as now_insured_count,insured_count as next_month_insured_count, " +
-        "regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
-        " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id from dwdb.dw_policy_streaming_detail")
+      sqlContext.sql("select * from dwdb.dw_policy_streaming_detail")
+        .selectExpr(
+          "policy_code",
+          "preserve_id",
+          "ent_id",
+          "ent_name",
+          "channel_id",
+          "channel_name",
+          "status",
+          "0 as now_insured_count",
+          "insured_count as next_month_insured_count",
+          "sale_name",
+          "biz_operator",
+          "create_time",
+          "update_time"
+        )
 
     /**
       * 读取雇主基础数据
       */
-    val dwEmployerBaseinfoDetail = sqlContext.sql("select policy_id,holder_name,ent_id,channel_id,channel_name,sale_name,biz_operator, " +
+    val dwEmployerBaseinfoDetail = sqlContext.sql("select policy_code,policy_id,holder_name,ent_id,7 as status,channel_id,channel_name,sale_name,biz_operator, " +
       "regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
       " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail")
 
@@ -56,10 +69,12 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     val nowDataRes = dwEmployerBaseinfoDetail.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insued and 'now_day_id === 'day_id,"leftouter")
       .selectExpr(
         "policy_id",
+        "policy_code",
         "ent_id",
         "holder_name",
         "channel_id",
         "channel_name",
+        "status",
         "sale_name",
         "biz_operator",
         "insured_count as now_insured_count",
@@ -69,44 +84,46 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
 
     val nextMonthData = nowDataRes.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insued and 'next_month_day_id === 'day_id,"leftouter")
       .selectExpr(
-        "channel_id",
-        "channel_name",
+        "policy_code",
+        "'' as preserve_id",
         "ent_id",
         "holder_name as ent_name",
-        "sale_name",
-        "biz_operator",
-        "now_insured_count",
-        "insured_count as next_month_insured_count",
-        "now_day_id",
-        "next_month_day_id"
-      )
-
-    dwPolicyStreamingDetail.unionAll(nextMonthData)
-        .registerTempTable("resTemp")
-
-    val res = sqlContext.sql("select channel_id,channel_name,ent_id,ent_name,sale_name,biz_operator," +
-      "sum(case when now_insured_count is null then 0 else now_insured_count end) as now_insured_count," +
-      "sum(case when next_month_insured_count is null then 0 else next_month_insured_count end) as next_month_insured_count" +
-      " from resTemp group by channel_id,channel_name,ent_id,ent_name,sale_name,biz_operator")
-      .selectExpr(
-        "getUUID() as id",
         "channel_id",
         "channel_name",
-        "ent_id",
-        "ent_name",
+        "status",
+        "now_insured_count",
+        "insured_count as next_month_insured_count",
         "sale_name",
         "biz_operator",
-        "cast(now_insured_count as int) as curr_insured",
-        "cast(next_month_insured_count as int) as pre_continue_person_count",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time"
       )
 
+    val res = dwPolicyStreamingDetail.unionAll(nextMonthData)
+      .selectExpr(
+        "getUUID() as id",
+        "policy_code",
+        "clean(preserve_id) as preserve_id",
+        "ent_id",
+        "ent_name",
+        "channel_id",
+        "channel_name",
+        "status",
+        "now_insured_count as curr_insured",
+        "next_month_insured_count as pre_continue_person_count",
+        "sale_name",
+        "biz_operator",
+        "create_time",
+        "update_time"
+      )
+
+    res.printSchema()
+
     val tableName  = "dm_b_clickthrouth_emp_continue_policy_detail"
 
-//    val user103 = "mysql.username.103"
-//    val pass103 = "mysql.password.103"
-//    val url103 = "mysql_url.103.dmdb"
+    //    val user103 = "mysql.username.103"
+    //    val pass103 = "mysql.password.103"
+    //    val url103 = "mysql_url.103.dmdb"
     val driver = "mysql.driver"
     val user106 = "mysql.username.106"
     val pass106 = "mysql.password.106"

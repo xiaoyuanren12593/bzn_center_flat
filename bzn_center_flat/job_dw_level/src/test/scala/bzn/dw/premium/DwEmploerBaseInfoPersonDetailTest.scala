@@ -65,7 +65,6 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("policy_id", "policy_code", "holder_name",
         "insured_subject", "product_code", "policy_status", "policy_start_date", "policy_end_date", "channelId", "channelName", "salesName", "insure_company_name", "short_name")
 
-
     //读取企业联系人
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
 

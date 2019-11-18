@@ -84,17 +84,20 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
       })
       .toDF("id_slave","pre_com_new","final_payment_new","res_pay")
 
-    val odsClaimDetail = odsClaimDetailOne.join(odsClaimDetailTwo,odsClaimDetailOne("id") ===odsClaimDetailTwo("id_slave"))
-      .selectExpr("id_slave","case_no","policy_no",
+    val odsClaimDetail = odsClaimDetailOne.join(odsClaimDetailTwo,odsClaimDetailOne("id") === odsClaimDetailTwo("id_slave"))
+      .selectExpr(
+        "id_slave","case_no","policy_no",
         "risk_date","report_date","risk_name","risk_cert_no",
         "mobile","insured_company",
-        "cast(pre_com_new as decimal(14,4)) as pre_com_new",
+        "pre_com_new",
         "disable_level","scene","case_type","case_status","case_close_date",
         "hos_benefits","medical_coverage",
         "delay_payment","disable_death_payment",
-        "cast( final_payment_new as decimal(14,4)) as final_payment_new",
-        "cast( res_pay as decimal(14,4)) as res_pay")
+        "final_payment_new",
+        "res_pay"
+      )
 
+    odsClaimDetail.where("policy_no is not null and res_pay is not null").show()
     /**
       * 保单明细数据和理赔明细数据通过保单号关联
       */
@@ -108,8 +111,7 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
         "medical_coverage","delay_payment","disable_death_payment",
         "cast(final_payment_new as decimal(14,4)) as final_payment",
         "cast(res_pay as decimal(14,4)) as res_pay","getNow() as dw_create_time")
-    res.where("policy_no is null").show()
-    println (res.count ())
+    res.where("policy_no is not null and res_pay is not null").show()
 
    //读取企业信息表
     val odsEnterpriseDetail: DataFrame = sqlContext.sql("select ent_id,ent_name from " +
@@ -125,8 +127,8 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
       .selectExpr("entid","entname","channel_id","channel_name")
 
     // 将理赔表与保单明细表的结果 与 客户归属销售表和企业信息表的结果关联
-    val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("entname"),
-      "leftouter").selectExpr(
+    val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("entname"), "leftouter")
+      .selectExpr(
       "id","policy_id", "policy_code", "product_code", "policy_status",
       "case_no", "risk_policy_code",
       "risk_date", "report_date", "risk_name", "risk_cert_no", "mobile",
