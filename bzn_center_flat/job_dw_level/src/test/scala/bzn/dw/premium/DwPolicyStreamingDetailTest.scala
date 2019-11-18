@@ -29,6 +29,7 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
   def getHolderInfo(sqlContext:HiveContext) = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
+
     /**
       * 读取近5d新增的保单数据
       */
@@ -40,6 +41,8 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "channel_id",
         "channel_name",
         "status",
+        "payment_status",//支付状态
+        "ledger_status",//实收状态
         "insured_count",
         "product_code",
         "create_time",
@@ -53,14 +56,61 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
       .selectExpr("product_code as product_code_slave","one_level_pdt_cate")
 
     /**
+      * 读取保单明细表
+      */
+    val odsPolicyDetail = sqlContext.sql("select policy_code as policy_code_slave,policy_status from odsdb.ods_policy_detail")
+      .where("policy_status in (0,1,-1) and policy_code_slave is not null")
+    odsPolicyDetail.show()
+
+    /**
+      * 读取批单表
+      */
+    val odsPreseveDetail = sqlContext.sql("select inc_dec_order_no as inc_dec_order_no_slave,preserve_status from odsdb.ods_preservation_detail")
+      .where("preserve_status = 1 and inc_dec_order_no_slave is not null")
+    odsPreseveDetail.show()
+
+    /**
       * 得到全部的雇主信息
       */
-    val policystreaming = odsPolicyStreamingDetail.join(odsProductDetail,odsPolicyStreamingDetail("product_code")===odsProductDetail("product_code_slave"),"leftouter")
+    val policyStreaming = odsPolicyStreamingDetail.join(odsProductDetail,odsPolicyStreamingDetail("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .where("one_level_pdt_cate not in ('17000001','LGB000001') and one_level_pdt_cate = '蓝领外包'")
       .selectExpr(
         "holder_name",
         "policy_code",
         "'' as preserve_id",
+        "channel_id",
+        "channel_name",
+        // 1	待提交
+        // 2	待审核
+        // 3	未支付
+        // 4	未承保
+
+        // 5	承保完成
+        // 6	保单过期
+        // 7	核心已经在保
+        // 8	其他
+        "case when status = 1 then 1 " +
+          "when status = 2 then 2 " +
+          "when status = 3 and ledger_status = 1 and payment_status = 1 then 3 " +
+          "when status = 3 and ledger_status = 1 and payment_status = 2 then 4 " +
+          "when status = 3 and ledger_status = 3 and payment_status = 2 then 4 " +
+          "when status = 5 then 5 " +
+          "when status = 6 or status = 7 then 6 " +
+          "else 8 end as status",
+        "insured_count",
+        "create_time",
+        "update_time"
+      )
+
+    /**
+      * 近5d内的数据在核心数据不存在的
+      */
+    val policyStreamingRes = policyStreaming.join(odsPolicyDetail,policyStreaming("policy_code")===odsPolicyDetail("policy_code_slave"),"leftouter")
+      .where("policy_code_slave is null")
+      .selectExpr(
+        "holder_name",
+        "policy_code",
+        "preserve_id",
         "channel_id",
         "channel_name",
         "status",
@@ -77,6 +127,27 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "holder_name",
         "policy_code",
         "preserve_id",
+        "inc_dec_order_no",
+        "channel_id",
+        "channel_name",
+        "case when status = 1 then 1 " +
+          "when status = 3 then 2 " +
+          "when status = 7 then 5 " +
+          "else 8 end as status",
+        "insured_count",
+        "create_time",
+        "update_time"
+      )
+
+    /**
+      * 近5d内存批单的数据在核心中不存在的
+      */
+    val odsPreserveStreamingDetailRes = odsPreserveStreamingDetail.join(odsPreseveDetail,odsPreserveStreamingDetail("inc_dec_order_no")===odsPreseveDetail("inc_dec_order_no_slave"),"leftouter")
+      .where("inc_dec_order_no_slave is null")
+      .selectExpr(
+        "holder_name",
+        "policy_code",
+        "preserve_id",
         "channel_id",
         "channel_name",
         "status",
@@ -88,7 +159,7 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
     /**
       * 5天之前的保单和批单的数据
       */
-    val data5DBefore = policystreaming.unionAll(odsPreserveStreamingDetail)
+    val data5DBefore = policyStreamingRes.unionAll(odsPreserveStreamingDetailRes)
 
     /**
       * 读取雇主销售表

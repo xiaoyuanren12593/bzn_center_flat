@@ -14,7 +14,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object InsertMysqlDemo {
 
-  case class CardMember(m_id: Int, card_type: String, expire: Timestamp, duration: Int, is_sale: Boolean, date: Date, user: String, salary: Float)
+  case class CardMember(m_id: Int, card_type: String, expire: Timestamp, duration: Int, is_sale: Int, date: Date, user: String, salary: Float,tableName:String)
 
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setMaster("local[*]").setAppName(getClass.getSimpleName).set("spark.testing.memory", "3147480000")
@@ -22,17 +22,23 @@ object InsertMysqlDemo {
     val hiveContext = new SQLContext(sparkContext)
     import hiveContext.implicits._
     val memberSeq = Seq(
-      CardMember(1, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
-      CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
-      CardMember(3, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
-      CardMember(4, "月卡", new Timestamp(System.currentTimeMillis()), 31, false, new Date(System.currentTimeMillis()), "1259", 0.32f),
-      CardMember(5, "季卡", null, 12, false, null, null, 0.95f)
+      CardMember(1, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
+      CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
+      CardMember(3, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
+      CardMember(4, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
+      CardMember(5, "季卡", null, 12, 1, null, null, 0.95f,"member_test"),
+      CardMember(6, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1", 0.32f,"member_test"),
+      CardMember(7, "季卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "2", 0.32f,"member_test"),
+      CardMember(8, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "3", 0.32f,"member_test"),
+      CardMember(9, "月卡", new Timestamp(System.currentTimeMillis()), 31, 1, new Date(System.currentTimeMillis()), "45", 0.32f,"member_test"),
+      CardMember(10, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "8", 0.66f,"member_test")
       //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
     )
     val memberDF = memberSeq.toDF().repartition(5)
     //MySQLUtils.saveDFtoDBCreateTableIfNotExist("member_test", memberDF)
     MySQLUtils.insertOrUpdateDFtoDBUsePool("member_test", memberDF, Array("expire","duration","date","card_type","user", "salary"))
-    MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
+    //MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF, "member_test")
+    //MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
 
     sparkContext.stop()
   }
