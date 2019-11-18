@@ -25,8 +25,8 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val sqlContext = sparkConf._3
-   /* val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
-    AddPolicyRes.printSchema()*/
+    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
+    AddPolicyRes.printSchema()
   /*  saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
 
@@ -184,7 +184,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
@@ -423,8 +423,7 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name", "product_desc", "product_name", "two_level_pdt_cate")
       .where("policy_status in (0,1,-1) and if(preserve_start_date is null,if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
         "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
-    val sssssss = resTempRes.selectExpr("preserve_id").where("preserve_id = '372050090338160640'")
-    sssssss.show(100)
+
 
     val res = resTempRes.selectExpr(
       "getUUID() as id",
@@ -484,7 +483,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
     /**
@@ -637,6 +636,5 @@ import org.apache.spark.sql.hive.HiveContext
     update
 
   }
-
 
 }

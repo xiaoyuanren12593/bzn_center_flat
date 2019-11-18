@@ -182,7 +182,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
@@ -487,7 +487,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve","preserve_id as preserve_id_salve")
 
