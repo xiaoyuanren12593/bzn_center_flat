@@ -237,7 +237,7 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
       .unionAll(preserveCancelPremium)
       .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type",
         "holder_name","insured_subject","belongs_regional","add_premium","add_person_count","del_premium","del_person_count",
-        "(add_person_count+del_person_count) as sum_preson","(add_premium+del_premium) as sum_premium","day_id")
+        "(add_person_count-del_person_count) as sum_preson","(add_premium+del_premium) as sum_premium","day_id")
 
     /**
       * 读取方案表

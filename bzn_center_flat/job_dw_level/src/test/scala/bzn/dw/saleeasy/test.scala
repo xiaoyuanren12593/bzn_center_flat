@@ -18,6 +18,7 @@ import scala.collection.mutable.ListBuffer
   **/
 object test extends Until{
   def main (args: Array[String]): Unit = {
+    java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019/4/7".replaceAll("/", "-").concat(" 00:00:00"))))
     val timePara = java.sql.Timestamp.valueOf("2017-11-03 00:00:00")
     val timePara1 = "20171103"
     getBeg_End_one_two_month("2017-11-03 00:00:00","2017-12-03 00:00:00").foreach(println)
@@ -46,7 +47,7 @@ object test extends Until{
     val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val date11: Timestamp = java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019-6-17 00:00:00")))
     println(date11)
-    println(java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019/4/7".replaceAll("/", "-").concat(" 00:00:00")))))
+    println(getFormatTime(getBeginTime("2019/4/7".replaceAll("/", "-").concat(" 00:00:00"))).substring(0,10).replaceAll("-",""))
 
   }
 
