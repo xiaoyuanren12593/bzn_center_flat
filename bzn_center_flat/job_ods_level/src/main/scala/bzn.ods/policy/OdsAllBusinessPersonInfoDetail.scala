@@ -24,8 +24,10 @@ import org.apache.spark.sql.hive.HiveContext
     hqlContext.setConf("hive.exec.dynamic.partition","true")
     hqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
     val res = HiveDataPerson(hqlContext)
+    val res1 = hiveExpressData(hqlContext)
+    val res2 = res.unionAll(res1)
     hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail")
-    res.write.mode(SaveMode.Append).partitionBy("business_line", "months").saveAsTable("odsdb.ods_all_business_person_base_info_detail")
+    res2.write.partitionBy("yearandmonth").mode(SaveMode.Append).saveAsTable("odsdb.ods_all_business_person_base_info_detail")
     sc.stop()
 
 
@@ -57,11 +59,48 @@ import org.apache.spark.sql.hive.HiveContext
 
     //拿到产品
     val res = odsPolicyAndInsured.join(odsProductPlanDetail, 'policy_code_salve === 'policy_code, "leftouter")
-      .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date",
-        "end_date", "create_time", "update_time", "product_code", "sku_price", "'官网' as business_line",
-        "substring(cast(if(start_date is null ,if(end_date is null ,if(create_time is null,if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7) as months")
+      .selectExpr(
+        "insured_name",
+        "insured_cert_no",
+        "insured_mobile",
+        "policy_code_salve",
+        "start_date",
+        "end_date",
+        "create_time",
+        "update_time",
+        "product_code",
+        "sku_price",
+        "'官网' as business_line",
+        "substring(cast(if(start_date is null,if(end_date is null,if(create_time is null,if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7) as yearandmonth")
     res
 
 
   }
+
+  /**
+    * 获取58的数据
+    *
+    * @param hqlContext
+    * @return
+    */
+  def hiveExpressData(hqlContext: HiveContext): DataFrame = {
+
+    hqlContext.udf.register("clean", (str: String) => clean(str))
+    val odsExpressPolicy = hqlContext.sql("select * from odsdb_prd.open_express_policy")
+      .selectExpr(
+        "courier_name as insured_name",
+        "courier_card_no as insured_cert_no",
+        "client_mobile as insured_mobile",
+        "policy_no as policy_code_salve",
+        "cast(start_time as timestamp) as start_date",
+        "cast(end_time as timestamp) as end_date",
+        "cast(create_time as timestamp)",
+        "cast(create_time as timestamp) as update_time",
+        "clean('') as product_code",
+        "cast(clean('') as decimal(14,4)) as sku_price",
+        "'58' as business_line",
+        "month_id as yearandmonth")
+    odsExpressPolicy
+  }
+
 }
