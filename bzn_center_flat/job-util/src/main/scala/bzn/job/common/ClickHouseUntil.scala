@@ -15,7 +15,7 @@ import scala.io.Source
 trait ClickHouseUntil {
 
   /**
-    *    读取ClickHouse表的数据
+    * 读取ClickHouse表的数据
     * @param sqlContext
     * @param tableName
     * @param url
@@ -46,39 +46,38 @@ trait ClickHouseUntil {
     * @param user
     * @param possWord
     */
-  def  writeClickHouseTable(res:DataFrame,tableName: String,saveMode:SaveMode,url:String,user:String,possWord:String): Unit ={
-    var table = tableName
-    val prop = getProPerties()
-    prop.setProperty("url", prop.getProperty(url))
-    println(prop.getProperty(url))
-    prop.setProperty("user", prop.getProperty(user) )
-    prop.setProperty("password",  prop.getProperty(possWord))
-    prop.setProperty("driver", "cc.blynk.clickhouse.ClickHouseDriver")
-    if (saveMode == SaveMode.Overwrite) {
-      var conn: Connection = null
-      try {
-        conn = DriverManager.getConnection(
-          prop.getProperty("url"),
-          prop.getProperty("user"),
-          prop.getProperty("password")
-        )
-        val stmt = conn.createStatement
-        table = table.toLowerCase
-        stmt.execute(s"truncate table $table")
-        conn.close()
+    def writeClickHouseTable(res:DataFrame,tableName: String,saveMode:SaveMode,url:String,user:String,possWord:String,driver:String): Unit ={
+      var table = tableName
+      val prop = getProPerties()
+      prop.setProperty("url", prop.getProperty(url))
+      prop.setProperty("user", prop.getProperty(user) )
+      prop.setProperty("password",  prop.getProperty(possWord))
+      prop.setProperty("driver", prop.getProperty(driver))
+      if (saveMode == SaveMode.Overwrite) {
+        var conn: Connection = null
+        try {
+          conn = DriverManager.getConnection(
+            prop.getProperty("url"),
+            prop.getProperty("user"),
+            prop.getProperty("password")
+          )
+          val stmt = conn.createStatement
+          table = table.toLowerCase
+          stmt.execute(s"truncate table $table")
+          conn.close()
+        }
+        catch {
+          case e: Exception =>
+            println("MySQL Error:")
+            e.printStackTrace()
+        }
       }
-      catch {
-        case e: Exception =>
-          println("MySQL Error:")
-          e.printStackTrace()
-      }
-    }
-    res
-      .write.mode(SaveMode.Append)
-      .option("batchsize","50000")
-      .option("isolationLevel","NONE") //设置事务
-      .option("numPartitions","1")//设置并发
-      .jdbc(prop.getProperty("url"),table,prop)
+      res
+        .write.mode(SaveMode.Append)
+        .option("batchsize","50000")
+        .option("isolationLevel","NONE") //设置事务
+        .option("numPartitions","1")//设置并发
+        .jdbc(prop.getProperty("url"),table,prop)
 
   }
 

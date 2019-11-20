@@ -25,8 +25,6 @@ import org.apache.spark.{SparkConf, SparkContext}
     hiveContext.sql("truncate table dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
     res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
     res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetail")
-    writeClickHouseTable(res,"dm_saleeasy_policy_curr_insured_premium_detail",SaveMode.Overwrite,
-      "clickhouse.url","clickhouse.username","clickhouse.password")
     sc.stop()
 
 
