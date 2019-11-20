@@ -4,12 +4,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.{ClickHouseUntil, MysqlUntil, Until}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import bzn.job.common.{ClickHouseUntil, Until}
 import org.apache.spark.sql.hive.HiveContext
-
-import scala.math.BigDecimal.RoundingMode
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -17,16 +15,25 @@ import scala.math.BigDecimal.RoundingMode
   * Time:14:35
   * describe: 雇主风险监控
   **/
-object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with ClickHouseUntil{
+object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with ClickHouseUntil{
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    getAegisEmployerRiskMonitoring(hiveContext)
+    val res = getAegisEmployerRiskMonitoring(hiveContext)
+    hiveContext.sql("truncate table dmdb.dm_aegis_emp_risk_monitor_detail")
+    res.repartition(100).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_aegis_emp_risk_monitor_detail")
+    val tableName = "emp_risk_monitor_kri_detail"
+    val url = "clickhouse.url"
+    val user = "clickhouse.username"
+    val possWord = "clickhouse.password"
+    val driver = "clickhouse.driver"
+    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
     sc.stop()
+
   }
 
   /**
@@ -60,7 +67,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       */
     val dwPolicyPremiumDetail =
       sqlContext.sql("select policy_id,policy_code,day_id,add_person_count,del_person_count,add_premium,del_premium," +
-      "case when sum_premium is null then 0 else sum_premium end as sum_premium from dwdb.dw_policy_premium_detail where one_level_pdt_cate = '蓝领外包'")
+        "case when sum_premium is null then 0 else sum_premium end as sum_premium from dwdb.dw_policy_premium_detail where one_level_pdt_cate = '蓝领外包'")
         .map(x => {
           val policyId = x.getAs[String]("policy_id")
           val policyCode = x.getAs[String]("policy_code")
@@ -68,11 +75,11 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
           val sumPremium = x.getAs[java.math.BigDecimal]("sum_premium")
           ((policyId,policyCode,dayId),sumPremium)
         })
-      .reduceByKey(_.add(_))
-      .map(x => {
-        (x._1._1,x._1._2,x._1._3,x._2)
-      })
-      .toDF("policy_id","policy_code","day_id","sum_premium")
+        .reduceByKey(_.add(_))
+        .map(x => {
+          (x._1._1,x._1._2,x._1._3,x._2)
+        })
+        .toDF("policy_id","policy_code","day_id","sum_premium")
 
     /**
       * 雇主基础数据表
@@ -252,16 +259,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
         "cast(getNow() as timestamp ) as update_time"
       )
       .where("channel_name is not null")
-
-   // sqlContext.sql("select * from insuredAndPremiumAccPremiumClaimExpireBase group by channel_id,channel_name,")
-
-   //val tableName = "dm_aegis_emp_risk_monitor_detail"
-   //val url = "clickhouse.url"
-   //val user = "clickhouse.username"
-   //val possWord = "clickhouse.password"
-   //val driver = "clickhouse.driver"
-   //writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
-    res.printSchema()
+    
     res
   }
 

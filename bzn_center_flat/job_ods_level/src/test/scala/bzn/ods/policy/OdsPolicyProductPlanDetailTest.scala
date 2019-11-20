@@ -51,6 +51,7 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
       .where("policy_status in (0,1,-1)")
       .selectExpr("policy_code","sku_id","product_code","sku_coverage",
         "sku_append","sku_ratio","sku_price","sku_charge_type","tech_service_rate","economic_rate","commission_discount_rate","commission_rate")
+        .where("policy_code = '200020191119142553554370'")
       .distinct()
 
     /**
@@ -82,11 +83,11 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
       */
     val firstRes = resTemp.where("product_code = 'LGB000001'")
       .selectExpr("id","policy_code","product_code","sku_coverage","sku_append", "sku_ratio", "sku_price", "sku_charge_type", "tech_service_rate",
-        "economic_rate","commission_discount_rate", "'0.1' as commission_rate", "dw_create_time")
+        "'0.1' as economic_rate","commission_discount_rate", "'0.1' as commission_rate", "dw_create_time")
 
     val threeRes = resTemp.where("product_code = '17000001'")
       .selectExpr("id","policy_code","product_code", "sku_coverage","sku_append","sku_ratio", "sku_price", "sku_charge_type", "tech_service_rate",
-        "economic_rate", "commission_discount_rate","'0.2' as commission_rate", "dw_create_time")
+        "'0.2' as economic_rate", "commission_discount_rate","'0.2' as commission_rate", "dw_create_time")
 
     /**
       * 其他产品的数据
@@ -101,12 +102,12 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
         "cast(clean(sku_coverage) as decimal(14,4)) as sku_coverage",
         "clean(sku_append) as sku_append",
         "clean(sku_ratio) as sku_ratio",
-        "cast(clean(sku_price) as decimal(14,4)) as sku_price",
+        "cast(sku_price as decimal(14,4)) as sku_price",
         "clean(sku_charge_type) as sku_charge_type",
-        "cast(clean(tech_service_rate) as decimal(14,4)) as tech_service_rate ",
-        "cast(clean(economic_rate) as decimal(14,4)) as economic_rate",
+        "cast(tech_service_rate as decimal(14,4)) as tech_service_rate ",
+        "cast(economic_rate as decimal(14,4)) as economic_rate",
         "commission_discount_rate",
-        "cast(clean(commission_rate) as decimal(14,4)) as commission_rate",
+        "cast(commission_rate as decimal(14,4)) as commission_rate",
         "dw_create_time")
 
     /**
@@ -189,7 +190,6 @@ object OdsPolicyProductPlanDetailTest extends SparkUtil with Until{
         "cast(commission_rate as decimal(14,4)) as commission_rate",
         "dw_create_time"
       )
-
     res.printSchema()
     res
   }

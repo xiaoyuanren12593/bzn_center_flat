@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
 import bzn.job.common.Until
-import bzn.ods.util.SparkUtil
+import bzn.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -30,7 +30,6 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
 
     hiveContext.sql("truncate table odsdb.ods_policy_product_plan_detail")
     res.repartition(1).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_product_plan_detail")
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/ods_data/ods_policy_product_plan_detail")
     sc.stop()
   }
 
@@ -86,11 +85,11 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
       */
     val firstRes = resTemp.where("product_code = 'LGB000001'")
       .selectExpr("id","policy_code","product_code","sku_coverage","sku_append", "sku_ratio", "sku_price", "sku_charge_type", "tech_service_rate",
-        "economic_rate","commission_discount_rate", "'0.1' as commission_rate", "dw_create_time")
+        "'0.1' as economic_rate","commission_discount_rate", "'0.1' as commission_rate", "dw_create_time")
 
     val threeRes = resTemp.where("product_code = '17000001'")
       .selectExpr("id","policy_code","product_code", "sku_coverage","sku_append","sku_ratio", "sku_price", "sku_charge_type", "tech_service_rate",
-        "economic_rate", "commission_discount_rate","'0.2' as commission_rate", "dw_create_time")
+        "'0.2' as economic_rate", "commission_discount_rate","'0.2' as commission_rate", "dw_create_time")
 
     /**
       * 其他产品的数据
@@ -105,12 +104,12 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
         "cast(clean(sku_coverage) as decimal(14,4)) as sku_coverage",
         "clean(sku_append) as sku_append",
         "clean(sku_ratio) as sku_ratio",
-        "cast(clean(sku_price) as decimal(14,4)) as sku_price",
+        "cast(sku_price as decimal(14,4)) as sku_price",
         "clean(sku_charge_type) as sku_charge_type",
-        "cast(clean(tech_service_rate) as decimal(14,4)) as tech_service_rate ",
-        "cast(clean(economic_rate) as decimal(14,4)) as economic_rate",
+        "cast(tech_service_rate as decimal(14,4)) as tech_service_rate ",
+        "cast(economic_rate as decimal(14,4)) as economic_rate",
         "commission_discount_rate",
-        "cast(clean(commission_rate) as decimal(14,4)) as commission_rate",
+        "cast(commission_rate as decimal(14,4)) as commission_rate",
         "dw_create_time")
 
     /**

@@ -23,7 +23,7 @@ import org.apache.spark.sql.hive.HiveContext
     val res: DataFrame = hiveContext.sql("select policy_id,policy_code,product_code  from odsdb.ods_policy_detail")
 
     writeClickHouseTable(res, "ods_policy_test", SaveMode.Overwrite,
-      "clickhouse.url", "clickhouse.username", "clickhouse.password")
+      "clickhouse.url", "clickhouse.username", "clickhouse.password","")
 
     println("666")
     sc.stop()
