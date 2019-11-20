@@ -60,7 +60,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     //保单明细关联 保险公司表
     val odsPolicyDetailInsureTempSalve = odsPolicyDetailTemp.join(insuranceCompany, odsPolicyDetailTemp("insure_company_name") === insuranceCompany("insurance_company"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date", "policy_end_date","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code", "policy_status","policy_start_date", "policy_end_date","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
         "belongs_regional","belongs_regional_salve","sum_premium","num_of_preson_first_policy","product_code","channelId", "channelName", "salesName")
 
     val frame = odsPolicyDetailInsureTempSalve.selectExpr("holder_name", "policy_start_date", "belongs_regional_salve").map(x => {
@@ -86,7 +86,7 @@ import org.apache.spark.sql.hive.HiveContext
     }).toDF("holderName", "belongs_regional_salve_temp", "policy_start_date_temp")
 
     val odsPolicyDetailInsureTemp = odsPolicyDetailInsureTempSalve.join(frame, 'holder_name === 'holderName, "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date_temp as policy_start_date", "policy_end_date", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
+      .selectExpr("policy_id", "policy_code","policy_status", "policy_start_date_temp as policy_start_date", "policy_end_date", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
         "belongs_regional", "belongs_regional_salve_temp as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName")
     /**
       * 读取地域信息码表
@@ -97,7 +97,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 保单明细表与地域信息关联 如果企业联系人对应多个城市 拿保单开始时间最近的投保城市
       */
     val odsPolicyDetail = odsPolicyDetailInsureTemp.join(odsArea,odsPolicyDetailInsureTemp("belongs_regional_salve")===odsArea("code"),"leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date", "policy_end_date","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_status", "policy_start_date", "policy_end_date","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy", "product_code","belongs_regional", "belongs_regional_salve","province as holder_province","holder_city",
         "channelId", "channelName", "salesName")
 
@@ -123,7 +123,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 将关联结果与保单明细表关联
     val resDetail = odsPolicyDetail.join(enterperiseAndSaleRes, odsPolicyDetail("holder_name") === enterperiseAndSaleRes("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_start_date","policy_end_date", "insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_status","policy_start_date","policy_end_date", "insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy","product_code","belongs_regional","belongs_regional_salve", "holder_province","holder_city","ent_id", "ent_name",
         "channel_id","channelId", "channel_name","channelName","salesName","salesman", "team_name","biz_operator","consumer_category","business_source")
 
@@ -132,7 +132,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_status","policy_start_date","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy","product_code","product_name","belongs_regional", "belongs_regional_salve","holder_province","holder_city","one_level_pdt_cate",
         "two_level_pdt_cate","ent_id", "ent_name", "channel_id","channelId", "channel_name","channelName","salesName","salesman", "team_name","biz_operator","consumer_category","business_source")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
@@ -146,7 +146,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 将上述结果与理赔表关联
       */
     val insuredAndClaimRes = resProductDetail.join(dwPolicyClaimDetail, resProductDetail("policy_id") === dwPolicyClaimDetail("id"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_status", "policy_start_date","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy","product_code","product_name","belongs_regional","belongs_regional_salve", "holder_province","holder_city","one_level_pdt_cate",
         "two_level_pdt_cate","ent_id","ent_name", "channel_id","channelId", "channel_name","channelName","salesName","salesman","team_name","biz_operator","consumer_category","business_source","pre_com",
         "final_payment", "res_pay")
@@ -163,6 +163,7 @@ import org.apache.spark.sql.hive.HiveContext
         "getUUID() as id",
         "clean(policy_id) as policy_id",
         "clean(policy_code) as policy_code",
+        "policy_status",
         "policy_start_date",
         "policy_end_date",
         "clean(holder_name) as holder_name",
@@ -182,9 +183,9 @@ import org.apache.spark.sql.hive.HiveContext
         "num_of_preson_first_policy",
         "clean(ent_id) as ent_id ",
         "clean(ent_name) as ent_name",
-        "clean(case when channel_id is null then channelId else channel_id end)as channel_id ",
-        "clean(case when channel_name is null then channelName else channel_name end)as channel_name",
-        "clean(case when salesman is null then salesName else salesman end) as sale_name",
+        "clean(case when channel_id is null or channel_id = '' then channelId else channel_id end)as channel_id ",
+        "clean(case when channel_name is null or channel_name = '' then channelName else channel_name end)as channel_name",
+        "clean(case when salesman is null or salesman = '' then salesName else salesman end) as sale_name",
         "clean(team_name) as team_name",
         "clean(biz_operator) as biz_operator",
         "clean(consumer_category) as consumer_category",

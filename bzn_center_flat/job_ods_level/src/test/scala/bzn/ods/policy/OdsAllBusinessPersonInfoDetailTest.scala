@@ -141,19 +141,20 @@ import org.apache.spark.sql.hive.HiveContext
       val endDate = x.getAs[Timestamp]("end_date")
       val createTime = x.getAs[Timestamp]("create_time")
       val updateTime = x.getAs[Timestamp]("update_time")
-      val productCode = x.getAs[Timestamp]("product_code")
+      val productCode = x.getAs[String]("product_code")
       val skuPrice = x.getAs[java.math.BigDecimal]("sku_price")
       val businessLine = x.getAs[String]("business_line")
       val months = x.getAs[String]("yearandmonth")
       val str = if (months.length == 7 && months.contains("-")) {
-                    months
-      } else  if(months.length > 7 && months.contains("-")) {
-        val monthTemp = months.substring(1, 7)
+        months
+      } else if (months.length > 7 && months.contains("-")) {
+        val monthTemp = months.substring(0, 7)
         monthTemp
       } else "aaaaaaaaaa"
       val month = str
       (insuredName, insuredCert, insuredMobile, policyCode, startDate, endDate, createTime, updateTime, productCode, skuPrice, businessLine, month)
-    }).toDF("insured_name", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "yearandmonth")
+    }).filter(x=>x._12.contains("-"))
+      .toDF("insured_name", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "yearandmonth")
     odsOfoPolicy
   }
 }
