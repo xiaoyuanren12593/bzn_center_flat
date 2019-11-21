@@ -9,8 +9,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
-import scala.math.BigDecimal.RoundingMode
-
 /**
   * author:xiaoYuanRen
   * Date:2019/11/19

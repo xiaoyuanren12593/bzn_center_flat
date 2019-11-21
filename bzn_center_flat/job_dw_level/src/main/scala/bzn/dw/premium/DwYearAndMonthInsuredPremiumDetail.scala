@@ -182,8 +182,28 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
         val insuredId = x.getAs[String]("insured_id")
         val insuredCertNo = x.getAs[String]("insured_cert_no")
 
-        val insuredStartDateRes =x.getAs[Timestamp]("insured_start_date")
-        val insuredEndDateRes = x.getAs[Timestamp]("insured_end_date")
+        val insuredStartDateRes = if(x.getAs[Timestamp]("policy_start_date") != null){
+          if(x.getAs[Timestamp]("policy_start_date").compareTo(x.getAs[Timestamp]("insured_start_date")) <= 0){
+            x.getAs[Timestamp]("insured_start_date")
+          }else{
+            x.getAs[Timestamp]("policy_start_date")
+          }
+        }else{
+          x.getAs[Timestamp]("insured_start_date")
+        }
+
+        val insuredEndDateRes = if(x.getAs[Timestamp]("policy_end_date") != null){
+          if(x.getAs[Timestamp]("policy_end_date").compareTo(x.getAs[Timestamp]("insured_end_date")) >= 0){
+            x.getAs[Timestamp]("insured_end_date")
+          }else{
+            x.getAs[Timestamp]("policy_end_date")
+          }
+        }else{
+          x.getAs[Timestamp]("insured_end_date")
+        }
+
+        val startDate = x.getAs[Timestamp]("policy_start_date").toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
+        val endDate = x.getAs[Timestamp]("policy_end_date").toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
 
         val insuredStartDate = insuredStartDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
         val insuredEndDate = insuredEndDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
