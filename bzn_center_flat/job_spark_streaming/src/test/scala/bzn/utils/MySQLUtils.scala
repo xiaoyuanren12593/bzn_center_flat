@@ -182,7 +182,9 @@ object MySQLUtils {
           //注意:setString方法从1开始，record.getString()方法从0开始
           for (i <- 1 to colNumbers) {
             val value = record.get(i - 1)
+            println(value)
             val dateType = columnDataTypes(i - 1)
+            println(dateType)
             if (value != null) { //如何值不为空,将类型转换为String
               preparedStatement.setString(i, value.toString)
               dateType match {
@@ -205,10 +207,10 @@ object MySQLUtils {
           }
           preparedStatement.addBatch()
         })
-        //preparedStatement.executeBatch()
+        preparedStatement.executeBatch()
         conn.commit()
       } catch {
-        case e: Exception => println(s"@@ insertOrUpdateDFtoDBUsePool ${e.getMessage}")
+        case e: Exception => println(s"@@ DeleteDFtoDBUsePool ${e.getMessage}")
         // do some log
       } finally {
         preparedStatement.close()
@@ -263,7 +265,7 @@ object MySQLUtils {
     * @return
     */
   def getDeleteSql(tableName: String): String = {
-    val sqlStr = "delete from "+tableName+" where ? = ?"
+    val sqlStr = "delete from "+tableName+" where id = ?"
     sqlStr
   }
 

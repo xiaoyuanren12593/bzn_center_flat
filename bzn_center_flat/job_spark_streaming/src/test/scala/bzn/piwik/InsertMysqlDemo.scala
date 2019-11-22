@@ -35,9 +35,9 @@ object InsertMysqlDemo {
       //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
     )
     val memberDF = memberSeq.toDF().repartition(5)
-    //MySQLUtils.saveDFtoDBCreateTableIfNotExist("member_test", memberDF)
+//    MySQLUtils.saveDFtoDBCreateTableIfNotExist("member_test", memberDF)
     MySQLUtils.insertOrUpdateDFtoDBUsePool("member_test", memberDF, Array("expire","duration","date","card_type","user", "salary"))
-    //MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF, "member_test")
+//    MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF, "member_test")
     //MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
 
     sparkContext.stop()
