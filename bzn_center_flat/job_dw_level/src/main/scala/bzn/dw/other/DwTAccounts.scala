@@ -43,7 +43,7 @@ import org.apache.spark.sql.hive.HiveContext
     *
     * @param hqlContext
     */
-  def TAccountsEmployerAddPolicy(hqlContext: HiveContext,sqlContext:SQLContext): DataFrame = {
+  def TAccountsEmployerAddPolicy(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -129,6 +129,7 @@ import org.apache.spark.sql.hive.HiveContext
       "getUUID() as id",
       "policy_code as policy_no",
       "data_source",
+      "'1' as premium_pay_status",
       "product_desc as project_name",
       "product_code",
       "product_name",
@@ -144,24 +145,24 @@ import org.apache.spark.sql.hive.HiveContext
       "sku_price as plan_price",
       "sku_coverage as plan_coverage",
       "sku_append as plan_append",
-      "cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate",
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(6,2)) as plan_disability_rate",
       "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
       "insure_company_name as underwriting_company",
       "policy_effect_date",
       "policy_start_date as policy_effective_time",
       "policy_end_date as policy_expire_time",
       "cast(policy_status as string) as policy_status",
-      "first_premium as premium_total",
+      "cast(first_premium as decimal(10,2)) as premium_total",
       "cast(invoice_type as string) as premium_invoice_type",
-      "economic_rate as economy_rates",
-      "cast(first_premium * economic_rate as decimal(14,4)) as economy_fee",
-      "tech_service_rate as technical_service_rates",
-      "cast(first_premium * tech_service_rate as decimal(14,4)) as technical_service_fee",
-      "cast(now() as timestamp) as service_fee_check_time",
-      "case when commission_discount_rate is  null then 0 else commission_discount_rate end as brokerage_ratio",
-      "cast(case when (first_premium * commission_discount_rate) is not null then (first_premium * commission_discount_rate) else 0 end as decimal(14,4)) as brokerage_fee",
-      "cast(now() as timestamp) as create_time",
-      "cast(now() as timestamp) as update_time")
+      "cast(economic_rate as decimal(10,2)) as economy_rates",
+      "cast(first_premium * economic_rate as decimal(10,2)) as economy_fee",
+      "cast(case when tech_service_rate is null then 0 else tech_service_rate end as decimal(10,2)) as technical_service_rates",
+      "cast(first_premium * (case when tech_service_rate is null then 0 else tech_service_rate end) as decimal(10,2)) as technical_service_fee",
+      "cast(case when commission_discount_rate is null then 0 else commission_discount_rate end as decimal(10,2)) as brokerage_ratio",
+      "cast(case when (first_premium * commission_discount_rate) is not null then (first_premium * commission_discount_rate) else 0 end as decimal(10,2)) as brokerage_fee",
+      "cast(getNow() as timestamp) as create_time",
+      "cast(getNow() as timestamp) as update_time")
+
 
 
     /**
@@ -172,9 +173,9 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取保单和批单的数据
       */
-    val dwTaccountEmployerIntermeditae = hqlContext.sql("select distinct policy_no,project_name,product_code,product_name,channel_name,data_source,business_owner,business_region,business_source," +
+    val dwTaccountEmployerIntermeditae = hqlContext.sql("select distinct policy_no,project_name,product_code,product_name,premium_pay_status,channel_name,data_source,business_owner,business_region,business_source," +
       "business_type,performance_accounting_day,operational_name,holder_name,insurer_name,plan_price,plan_coverage,plan_append,plan_disability_rate,plan_pay_type,underwriting_company,policy_effect_date,policy_effective_time," +
-      "policy_expire_time,policy_status,premium_total,premium_invoice_type,economy_rates,economy_fee,technical_service_rates,technical_service_fee,service_fee_check_time," +
+      "policy_expire_time,policy_status,premium_total,premium_invoice_type,economy_rates,economy_fee,technical_service_rates,technical_service_fee," +
       "brokerage_ratio,brokerage_fee,create_time,update_time from t_accounts_employer_intermediate_temp")
 
 
@@ -190,50 +191,50 @@ import org.apache.spark.sql.hive.HiveContext
       * 关联两个表 过滤出保单数据的增量数据
       */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
-      .selectExpr("policy_no","policy_no_salve", "data_source", "project_name", "product_code", "product_name", "channel_name",
+      .selectExpr("policy_no", "policy_no_salve", "data_source", "project_name", "product_code", "product_name", "channel_name","premium_pay_status",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_invoice_type",
-        "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",  "service_fee_check_time","brokerage_ratio", "brokerage_fee", "create_time", "update_time")
+        "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee", "brokerage_ratio", "brokerage_fee", "create_time", "update_time")
       .where("policy_no_salve is null")
+
 
 
     //增量数据
     val res1 = resTemp.selectExpr(
       "getUUID() as id",
-      "policy_no",
-      "data_source",
-      "project_name",
-      "product_code",
-      "product_name",
-      "channel_name",
-      "business_owner",
-      "business_region",
-      "business_source",
-      "business_type",
+      "clean(policy_no) as policy_no",
+      "clean(data_source) as data_source",
+      "clean(project_name) as project_name",
+      "clean(product_code) as product_code",
+      "clean(product_name) as product_name",
+      "clean(channel_name) as channel_name",
+      "clean(business_owner)  as business_owner",
+      "clean(business_region) as business_region",
+      "clean(business_source) as business_source",
+      "clean(business_type) as business_type",
       "performance_accounting_day",
-      "operational_name",
-      "holder_name",
-      "insurer_name",
+      "clean(operational_name) as operational_name",
+      "clean(holder_name) as holder_name",
+      "clean(insurer_name) as insurer_name",
       "plan_price",
       "plan_coverage",
-      "plan_append",
+      "clean(plan_append) as plan_append",
       "plan_disability_rate",
-      "plan_pay_type",
-      "underwriting_company",
-      "policy_effect_date",  "policy_effective_time", "policy_expire_time",
+      "clean(plan_pay_type) as plan_pay_type",
+      "clean(underwriting_company) as underwriting_company",
+      "policy_effect_date", "policy_effective_time", "policy_expire_time",
       "policy_status",
+      "premium_pay_status",
       "premium_total",
-      "premium_invoice_type",
+      "clean(premium_invoice_type) as premium_invoice_type",
       "economy_rates",
       "economy_fee",
       "technical_service_rates",
       "technical_service_fee",
-      "service_fee_check_time",
       "brokerage_ratio",
       "brokerage_fee",
-      "create_time",
-      "update_time")
+      "create_time", "update_time")
 
     //更新数据
 
@@ -272,13 +273,15 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_effective_time",
         "policy_expire_time",
         "policy_status",
+        "premium_pay_status",
         "premium_total",
         "premium_invoice_type",
+        "'天津中策' as economy_company",
         "economy_rates",
         "economy_fee",
         "technical_service_rates",
         "technical_service_fee",
-        "service_fee_check_time",
+        "brokerage_ratio",
         "brokerage_fee",
         "create_time",
         "update_time")
@@ -310,22 +313,21 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_effect_date",
         "policy_effective_time",
         "policy_expire_time",
-        "case when policy_no is not null then policy_status_salve else policy_status end as policy_status",
+        "case when policy_no is not null then policy_status_salve else policy_status end as cur_policy_status",
+        "premium_pay_status",
         "premium_total",
         "premium_invoice_type",
+        "economy_company",
         "economy_rates",
         "economy_fee",
         "technical_service_rates",
         "technical_service_fee",
-        "service_fee_check_time",
+        "brokerage_ratio",
         "brokerage_fee",
         "create_time",
         "update_time")
+
     update
-
-
-
-
 
 
   }
@@ -333,10 +335,11 @@ import org.apache.spark.sql.hive.HiveContext
 
   /**
     * 批单数据
+    *
     * @param hqlContext
     * @return
     */
-  def TAccountsEmployerAddPreserve(hqlContext: HiveContext,sqlContext:SQLContext): DataFrame = {
+  def TAccountsEmployerAddPreserve(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -407,7 +410,6 @@ import org.apache.spark.sql.hive.HiveContext
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
         "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name")
 
-
     /**
       * 读取产品表
       */
@@ -425,8 +427,7 @@ import org.apache.spark.sql.hive.HiveContext
         "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
         "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name", "product_desc", "product_name", "two_level_pdt_cate")
-      .where("policy_status in (0,1,-1) and if(preserve_start_date is null," +
-        "if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
+      .where("policy_status in (0,1,-1) and if(preserve_start_date is null,if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
         "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
 
 
@@ -453,7 +454,7 @@ import org.apache.spark.sql.hive.HiveContext
       "sku_price as plan_price",
       "sku_coverage as plan_coverage",
       "sku_append  as plan_append",
-      "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(14,4)) as plan_disability_rate",
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(6,2)) as plan_disability_rate",
       "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
       "insure_company_name as underwriting_company",
       "effective_date as policy_effect_date",
@@ -461,17 +462,18 @@ import org.apache.spark.sql.hive.HiveContext
       "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date end) end as policy_effective_time",
       "preserve_end_date as policy_expire_time",
       "cast(policy_status as string) as policy_status",
-      "cast((add_premium + del_premium) as decimal(14,4)) as premium_total",
+      "cast((add_premium + del_premium) as decimal(10,2)) as premium_total",
       "cast(case pay_status when 1 then 0 when 2 then 1 when 3 then 3 else pay_status end as string) as premium_pay_status",
       "cast(invoice_type as string) as premium_invoice_type",
-      "economic_rate as economy_rates",
-      "cast((add_premium + del_premium) * economic_rate as decimal(14,4))as economy_fee",
-      "tech_service_rate as technical_service_rates",
-      "round(cast((add_premium + del_premium) * tech_service_rate as decimal(14,4)),4) as technical_service_fee",
-      "case when commission_discount_rate is null then 0 else commission_discount_rate end as brokerage_ratio",
-      "cast((add_premium + del_premium) * commission_discount_rate as decimal(14,4))  as brokerage_fee",
+      "cast(economic_rate as decimal(10,2)) as economy_rates",
+      "cast((add_premium + del_premium) * economic_rate as decimal(10,2))as economy_fee",
+      "cast(case when tech_service_rate is null then 0 else tech_service_rate end as decimal(10,2)) as technical_service_rates",
+      "cast((add_premium + del_premium) * (case when tech_service_rate is null then 0 else tech_service_rate end) as decimal(10,2)) as technical_service_fee",
+      "cast(case when commission_discount_rate is null then 0 else commission_discount_rate end as decimal(10,2)) as brokerage_ratio",
+      "cast((add_premium + del_premium) * commission_discount_rate as decimal(10,2))  as brokerage_fee",
       "cast(getNow() as timestamp) as create_time",
       "cast(getNow() as timestamp) as update_time")
+
     res.registerTempTable("t_accounts_employer_intermediate_temp")
 
 
@@ -489,52 +491,51 @@ import org.apache.spark.sql.hive.HiveContext
 
     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
-      .selectExpr("policy_no as policy_no_salve","preserve_id as preserve_id_salve")
-
+      .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
     /**
       * 关联两个表 拿到批单数据的增量数据
       */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
-      .selectExpr("policy_no","policy_no_salve", "preserve_id","preserve_id_salve", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
+      .selectExpr("policy_no", "policy_no_salve", "preserve_id","preserve_id_salve", "add_batch_code", "del_batch_code", "preserve_status", "data_source", "project_name", "product_code", "product_name", "channel_name",
         "business_owner", "business_region", "business_source", "business_type", "performance_accounting_day", "operational_name", "holder_name", "insurer_name",
         "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
         "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "policy_status", "premium_total", "premium_pay_status", "premium_invoice_type",
         "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
-        "brokerage_ratio", "brokerage_fee", "brokerage_fee",  "create_time", "update_time")
+        "brokerage_ratio", "brokerage_fee", "brokerage_fee", "create_time", "update_time")
       .where("preserve_id is not null and preserve_id_salve is null")
 
 
     val res1 = resTemp.selectExpr(
       "getUUID() as id",
-      "policy_no",
-      "preserve_id",
-      "add_batch_code",
-      "del_batch_code",
-      "preserve_status",
-      "data_source",
-      "project_name",
-      "product_code",
-      "product_name",
-      "channel_name",
-      "business_owner",
-      "business_region",
-      "business_source",
-      "business_type",
+      "clean(policy_no) as policy_no",
+      "clean(preserve_id) as preserve_id",
+      "clean(add_batch_code) as add_batch_code",
+      "clean(del_batch_code) as del_batch_code",
+      "clean(preserve_status) as preserve_status",
+      "clean(data_source) as data_source",
+      "clean(project_name) as project_name",
+      "clean(product_code) as product_code",
+      "clean(product_name) as product_name",
+      "clean(channel_name) as channel_name",
+      "clean(business_owner)  as business_owner",
+      "clean(business_region) as business_region",
+      "clean(business_source) as business_source",
+      "clean(business_type) as business_type",
       "performance_accounting_day",
-      "operational_name",
-      "holder_name",
-      "insurer_name",
+      "clean(operational_name) as operational_name",
+      "clean(holder_name) as holder_name",
+      "clean(insurer_name) as insurer_name",
       "plan_price",
       "plan_coverage",
-      "plan_append",
+      "clean(plan_append) as plan_append",
       "plan_disability_rate",
-      "plan_pay_type",
-      "underwriting_company",
+      "clean(plan_pay_type) as plan_pay_type",
+      "clean(underwriting_company) as underwriting_company",
       "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
       "policy_status",
       "premium_total",
-      "premium_pay_status",
-      "premium_invoice_type",
+      "clean(premium_pay_status) as premium_pay_status",
+      "clean(premium_invoice_type) as premium_invoice_type",
       "economy_rates",
       "economy_fee",
       "technical_service_rates",
@@ -542,7 +543,6 @@ import org.apache.spark.sql.hive.HiveContext
       "brokerage_ratio",
       "brokerage_fee",
       "create_time", "update_time")
-
     //更新数据
 
     /**
@@ -580,7 +580,7 @@ import org.apache.spark.sql.hive.HiveContext
         "plan_disability_rate",
         "plan_pay_type",
         "underwriting_company",
-        "policy_effect_date","policy_start_time", "policy_effective_time", "policy_expire_time",
+        "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time",
         "policy_status",
         "premium_total",
         "premium_pay_status",
@@ -627,7 +627,7 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_start_time",
         "policy_effective_time",
         "policy_expire_time",
-        "case when policy_no is not null then policy_status_salve else policy_status end as policy_status",
+        "case when policy_no is not null then policy_status_salve else policy_status end as cur_policy_status",
         "premium_total",
         "premium_pay_status",
         "premium_invoice_type",
@@ -642,6 +642,5 @@ import org.apache.spark.sql.hive.HiveContext
     update
 
   }
-
 
 }
