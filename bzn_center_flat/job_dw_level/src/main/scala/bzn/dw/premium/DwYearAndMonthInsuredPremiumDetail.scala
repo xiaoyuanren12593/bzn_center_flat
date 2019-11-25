@@ -36,14 +36,14 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
   /**
     * 计算保单与在保人的每日已赚保费，年单和月单
     * 月单取在保人的开始时间和结束时间
-    * @param sqlContext
+    * @param sqlContext //
     */
-  def DwYearAndMonthInsuredPremium(sqlContext:HiveContext) ={
+  def DwYearAndMonthInsuredPremium(sqlContext:HiveContext): DataFrame ={
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
     /**
       * 读取保单表
@@ -109,9 +109,9 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
 
   /**
     * 年单保费计算方式
-    * @param date
+    * @param date //
     */
-  def yearPremium(sqlContext: HiveContext,date:DataFrame) = {
+  def yearPremium(sqlContext: HiveContext,date:DataFrame): DataFrame = {
     import sqlContext.implicits._
     val res = date.where("sku_charge_type = '2'").mapPartitions(rdd => {
       // 创建一个数值格式化对象(对数字)
@@ -120,68 +120,19 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
       numberFormat.setMaximumFractionDigits(4)
 
       rdd.flatMap(x => {
-        var holderName = x.getAs[String]("holder_name")
+        val holderName = x.getAs[String]("holder_name")
 
         val policyId = x.getAs[String]("policy_id")
         val skuPrice = x.getAs[java.math.BigDecimal]("sku_price")
         val insuredId = x.getAs[String]("insured_id")
         val insuredCertNo = x.getAs[String]("insured_cert_no")
+
         val startDate = x.getAs[Timestamp]("policy_start_date").toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
         val endDate = x.getAs[Timestamp]("policy_end_date").toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
 
-        val insuredStartDateRes =x.getAs[Timestamp]("insured_start_date")
-        val insuredEndDateRes = x.getAs[Timestamp]("insured_end_date")
-
-        val insuredStartDate = insuredStartDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
-        val insuredEndDate = insuredEndDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
-
-
-        val insurePolicyStatus = x.getAs[Int]("insured_policy_status")
-        // sku_charge_type:1是月单，2是年单子
-        //判断是年单还是月单
-        //如果是月单，则计算的是我当月的平均保费使用的字段是:insured_start_date,insured_end_date
-        //如果是年单，则计算的是我当年的平均保费使用的字段是:start_date,end_date
-
-        //保单层面的循环天数
-        val dateNumber = getBeg_End_one_two(startDate, endDate).size
-
-        val res = getBeg_End_one_two(insuredStartDate, insuredEndDate).map(day_id => {
-          val num = java.math.BigDecimal.valueOf(dateNumber)
-          val skuDayPrice: java.math.BigDecimal = if(num != 0){
-            skuPrice.divide(num,4)
-          }else{
-            java.math.BigDecimal.valueOf(0)
-          }
-          (policyId,skuDayPrice,insuredId,insuredCertNo,insuredStartDateRes,insuredEndDateRes,insurePolicyStatus,day_id,skuPrice,holderName)
-        })
-        res
-      })
-    }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
-      "day_id","sku_price","holder_name")
-
-    res
-  }
-
-  /**
-    * 月单保费计算方式
-    * @param date
-    */
-  def monthPremium(sqlContext: HiveContext,date:DataFrame) = {
-    import sqlContext.implicits._
-    val res = date.where("sku_charge_type = '1'").mapPartitions(rdd => {
-      // 创建一个数值格式化对象(对数字)
-      val numberFormat = NumberFormat.getInstance
-      // 设置精确到小数点后2位
-      numberFormat.setMaximumFractionDigits(4)
-
-      rdd.flatMap(x => {
-        var holderName = x.getAs[String]("holder_name")
-
-        val policyId = x.getAs[String]("policy_id")
-        val skuPrice = x.getAs[java.math.BigDecimal]("sku_price")
-        val insuredId = x.getAs[String]("insured_id")
-        val insuredCertNo = x.getAs[String]("insured_cert_no")
-
+        /**
+          * 被保人的止期时间不得大于保单的止期时间
+          */
         val insuredStartDateRes = if(x.getAs[Timestamp]("policy_start_date") != null){
           if(x.getAs[Timestamp]("policy_start_date").compareTo(x.getAs[Timestamp]("insured_start_date")) <= 0){
             x.getAs[Timestamp]("insured_start_date")
@@ -202,8 +153,78 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
           x.getAs[Timestamp]("insured_end_date")
         }
 
-        val startDate = x.getAs[Timestamp]("policy_start_date").toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
-        val endDate = x.getAs[Timestamp]("policy_end_date").toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
+        val insuredStartDate = insuredStartDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
+        val insuredEndDate = insuredEndDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
+
+
+        val insurePolicyStatus = x.getAs[Int]("insured_policy_status")
+        // sku_charge_type:1是月单，2是年单子
+        //判断是年单还是月单
+        //如果是月单，则计算的是我当月的平均保费使用的字段是:insured_start_date,insured_end_date
+        //如果是年单，则计算的是我当年的平均保费使用的字段是:start_date,end_date
+
+        //保单层面的循环天数
+        val dateNumber = getBeg_End_one_two(startDate, endDate).size
+
+        val res = getBeg_End_one_two(insuredStartDate, insuredEndDate).map(day_id => {
+          val num = java.math.BigDecimal.valueOf(dateNumber)
+          val skuDayPrice: java.math.BigDecimal = if(num.compareTo(java.math.BigDecimal.valueOf(0)) != 0){
+            skuPrice.divide(num,4)
+          }else{
+            java.math.BigDecimal.valueOf(0)
+          }
+          (policyId,skuDayPrice,insuredId,insuredCertNo,insuredStartDateRes,insuredEndDateRes,insurePolicyStatus,day_id,skuPrice,holderName)
+        })
+        res
+      })
+    }).toDF("policy_id","sku_day_price","insured_id","insured_cert_no","insured_start_date","insured_end_date","insure_policy_status",
+      "day_id","sku_price","holder_name")
+
+    res
+  }
+
+  /**
+    * 月单保费计算方式
+    * @param date //
+    */
+  def monthPremium(sqlContext: HiveContext,date:DataFrame): DataFrame = {
+    import sqlContext.implicits._
+    val res = date.where("sku_charge_type = '1'").mapPartitions(rdd => {
+      // 创建一个数值格式化对象(对数字)
+      val numberFormat = NumberFormat.getInstance
+      // 设置精确到小数点后2位
+      numberFormat.setMaximumFractionDigits(4)
+
+      rdd.flatMap(x => {
+        val holderName = x.getAs[String]("holder_name")
+
+        val policyId = x.getAs[String]("policy_id")
+        val skuPrice = x.getAs[java.math.BigDecimal]("sku_price")
+        val insuredId = x.getAs[String]("insured_id")
+        val insuredCertNo = x.getAs[String]("insured_cert_no")
+
+        /**
+          * 被保人的止期时间不得大于保单的止期时间
+          */
+        val insuredStartDateRes = if(x.getAs[Timestamp]("policy_start_date") != null){
+          if(x.getAs[Timestamp]("policy_start_date").compareTo(x.getAs[Timestamp]("insured_start_date")) <= 0){
+            x.getAs[Timestamp]("insured_start_date")
+          }else{
+            x.getAs[Timestamp]("policy_start_date")
+          }
+        }else{
+          x.getAs[Timestamp]("insured_start_date")
+        }
+
+        val insuredEndDateRes = if(x.getAs[Timestamp]("policy_end_date") != null){
+          if(x.getAs[Timestamp]("policy_end_date").compareTo(x.getAs[Timestamp]("insured_end_date")) >= 0){
+            x.getAs[Timestamp]("insured_end_date")
+          }else{
+            x.getAs[Timestamp]("policy_end_date")
+          }
+        }else{
+          x.getAs[Timestamp]("insured_end_date")
+        }
 
         val insuredStartDate = insuredStartDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
         val insuredEndDate = insuredEndDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
@@ -220,7 +241,7 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
         val res: mutable.Seq[(String, java.math.BigDecimal, String, String, Timestamp, Timestamp, Int, String, java.math.BigDecimal, String)] =
           getBeg_End_one_two(insuredStartDate, insuredEndDate).map(day_id => {
             val num = java.math.BigDecimal.valueOf(dateNumber)
-            val skuDayPrice: java.math.BigDecimal = if(num != 0){
+            val skuDayPrice: java.math.BigDecimal = if(num.compareTo(java.math.BigDecimal.valueOf(0)) != 0){
               skuPrice.divide(num,4)
             }else{
               java.math.BigDecimal.valueOf(0)

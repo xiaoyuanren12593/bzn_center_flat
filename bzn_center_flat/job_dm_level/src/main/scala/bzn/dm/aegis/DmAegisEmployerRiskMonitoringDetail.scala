@@ -31,7 +31,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
-    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+    //writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
     sc.stop()
 
   }
@@ -94,7 +94,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
       */
     val dwPolicyClaimDetail =
       sqlContext.sql("select policy_id,policy_code,case_no,risk_date,case_status,res_pay from dwdb.dw_policy_claim_detail")
-      .where("risk_date is not null")
+        .where("risk_date is not null")
 
     val claimData = getClaimData(sqlContext,dwPolicyClaimDetail)
       .selectExpr("policy_id","policy_code","risk_date","case_no","cast(end_risk_premium as decimal(14,4)) as end_risk_premium",
@@ -154,16 +154,21 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         "insured_count",
         "charge_premium",
         "acc_premium",
-        "case_no",
-        "end_risk_premium",
-        "res_pay",
+        "case_no",//案件数
+        "end_risk_premium",//结案保费
+        "res_pay",//预估赔付
         "cast(expire_premium as decimal(14,4)) as expire_premium"
       )
 
     /**
+      * 终止的保单补全数据到当前的值
+      */
+    val toNowData = getToNowData(sqlContext,insuredAndPremiumAccPremiumClaimExpire:DataFrame)
+
+    /**
       * 上述结果与基础数据信息
       */
-    val res = insuredAndPremiumAccPremiumClaimExpire.join(dwEmployerBaseinfoDetail,'policy_code_insured === 'policy_code_master)
+    val res = toNowData.join(dwEmployerBaseinfoDetail,'policy_code_insured === 'policy_code_master)
       .selectExpr(
         //"getUUID() as id",
         "channel_id",
@@ -186,7 +191,6 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
       .map(x => {
         val channelId = x.getAs[String]("channel_id")
         val channelName = x.getAs[String]("channel_name")
-        val insureCompanyName = x.getAs[String]("insure_company_name")
         val insureCompanyShortName = x.getAs[String]("insure_company_short_name")
         val skuChargeType = x.getAs[String]("sku_charge_type")
         val dayIdInsured = x.getAs[String]("day_id_insured")
@@ -202,7 +206,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         val endRiskPremium = x.getAs[java.math.BigDecimal]("end_risk_premium")
         val resPay = x.getAs[java.math.BigDecimal]("res_pay")
         val expirePremium = x.getAs[java.math.BigDecimal]("expire_premium")
-        ((channelId,channelName,insureCompanyName,insureCompanyShortName,skuChargeType,dayId),
+        ((channelId,channelName,insureCompanyShortName,skuChargeType,dayId),
           (insuredCount,chargePremium,accPremium,caseNo,endRiskPremium,resPay,expirePremium))
       })
       .reduceByKey((x1,x2) =>{
@@ -216,7 +220,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         (insuredCount,chargePremium,accPremium,caseNo,endRiskPremium,resPay,expirePremium)
       })
       .map(x => {
-        (x._1._1,x._1._2,x._1._3,x._1._4,x._1._5,x._1._6,x._2._1,
+        (x._1._1,x._1._2,x._1._3,x._1._4,x._1._5,x._2._1,
           x._2._2,
           x._2._3,
           x._2._4,
@@ -228,7 +232,6 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
       .toDF(
         "channel_id",
         "channel_name",
-        "insurance_company",
         "insurance_company_short_name",
         "sku_charge_type",
         "day_id",
@@ -244,7 +247,6 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         "getUUID() as id",
         "channel_id",
         "clean(channel_name) as channel_name",
-        "insurance_company",
         "insurance_company_short_name",
         "sku_charge_type",
         "cast(day_id as Date) as day_id",
@@ -259,7 +261,118 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         "cast(getNow() as timestamp ) as update_time"
       )
       .where("channel_name is not null")
-    
+
+    res
+  }
+
+  /**
+    * 截止到当天的每一天的数据
+    * 预处理结果集中，筛选出保单终止日期小于当前日期的数据，和大于等于当前日期的数据分别作为两个结果集，
+    * 对于小于当前日期的数据将结果补全到当前时间，再将两个结果集的数据进行合并。
+    * @param sqlContext 上下文
+    * @param insuredAndPremiumAccPremiumClaimExpire 预处理结果集
+    */
+  def getToNowData(sqlContext:HiveContext,insuredAndPremiumAccPremiumClaimExpire:DataFrame): DataFrame ={
+    import sqlContext.implicits._
+
+    val maxDayIdData = insuredAndPremiumAccPremiumClaimExpire.map(x => {
+      val policyCodeInsured = x.getAs[String]("policy_code_insured")
+      val dayIdInsured = x.getAs[String]("day_id_insured")
+      (policyCodeInsured,dayIdInsured)
+    }).reduceByKey((x1,x2) =>{
+      val res = if(x1.compareTo(x2) > 0) x1 else x2
+      res
+    })
+      .map(x => {
+        (x._1,x._2)
+      })
+      .toDF("policy_code_max","day_id_max")
+
+    /**
+      * day_id（最大）小于当前时间的数据
+      */
+    val ltRes = maxDayIdData.where("day_id_max < regexp_replace(subStr(cast(now() as string),1,10),'-','')")
+      .selectExpr("policy_code_max","day_id_max","regexp_replace(subStr(cast(now() as string),1,10),'-','') as now_day_id")
+
+    /**
+      * 得到最大day_id且小于当前时间的数据
+      */
+    val ltInfoRes =  ltRes.join(insuredAndPremiumAccPremiumClaimExpire,'policy_code_max === 'policy_code_insured and 'day_id_max === 'day_id_insured)
+      .selectExpr(
+        "policy_code_insured",
+        "day_id_insured",
+        "now_day_id",
+        "insured_count",
+        "charge_premium",
+        "acc_premium",
+        "case_no",//案件数
+        "end_risk_premium",//结案保费
+        "res_pay",//预估赔付
+        "expire_premium"
+      )
+      .mapPartitions(rdd => {
+        rdd.flatMap( x => {
+          val policyCodeInsured = x.getAs[String]("policy_code_insured")
+          val dayIdInsured = x.getAs[String]("day_id_insured")
+          val nowDayId = x.getAs[String]("now_day_id")
+          val insuredCount = x.getAs[Int]("insured_count")
+          val chargePremium = x.getAs[java.math.BigDecimal]("charge_premium")
+          val accPremium = x.getAs[java.math.BigDecimal]("acc_premium")
+          val caseNo = x.getAs[Int]("case_no")
+          val endRiskPremium = x.getAs[java.math.BigDecimal]("end_risk_premium")
+          val resPay = x.getAs[java.math.BigDecimal]("res_pay")
+          val expirePremium = x.getAs[java.math.BigDecimal]("expire_premium")
+
+          val res =
+            getBeg_End_one_two(dayIdInsured, nowDayId).map(day_id => {
+              if(day_id.compareTo(dayIdInsured) > 0 && day_id.compareTo(nowDayId) <= 0){
+                (policyCodeInsured,dayIdInsured,nowDayId,day_id,0,
+                  java.math.BigDecimal.valueOf(0),
+                  java.math.BigDecimal.valueOf(0),0,
+                  java.math.BigDecimal.valueOf(0),
+                  java.math.BigDecimal.valueOf(0),
+                  java.math.BigDecimal.valueOf(0))
+              }else{
+                ("",dayIdInsured,nowDayId,day_id,insuredCount,chargePremium,accPremium,caseNo,endRiskPremium,resPay,expirePremium)
+              }
+            })
+          res
+        })
+      }).filter(x => x._1.length > 0)//过滤day_id最大的数据  否则和源数据union时候数据重复
+      .toDF(
+        "policy_code_insured",
+        "day_id_insured",
+        "now_day_id",
+        "day_id",
+        "insured_count",
+        "charge_premium",
+        "acc_premium",
+        "case_no",//案件数
+        "end_risk_premium",//结案保费
+        "res_pay",//预估赔付
+        "expire_premium"
+      )
+    ltInfoRes.show(100)
+    val res = ltInfoRes.selectExpr(
+      "policy_code_insured",
+      "day_id as day_id_insured", //这个值对应的是 day_id
+      "insured_count",
+      "cast(charge_premium as decimal(14,4)) as charge_premium",
+      "cast(acc_premium as decimal(14,4)) as acc_premium",
+      "case_no",//案件数
+      "cast(end_risk_premium as decimal(14,4)) as end_risk_premium",//结案保费
+      "cast(res_pay as decimal(14,4)) as res_pay",//预估赔付
+      "cast(expire_premium as decimal(14,4)) as expire_premium").unionAll(insuredAndPremiumAccPremiumClaimExpire)
+      .selectExpr(
+        "policy_code_insured",
+        "day_id_insured", //这个值对应的是 day_id
+        "insured_count",
+        "cast(charge_premium as decimal(14,4)) as charge_premium",
+        "cast(acc_premium as decimal(14,4)) as acc_premium",
+        "case_no",//案件数
+        "cast(end_risk_premium as decimal(14,4)) as end_risk_premium",//结案保费
+        "cast(res_pay as decimal(14,4)) as res_pay",//预估赔付
+        "cast(expire_premium as decimal(14,4)) as expire_premium")
     res
   }
 
@@ -317,7 +430,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
       }
       //预估赔付
       val resPay = x.getAs[java.math.BigDecimal]("res_pay")
-                                       //案件数,结案赔付，预估赔付
+      //案件数,结案赔付，预估赔付
       ((policyId,policyCode,riskDate),(1,endRiskPremium,resPay))
     })
       .reduceByKey((x1,x2)=>{
