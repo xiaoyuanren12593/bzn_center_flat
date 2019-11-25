@@ -88,7 +88,7 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
     }).toDF("holderName", "belongs_regional_salve_temp", "policy_start_date_temp")
 
     val odsPolicyDetailInsureTemp = odsPolicyDetailInsureTempSalve.join(frame, 'holder_name === 'holderName, "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_status", "policy_start_date_temp as policy_start_date", "policy_end_date", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
+      .selectExpr("policy_id", "policy_code","policy_status", "policy_start_date", "policy_end_date", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
         "belongs_regional", "belongs_regional_salve_temp as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName")
     /**
       * 读取地域信息码表

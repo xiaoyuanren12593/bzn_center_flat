@@ -1,9 +1,9 @@
 package bzn.ods.policy
 
 import java.sql.Timestamp
-import bzn.job.common.MysqlUntil
-import bzn.ods.policy.OdsInterAndWeddingPremiumDetailTest.clean
-import bzn.ods.util.Until
+
+
+import bzn.job.common.{MysqlUntil, Until}
 import bzn.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -24,27 +24,39 @@ import org.apache.spark.sql.hive.HiveContext
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val sqlContext = sparkConf._3
+    hqlContext.setConf("hive.exec.dynamic.partition", "true")
     hqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
+    // hqlContext.setConf("hive.exec.max.dynamic.partitions","100000")
+    //hqlContext.setConf("hive.exec.max.dynamic.partitions.pernode","100000")
 
-    /*val data = Array(("001", "张三", 21, "2018"), ("002", "李四", 18, "2017"),("003", "李四", 18, "2018"),*/
-    /*  ("004", "李四", 18, "2019"),("005", "李四", 12, "2017"),("006", "李四", 16, "2017"),("007", "李四", 19, "2017- 1"),*/
-    /*  ("008", "李四", 17, "2018"),("009", "李四", 19, "2012"))*/
-    /*val df = hqlContext.createDataFrame(data).toDF("id", "name", "age", "years")*/
-    /*hqlContext.sql("truncate table odsdb.ods_patition_test")*/
-    /*df.write.mode(SaveMode.Append).partitionBy("age","years").saveAsTable("odsdb.ods_patition_test")*/
+    /* val data = Array(("001", "张三", 21, "112121"), ("002", "李四", 18, "877878"),("003", "李四", 18, "1212123"),
+       ("004", "李四", 18, "121212"),("005", "李四", 12, "4564"),("006", "李四", 16, "45646"),("007", "李四", 19, "12155"),
+       ("008", "李四", 17, "4567"),("009", "李四", 19, "2220"),("006", "李四", 16, "46545"),("006", "李四", 16, "45645"),("006", "李四", 16, "254"),("006", "李四", 16, "7512"),
+       ("006", "李四", 16, "12231456"),("006", "李四", 16, "123123"),("006", "李四", 16, "1234545"),("006", "李四", 16, "1234545"),
+       ("006", "李四", 16, "7895"),("006", "李四", 16, "7821"),("006", "李四", 16, "5421"),("006", "李四", 16, "1561212"),("006", "李四", 16, "745"),("006", "李四", 16, "3214"),
+       ("006", "李四", 16, "2315245"),("006", "李四", 16, "78555"),("006", "李四", 16, "123123456"),("006", "李四", 16, "784568"),
+       ("006", "李四", 16, "1231"),("006", "李四", 16, "4556"),("006", "李四", 16, "2321"),("006", "李四", 16, "1231212"),("006", "李四", 16, "78522278"),
+       ("006", "李四", 16, "2452452"),("006", "李四", 16, "424124"),
+       ("006", "李四", 16, "45645654"),("006", "李四", 16, "64565"),("006", "李四", 16, "78528728"),("006", "李四", 16, "141414"),
+       ("006", "李四", 16, "0414"),("006", "李四", 16, "35"),("006", "李四", 16, "252525"),("006", "李四", 16, "141414"),("006", "李四", 16, "242424"))
+     val df = hqlContext.createDataFrame(data).toDF("id", "name", "age", "years")
+     hqlContext.sql("truncate table odsdb.ods_patition_test")
+     df.write.mode(SaveMode.Append).partitionBy("age","years").saveAsTable("odsdb.ods_patition_test")*/
     // res.registerTempTable("hiveInsuredData")
-
 
 
     // hqlContext.sql("insert into odsdb.ods_all_business_person_base_info_detail select * from hiveInsuredData")
     /*hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail")
     res.write.mode(SaveMode.Append).partitionBy("yearandmonth").saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")*/
     val res1 = HiveDataPerson(hqlContext)
+
     /*val res2 = hiveExpressData(hqlContext)*/
     /*val res3 = hiveOfoData(hqlContext)*/
     /*val res4 = res1.unionAll(res2).unionAll(res3)*/
     //res4.printSchema()
-
+    hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail_test")
+    res1.write.mode(SaveMode.Append).format("parquet").partitionBy("business_line", "years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
 
     sc.stop()
 
@@ -87,7 +99,9 @@ import org.apache.spark.sql.hive.HiveContext
         "product_code",
         "sku_price",
         "'官网' as business_line",
-        "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null,if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years")
+        "'2018-11-20' as years")
+    /* "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
+       "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years"*/
     res
 
   }
@@ -162,7 +176,7 @@ import org.apache.spark.sql.hive.HiveContext
       } else "aaaaaaaaaa"
       val month = str
       (insuredName, insuredCert, insuredMobile, policyCode, startDate, endDate, createTime, updateTime, productCode, skuPrice, businessLine, month)
-    }).filter(x=>x._12.contains("-"))
+    }).filter(x => x._12.contains("-"))
       .toDF("insured_name", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "years")
     odsOfoPolicy
   }

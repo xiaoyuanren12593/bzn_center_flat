@@ -25,15 +25,13 @@ import org.apache.spark.sql.hive.HiveContext
     val sqlContext = sparkConf._3
     hqlContext.setConf("hive.exec.dynamic.partition", "true")
     hqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
-    val res1 = HiveDataPerson(hqlContext)
-    hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail_temp")
-    res1.write.mode(SaveMode.Append).saveAsTable("odsdb.ods_all_business_person_base_info_detail_temp")
-    val res = hqlContext.sql("select * from odsdb.ods_all_business_person_base_info_detail_temp")
-   /* val res2 = hiveExpressData(hqlContext)
-   // val res3 = hiveOfoData(hqlContext)
-    val res4 = res1.unionAll(res2)*/
+    //val res1 = HiveDataPerson(hqlContext)
+   val res2 = hiveExpressData(hqlContext)
+  /*  val res3 = hiveOfoData(hqlContext)
+   val res4 = res1.unionAll(res2)*/
     hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail_test")
-    res.write.mode(SaveMode.Append).format("parquet").partitionBy("business_line","years").saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
+    res2.write.mode(SaveMode.Append).format("parquet").partitionBy("business_line","years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
     sc.stop()
 
 
@@ -78,8 +76,7 @@ import org.apache.spark.sql.hive.HiveContext
         "product_code",
         "sku_price",
         "'官网' as business_line",
-        "substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
-          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7) as years")
+        "'2018-11-20' as years")
     res
 
 
