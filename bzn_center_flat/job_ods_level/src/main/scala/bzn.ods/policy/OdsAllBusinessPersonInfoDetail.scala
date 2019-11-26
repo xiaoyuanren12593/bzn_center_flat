@@ -22,16 +22,19 @@ import org.apache.spark.sql.hive.HiveContext
 
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
-    val sqlContext = sparkConf._3
     hqlContext.setConf("hive.exec.dynamic.partition", "true")
     hqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
     //val res1 = HiveDataPerson(hqlContext)
-   val res2 = hiveExpressData(hqlContext)
-  /*  val res3 = hiveOfoData(hqlContext)
-   val res4 = res1.unionAll(res2)*/
-    hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail_test")
-    res2.write.mode(SaveMode.Append).format("parquet").partitionBy("business_line","years")
-      .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
+    //val res2 = hiveExpressData(hqlContext)
+    val res3 = hiveOfoData(hqlContext)
+
+    //hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail")
+   /* res1.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line","years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
+    res2.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line","years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail")*/
+    res3.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line","years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
     sc.stop()
 
 
@@ -74,9 +77,10 @@ import org.apache.spark.sql.hive.HiveContext
         "create_time",
         "update_time",
         "product_code",
-        "sku_price",
-        "'官网' as business_line",
-        "'2018-11-20' as years")
+        "sku_price","'official' as business_line",
+        "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
+          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years"
+        )
     res
 
 
@@ -89,7 +93,6 @@ import org.apache.spark.sql.hive.HiveContext
     * @return
     */
   def hiveExpressData(hqlContext: HiveContext): DataFrame = {
-
     hqlContext.udf.register("clean", (str: String) => clean(str))
     val odsExpressPolicy = hqlContext.sql("select * from odsdb_prd.open_express_policy")
       .selectExpr(
@@ -102,9 +105,9 @@ import org.apache.spark.sql.hive.HiveContext
         "cast(create_time as timestamp)",
         "cast(create_time as timestamp) as update_time",
         "clean('') as product_code",
-        "cast(clean('') as decimal(14,4)) as sku_price",
-        "'58' as business_line",
-        "month_id as years")
+        "cast(clean('') as decimal(14,4)) as sku_price","'58' as business_line",
+        "month_id as years"
+        )
     odsExpressPolicy
   }
 
@@ -118,11 +121,12 @@ import org.apache.spark.sql.hive.HiveContext
 
   def hiveOfoData(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
+    hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
     //读取hive中ofo的数据
 
     val odsOfoPolicyTemp = hqlContext.sql("select * from  odsdb_prd.open_ofo_policy_parquet")
-      .selectExpr("insured_name",
+      .selectExpr("getUUID() as id","insured_name",
         "insured_cert_no",
         "insured_mobile",
         "policy_id as policy_code_salve",
@@ -133,30 +137,9 @@ import org.apache.spark.sql.hive.HiveContext
         "product_code",
         "cast(clean('') as decimal(14,4)) as sku_price",
         "'ofo' as business_line",
-        "month_id as yearandmonth")
-    val odsOfoPolicy: DataFrame = odsOfoPolicyTemp.map(x => {
-      val insuredName = x.getAs[String]("insured_name")
-      val insuredCert = x.getAs[String]("insured_cert_no")
-      val insuredMobile = x.getAs[String]("insured_mobile")
-      val policyCode = x.getAs[String]("policy_code_salve")
-      val startDate = x.getAs[Timestamp]("start_date")
-      val endDate = x.getAs[Timestamp]("end_date")
-      val createTime = x.getAs[Timestamp]("create_time")
-      val updateTime = x.getAs[Timestamp]("update_time")
-      val productCode = x.getAs[String]("product_code")
-      val skuPrice = x.getAs[java.math.BigDecimal]("sku_price")
-      val businessLine = x.getAs[String]("business_line")
-      val months = x.getAs[String]("yearandmonth")
-      val str = if (months.length == 7 && months.contains("-")) {
-        months
-      } else if (months.length > 7 && months.contains("-")) {
-        val monthTemp = months.substring(0, 7)
-        monthTemp
-      } else "aaaaaaaaaa"
-      val month = str
-      (insuredName, insuredCert, insuredMobile, policyCode, startDate, endDate, createTime, updateTime, productCode, skuPrice, businessLine, month)
-    }).filter(x => x._12.contains("-"))
-      .toDF("insured_name", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "years")
-    odsOfoPolicy
+        "month_id as years")
+      .where("length(years)=7 and years <'2111'")
+      .repartition(1000)
+    odsOfoPolicyTemp
   }
 }
