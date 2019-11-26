@@ -61,7 +61,7 @@ import org.apache.spark.sql.hive.HiveContext
       .map( x => {
         (x._1._1,x._1._2,x._1._3,x._2)
       })
-      .toDF("policy_id_pemium","insured_cert_no_premium","start_date_premium","days_promium")
+      .toDF("policy_id_pemium","insured_cert_no_premium","start_date_premium","days_premium")
 
     /**
       * 读取dw层工种匹配表
@@ -158,7 +158,7 @@ import org.apache.spark.sql.hive.HiveContext
         "plan_recognition",
         "gs_plan_recognition",
         "res_pay",
-        "cast(days_promium as decimal(14,4)) as charge_premium",
+        "cast(days_premium as decimal(14,4)) as charge_premium",
         "getNow() as dw_create_time"
       )
     res
