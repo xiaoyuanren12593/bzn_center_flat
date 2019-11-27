@@ -4,9 +4,8 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
-
 import bzn.dw.util.SparkUtil
-import bzn.job.common.{MysqlUntil, Until}
+import bzn.job.common.{MysqlUntil, Until, WareUntil}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext
@@ -15,7 +14,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/8
 * @Describe:
-*/ object DwEmployerBaseInfoHolderDetailTest extends SparkUtil with Until with MysqlUntil {
+*/ object DwEmployerBaseInfoHolderDetailTest extends SparkUtil with Until with MysqlUntil{
 
   /**
     * 获取配置信息

@@ -91,7 +91,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         // 8	其他
         "case when status = 1 then 1 " +
           "when status = 2 then 2 " +
-          "when status = 3 and ledger_status = 1 and payment_status = 1 then 3 " +
+          "when status = 3 and payment_status = 1 then 3 " +
           "when status = 3 and ledger_status = 1 and payment_status = 2 then 4 " +
           "when status = 3 and ledger_status = 3 and payment_status = 2 then 4 " +
           "when status = 5 then 5 " +

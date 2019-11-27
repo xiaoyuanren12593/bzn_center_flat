@@ -74,8 +74,8 @@ object Dependencies {
     hbaseHadoopCompatProvided)
 
   //--------------------------------------------工具模块----------------------------------------------------------------
-  val utilDeps = Seq(jodaTime,mysqlConnectorJava,clickhouseConnector, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
-    hbaseHadoopCompatProvided)
+  val utilDeps = Seq(jodaTime,mysqlConnectorJava,clickhouseConnector, nlpLang,fastjson, sparkHiveProvided,sparkNeo4jProvided, sparkCsvProvided,
+    sparkStreamingProvided, sparkStreamingKafkaProvided, sparkMllibProvided, hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,hbaseHadoopCompatProvided)
 
   //--------------------------------------------ods层----------------------------------------------------------------
   val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava,clickhouseConnector,fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
@@ -97,5 +97,7 @@ object Dependencies {
   val bznMLLibGraphXDepsProvided = Seq(mysqlConnectorJava, fastjson, sparkHiveProvided, sparkMllib, sparkGraphX)
 
   //--------------------------------------------spark streaming 实时计算----------------------------------------------------------------
-  val bznSparkStreamingDepsProvided  = Seq(c3p0,mysqlConnectorJava,clickhouseConnector, fastjson, sparkHiveProvided,sparkStreaming,sparkStreamingKafka,sparkCsv)
+  val bznSparkStreamingDepsProvided  = Seq(c3p0,mysqlConnectorJava,clickhouseConnector, fastjson, sparkHiveProvided,sparkStreamingProvided,
+    sparkStreamingKafkaProvided,sparkCsvProvided,hbaseClientProvided, hbaseCommonProvided, hbaseServerProvided,
+    hbaseHadoopCompatProvided)
 }

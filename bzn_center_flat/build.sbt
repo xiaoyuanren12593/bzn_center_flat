@@ -24,7 +24,6 @@ val commonSettings = Seq(
   runMain in Compile := Defaults.runMainTask(fullClasspath in Compile, runner in(Compile, run)).evaluated
 )
 
-
 // 公共的 打包 配置
 val commonAssemblySettings = Seq(
   //解决依赖重复的问题
@@ -137,7 +136,7 @@ lazy val bznCPersonLabel = (project in file("job_c_Person_label"))
     assemblyJarName in assembly := "bznCPerson.jar"
   )
 
-// c端标签模块
+// sparkStreaming模块
 lazy val bznSparkStreaming = (project in file("job_spark_streaming"))
   .dependsOn(jobUtil)
   .settings(

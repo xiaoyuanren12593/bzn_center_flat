@@ -273,7 +273,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
         "sku_charge_type",
         "day_id",
         "c_week_id as week_id",
-        "case when week_day = '5' then '星期五' else null end as week_day",
+        "case when week_day = '6' then '星期五' else null end as week_day",
         "c_week_long_desc as week_long_desc",
         "c_month_id as month_id",
         "case when c_month_end_date = day_id then c_month_end_date else null end as month_end_date",
