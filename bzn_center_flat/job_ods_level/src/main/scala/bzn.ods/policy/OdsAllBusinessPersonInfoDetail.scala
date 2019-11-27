@@ -125,20 +125,9 @@ import org.apache.spark.sql.hive.HiveContext
     hqlContext.udf.register("clean", (str: String) => clean(str))
     //读取hive中ofo的数据
 
-    val odsOfoPolicyTemp = hqlContext.sql("select * from  odsdb_prd.open_ofo_policy_parquet")
-      .selectExpr("getUUID() as id","insured_name",
-        "insured_cert_no",
-        "insured_mobile",
-        "policy_id as policy_code_salve",
-        "cast(start_date as timestamp) as start_date",
-        "cast(end_date as timestamp) as end_date",
-        "cast(create_time as timestamp) as create_time",
-        "cast(create_time as timestamp) as update_time",
-        "product_code",
-        "cast(clean('') as decimal(14,4)) as sku_price",
-        "'ofo' as business_line",
-        "month_id as years")
-      .where("length(years)=7 and years <'2111'")
+    val odsOfoPolicyTemp =  hqlContext.sql("select insured_name,insured_cert_no,insured_mobile,policy_id as policy_code_salve,cast(start_date as timestamp) as start_date," +
+      "cast(create_time as timestamp) as create_time,cast(create_time as timestamp) as update_time,product_code,cast(clean('') as decimal(14,4)) as sku_price,'ofo' as business_line,month_id as years" +
+      " from odsdb_prd.open_ofo_policy_parquet where length(month_id)=7 and month_id<'2100' and  month_id<'2016-12'")
       .repartition(1000)
     odsOfoPolicyTemp
   }
