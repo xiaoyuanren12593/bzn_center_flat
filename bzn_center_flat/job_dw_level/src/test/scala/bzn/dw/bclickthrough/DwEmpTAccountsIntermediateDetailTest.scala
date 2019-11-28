@@ -185,7 +185,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test_20191121", "mysql.username.103",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_update_employer_detail_test", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
