@@ -47,7 +47,6 @@ object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with WareUntil {
 
     getPiwikDataToMysql(strContext,kafkaParam,topicSet)
   }
-  case class CardMember(m_id: Int, card_type: String, expire: Timestamp, duration: Int, is_sale: Int, date: Date, user: String, salary: Float,tableName:String)
   /**
     * 实时读取kafka数据到MySQL
     * @param strContext
@@ -62,6 +61,7 @@ object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with WareUntil {
 
     lines.foreachRDD(rdds => {
       if(!rdds.isEmpty()){
+
         rdds.map(x => {
           val jsonData = JSON.parse(x)
 

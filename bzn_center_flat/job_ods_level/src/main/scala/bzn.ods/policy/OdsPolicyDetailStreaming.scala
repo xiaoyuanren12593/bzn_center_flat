@@ -45,7 +45,7 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
       .where("business_type = 2")
       .selectExpr(
         "holder_name",
-        "insurance_proposal_no as policy_code",
+        "insurance_policy_no as policy_code",
         "sell_channel_code as channel_id",
         "sell_channel_name as channel_name",
         "status",
