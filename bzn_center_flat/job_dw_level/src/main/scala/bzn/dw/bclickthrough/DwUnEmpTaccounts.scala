@@ -29,7 +29,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
 
-    saveASMysqlTable(finRes, "t_accounts_un_employer_test_20191128", SaveMode.Append, "mysql.username.103",
+    saveASMysqlTable(finRes, "t_accounts_un_employer_test", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
 
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
@@ -73,7 +73,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取销售团队表
       */
-    val odsEntSalesTeamDimension = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
+    val odsEntSalesTeamDimension = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
 
     /**
       * 保单表和产品方案表进行关联
@@ -154,7 +154,7 @@ import org.apache.spark.sql.hive.HiveContext
         "insure_company_name",
         "channel_id",
         "channel_name",
-        "case when sales_name is null and business_line = '体育' then sales_name_slave else sales_name end as sales_name",
+        "case when sales_name is null and business_line = '体育' then sales_name_slave when sales_name is null and business_line = '健康' then '王艳' else sales_name  end as sales_name",
         "first_premium",
         "holder_name",
         "insured_subject",
@@ -231,7 +231,7 @@ import org.apache.spark.sql.hive.HiveContext
     hqlContext.udf.register("clean", (str: String) => clean(str))
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
-      .where("policy_start_date>='2019-01-01 00:00:00'")
+    //  .where("policy_start_date>='2019-01-01 00:00:00'")
       .selectExpr(
         "getUUID() as id",
         "clean('') as batch_no",
