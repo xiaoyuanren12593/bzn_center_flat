@@ -24,8 +24,8 @@ import org.apache.spark.sql.hive.HiveContext
     val hiveContext = sparkConf._4
 
     val res = getAllBusinessPolicyDetail(hiveContext)
-    val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
-    frame1.printSchema()
+   //val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
+  // res.printSchema()
    // val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
    // val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
 
@@ -68,7 +68,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取体育销售表
       */
-    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave from  odsdb.ods_sports_customers_dimension")
+    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from  odsdb.ods_sports_customers_dimension")
 
     /**
       * 读取销售团队表
@@ -141,6 +141,8 @@ import org.apache.spark.sql.hive.HiveContext
         "commission_discount_rate"
       )
 
+    val xxxxxxx = policyAndPlanAndProductRes.where("policy_code = 'AHAZK79E4C19PAAA190R'")
+    xxxxxxx.show(100)
     // 体育销售的处理
     val policyAndPlanAndProductSportsSaleRes = policyAndPlanAndProductRes.join(odsSportsCustomersDimension, policyAndPlanAndProductRes("channel_name") === odsSportsCustomersDimension("name"), "leftouter")
       .selectExpr(
@@ -154,6 +156,7 @@ import org.apache.spark.sql.hive.HiveContext
         "insure_company_name",
         "channel_id",
         "channel_name",
+        "type",
         "case when sales_name is null and business_line = '体育' then sales_name_slave when sales_name is null and business_line = '健康' then '王艳' else sales_name  end as sales_name",
         "first_premium",
         "holder_name",
@@ -172,7 +175,8 @@ import org.apache.spark.sql.hive.HiveContext
         "economic_rate",
         "commission_discount_rate"
       )
-
+    val aaaaaaa = policyAndPlanAndProductSportsSaleRes.where("policy_code = 'AHAZK79E4C19PAAA190R'")
+    aaaaaaa.show(100)
     /**
       * 上结果与团队表进行关联
       */
@@ -206,9 +210,7 @@ import org.apache.spark.sql.hive.HiveContext
         "tech_service_rate",
         "economic_rate",
         "commission_discount_rate"
-      )
-
-
+      ).distinct
     /**
       * 获取体育保单数据信息
       */
@@ -230,7 +232,8 @@ import org.apache.spark.sql.hive.HiveContext
     import hqlContext.implicits._
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
-
+    val xxxxx = policyAndPlanAndTeamRes.where("policy_code = 'AHAZK79E4C19PAAA190R'")
+    xxxxx.show(100)
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
      // .where("policy_start_date>='2019-01-01 00:00:00'")
       .selectExpr(
@@ -281,13 +284,13 @@ import org.apache.spark.sql.hive.HiveContext
         "now() as create_time",
         "now() as update_time",
         "cast(clean('') as int) as operator"
-      ).where("policy_no = 'ABEJ130E0518PAAA1S81'")
-
+      ).where("policy_no = 'AHAZK79E4C19PAAA190R'")
+    policyAndPlanAndTeamAndProductRes.show(100)
     /** *
       * 拿出增量数据
       */
 
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username.103",
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer_copy", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
@@ -310,8 +313,8 @@ import org.apache.spark.sql.hive.HiveContext
       "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
       "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
 
-    val qqqq = resfin.where("policy_no = 'P55010106152019005554'")
-
+    val qqqq = resfin.where("policy_no = 'AHAZK79E4C19PAAA190R'")
+    qqqq.show(100)
     qqqq
   }
 
@@ -443,7 +446,7 @@ import org.apache.spark.sql.hive.HiveContext
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
         "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
-      .where("preserve_id_salve is null")
+      .where("preserve_id_salve is null business_type='1'")
 
 
     val resfin = res

@@ -29,7 +29,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
 
-    saveASMysqlTable(finRes, "t_accounts_un_employer_test", SaveMode.Append, "mysql.username.103",
+    saveASMysqlTable(finRes, "t_accounts_un_employer", SaveMode.Append, "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
 
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
@@ -68,8 +68,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取体育销售表
       */
-    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave from  odsdb.ods_sports_customers_dimension")
-
+    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from  odsdb.ods_sports_customers_dimension")
     /**
       * 读取销售团队表
       */
@@ -150,6 +149,7 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_effect_date",
         "policy_start_date",
         "policy_end_date",
+        "type",
         "policy_create_time",
         "insure_company_name",
         "channel_id",
@@ -206,7 +206,7 @@ import org.apache.spark.sql.hive.HiveContext
         "tech_service_rate",
         "economic_rate",
         "commission_discount_rate"
-      )
+      ).distinct
 
     /**
       * 获取体育保单数据信息
@@ -513,7 +513,7 @@ import org.apache.spark.sql.hive.HiveContext
       )
 
     val policyAndPlanAndTeamAndProductPreserveRes = odsHealthPreserceDetail.join(policyAndPlanAndTeamAndProductRes, odsHealthPreserceDetail("policy_code_preserve") === policyAndPlanAndTeamAndProductRes("policy_code"))
-      .where("policy_start_date >= '2019-01-01 00:00:00'")
+     // .where("policy_start_date >= '2019-01-01 00:00:00'")
       .selectExpr(
         "getUUID() as id",
         "clean('')  as batch_no",
