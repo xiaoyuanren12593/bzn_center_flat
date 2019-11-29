@@ -63,7 +63,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
       "clean(insured_company) as insured_company, " +
       "pre_com, clean(disable_level) as disable_level, clean(scene) as scene, " +
       "clean(case_type) as case_type, clean(case_status) as case_status, " +
-      "cast(clean(case_close_date) as timestamp) as case_close_date, " +
+      "clean(case_close_date) as case_close_date, " +
       "cast(clean(hos_benefits) as decimal(14,4)) as hos_benefits, " +
       "cast(clean(medical_coverage) as decimal(14,4)) as medical_coverage, " +
       "cast(clean(delay_payment) as decimal(14,4)) as delay_payment, " +
