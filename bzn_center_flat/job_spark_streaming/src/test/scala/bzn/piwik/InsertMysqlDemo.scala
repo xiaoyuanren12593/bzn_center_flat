@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object InsertMysqlDemo {
 
   case class CardMember(m_id: Int, card_type: String, expire: Timestamp, duration: Int, is_sale: Int, date: Date, user: String, salary: Float,tableName:String)
-
+  case class CardMember1(m_id: Int)
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setMaster("local[*]").setAppName(getClass.getSimpleName).set("spark.testing.memory", "3147480000")
     val sparkContext = new SparkContext(conf)
@@ -35,10 +35,25 @@ object InsertMysqlDemo {
       //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
     )
     val memberDF = memberSeq.toDF().repartition(5)
+
+    val memberSeq1 = Seq(
+      CardMember1(1),
+      CardMember1(2),
+      CardMember1(3),
+      CardMember1(4),
+      CardMember1(5),
+      CardMember1(6),
+      CardMember1(7),
+      CardMember1(8),
+      CardMember1(9),
+      CardMember1(10)
+      //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
+    )
+    val memberDF1 = memberSeq1.toDF().repartition(5)
 //    MySQLUtils.saveDFtoDBCreateTableIfNotExist("member_test", memberDF)
     MySQLUtils.insertOrUpdateDFtoDBUsePool("member_test", memberDF, Array("expire","duration","date","card_type","user", "salary"))
-//    MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF, "member_test")
-    //MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
+//    MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF1, "member_test")
+    MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
 
     sparkContext.stop()
   }

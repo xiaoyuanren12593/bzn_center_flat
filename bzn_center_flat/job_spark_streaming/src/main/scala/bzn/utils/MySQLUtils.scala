@@ -279,11 +279,12 @@ object MySQLUtils {
   def insertOrUpdateDFtoDBUsePool(tableName: String, resultDateFrame: DataFrame, updateColumns: Array[String]) {
     val colNumbers = resultDateFrame.columns.length-1
     val sql = getInsertOrUpdateSql(tableName, resultDateFrame.columns, updateColumns)
-    val columnDataTypes = resultDateFrame.schema.fields.map(_.dataType)
+    val columnDataTypes: Array[DataType] = resultDateFrame.schema.fields.map(_.dataType)
     println("############## sql = " + sql)
     resultDateFrame.foreachPartition(partitionRecords => {
       val conn = MySQLPoolManager.getMysqlManager.getConnection //从连接池中获取一个连接
       val preparedStatement = conn.prepareStatement(sql)
+      val preparedStatement1 = conn.prepareStatement(sql)
       val metaData = conn.getMetaData.getColumns(null, "%", tableName, "%") //通过连接获取表名对应数据表的元数据
       try {
         conn.setAutoCommit(false)
