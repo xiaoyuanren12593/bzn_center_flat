@@ -48,6 +48,8 @@ object test{
       (name,idzz,value,database,pkNames,table,sqlType)
     }).toSeq
 
+    val insertColumns = Array("name","idzz","value")
+    println (insertColumns.indexOf ("idzz"))
     val df: DataFrame = res.toDF("name","idzz","value","database","pkNames","table","sql_type")
 
     df.where("value is null").show()

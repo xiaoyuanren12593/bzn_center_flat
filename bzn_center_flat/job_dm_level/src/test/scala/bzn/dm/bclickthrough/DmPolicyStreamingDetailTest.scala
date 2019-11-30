@@ -117,7 +117,6 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
           "update_time"
         )
 
-    res.printSchema()
 
     val tableName  = "dm_b_clickthrouth_emp_continue_policy_detail"
 
@@ -132,6 +131,28 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
 //    // saveASMysqlTable(res: DataFrame, tableName, SaveMode.Overwrite,user103,pass103,driver,url103)
 //    saveASMysqlTable(res: DataFrame, tableName, SaveMode.Overwrite,user106,pass106,driver,url106)
 //    res.printSchema()
+
+
+    val resEnd =res.selectExpr(
+      "id",
+      "policy_code",
+      "preserve_id",
+      "ent_id",
+      "ent_name",
+      "channel_id",
+      "channel_name",
+      "status",
+      "curr_insured",
+      "pre_continue_person_count",
+      "sale_name",
+      "biz_operator",
+      "create_time",
+      "update_time",
+      //"substr(cast(now() as string),1,10) as date_time"
+      "cast(now() as string) as date_time"
+    )
+    resEnd.printSchema()
+    resEnd
 
   }
 }

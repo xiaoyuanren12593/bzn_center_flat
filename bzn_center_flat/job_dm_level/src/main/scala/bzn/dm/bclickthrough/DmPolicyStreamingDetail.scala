@@ -21,9 +21,9 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = getHolderInfo(hiveContext)
-   // hiveContext.sql("truncate table dwdb.dw_policy_streaming_detail")
-   // res.repartition(1).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_policy_streaming_detail")
-
+    //hiveContext.sql("alter table backupdb.dm_b_clickthrouth_emp_continue_policy_detail drop partition (date_time =CURRENT_DATE")
+    res.repartition(1).write.mode(SaveMode.Append).format("parquet").partitionBy("date_time").saveAsTable("backupdb.dm_b_clickthrouth_emp_continue_policy_detail")
+    //substr(cast(CURRENT_DATE as string),1,10)
     sc.stop()
   }
 
@@ -117,8 +117,6 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "update_time"
       )
 
-    res.printSchema()
-
     val tableName  = "dm_b_clickthrouth_emp_continue_policy_detail"
 
     //    val user103 = "mysql.username.103"
@@ -131,5 +129,25 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
 
    // saveASMysqlTable(res: DataFrame, tableName, SaveMode.Overwrite,user103,pass103,driver,url103)
     saveASMysqlTable(res: DataFrame, tableName, SaveMode.Overwrite,user106,pass106,driver,url106)
+
+    val resEnd =res.selectExpr(
+      "id",
+      "policy_code",
+      "preserve_id",
+      "ent_id",
+      "ent_name",
+      "channel_id",
+      "channel_name",
+      "status",
+      "curr_insured",
+      "pre_continue_person_count",
+      "sale_name",
+      "biz_operator",
+      "create_time",
+      "update_time",
+      //"substr(cast(now() as string),1,10) as date_time"
+      "cast(now() as string) as date_time"
+    )
+    resEnd
   }
 }
