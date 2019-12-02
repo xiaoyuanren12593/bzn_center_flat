@@ -154,7 +154,7 @@ import org.apache.spark.sql.hive.HiveContext
         "insure_company_name",
         "channel_id",
         "channel_name",
-        "case when sales_name is null and business_line = '体育' then sales_name_slave when sales_name is null and business_line = '健康' then '王艳' else sales_name  end as sales_name",
+        "case when sales_name is null and business_line = '体育' then sales_name_slave when sales_name is null and business_line = '健康' then '保准健康' else sales_name  end as sales_name",
         "first_premium",
         "holder_name",
         "insured_subject",
@@ -263,7 +263,7 @@ import org.apache.spark.sql.hive.HiveContext
         "'1' as premium_pay_status", //保费实收状态
         "clean('') as  behalf_number",
         "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-        "'天津中策' as economy_company",
+        "clean('') as economy_company",
         "economic_rate as economy_rates",
         "cast((first_premium * economic_rate) as decimal(14,4)) as economy_fee",
         "tech_service_rate as technical_service_rates",
@@ -403,7 +403,7 @@ import org.apache.spark.sql.hive.HiveContext
         "cast(pay_status as string) as premium_pay_status", //保费实收状态
         "clean('')  as behalf_number",
         "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-        "'天津中策' as economy_company",
+        "clean('') as economy_company",
         "economic_rate as economy_rates",
         "cast(((if(add_premium is null,0,add_premium) + if(del_premium is null,0,del_premium)) * economic_rate) as decimal(14,4)) as economy_fee",
         "tech_service_rate as technical_service_rates",
@@ -545,7 +545,7 @@ import org.apache.spark.sql.hive.HiveContext
         "'1' as premium_pay_status", //保费实收状态
         "clean('')  as behalf_number",
         "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-        "'天津中策' as economy_company",
+        "clean('') as economy_company",
         "economic_rate as economy_rates",
         "cast((premium_total * economic_rate) as decimal(14,4)) as economy_fee",
         "tech_service_rate as technical_service_rates",
