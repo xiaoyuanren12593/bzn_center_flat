@@ -71,7 +71,7 @@ import org.apache.spark.sql.hive.HiveContext
       "channel_id, channel_name, insured_subject,sum_premium, insure_company_name, insure_company_short_name,insured_name, " +
       "insured_cert_no, start_date,end_date," +
       "work_type,primitive_work,job_company, gender, age, " +
-      "bzn_work_name,work_name,bzn_work_risk,gs_work_risk,recognition, whether_recognition,plan_recognition,gs_plan_recognition from dwdb.dw_work_type_matching_detail")
+      "bzn_work_name,work_name,work_name_check,bzn_work_risk,gs_work_risk,recognition, whether_recognition,plan_recognition,gs_plan_recognition from dwdb.dw_work_type_matching_detail")
 
     val res2 = res1.selectExpr("policy_id","insured_cert_no","start_date","end_date")
 
@@ -117,7 +117,7 @@ import org.apache.spark.sql.hive.HiveContext
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
         "insured_subject","sum_premium", "insure_company_name", "insure_company_short_name","insured_name", "insured_cert_no",
         "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
-        "bzn_work_name", "work_name", "bzn_work_risk","gs_work_risk",
+        "bzn_work_name", "work_name","work_name_check", "bzn_work_risk","gs_work_risk",
         "recognition", "whether_recognition","plan_recognition","gs_plan_recognition",
         "cast((case when res_pay is null then 0 else res_pay end) as decimal(14,4)) as res_pay")
 
@@ -151,6 +151,7 @@ import org.apache.spark.sql.hive.HiveContext
         "gender", "age",
         "bzn_work_name",
         "work_name",
+        "work_name_check",
         "bzn_work_risk",
         "gs_work_risk",
         "recognition",

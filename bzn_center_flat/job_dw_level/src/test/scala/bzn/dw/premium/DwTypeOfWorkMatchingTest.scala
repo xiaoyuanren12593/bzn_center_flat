@@ -127,7 +127,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
         "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high")
 
     //读取bzn工种表
-    val odsWorkMatching: DataFrame = sqlContext.sql("select primitive_work,work_name from odsdb.ods_work_matching_dimension")
+    val odsWorkMatching: DataFrame = sqlContext.sql("select primitive_work,work_name_check,work_name  from odsdb.ods_work_matching_dimension")
 
     //将上述结果与bzn工种表关联
     val resAndOdsWorkMatch = WorkGardeAndEnt.join(odsWorkMatching, WorkGardeAndEnt("work_type") === odsWorkMatching("primitive_work"), "leftouter")
@@ -135,7 +135,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
         "insured_subject","sum_premium", "insure_company_name", "short_name",
         "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company",
-        "primitive_work", "work_name",
+        "primitive_work", "work_name_check","work_name",
         "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
     // and product_code not in ('LGB000001','17000001')
@@ -148,7 +148,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
       .selectExpr("policy_id", "policy_code", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
         "insured_subject","sum_premium","insure_company_name", "short_name", "insured_name", "insured_cert_no","start_date",
-        "end_date", "work_type", "job_company", "primitive_work", "work_name",
+        "end_date", "work_type", "job_company", "primitive_work", "work_name_check","work_name",
         "gender", "age", "one_level_pdt_cate","profession_type_slow",
         "profession_type_high", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type")
 
@@ -179,7 +179,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
 
     //将上述结果与标准工种表关联
     var odsWorkMatch: DataFrame = WorkAndPlan.join(odsWorkRiskDimension,
-      WorkAndPlan("work_name") === odsWorkRiskDimension("name"), "leftouter")
+      WorkAndPlan("work_name_check") === odsWorkRiskDimension("name"), "leftouter")
       .selectExpr("getUUID() as id", "policy_id ",
         "clean(policy_code) as policy_code",
         "sku_coverage",
@@ -205,14 +205,15 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
         "clean(work_type) as work_type",
         "clean(primitive_work) as primitive_work ", //原始工种
         "clean(name) as bzn_work_name ", //工种名称
-        "clean(work_name) as work_name ", //标准工种
+        "clean(work_name) as work_name",
+        "clean(work_name_check) as work_name_check ", //标准工种
         "clean(risk) as bzn_work_risk", //级别
         "gs_work_risk",
         "case when work_type is null then '已匹配' when work_type is not null and primitive_work is not null then '已匹配'" +
           " when work_type is not null and primitive_work is null then '未匹配' end as recognition ",
-        "case when work_type is not null and (work_name is not null and work_name !='未知') then 1 " +
-          "when work_type is not null and work_name='未知' then 0 " +
-          "when work_type is not null and work_name is null then 0  " +
+        "case when work_type is not null and (work_name_check is not null and work_name_check !='未知') then 1 " +
+          "when work_type is not null and work_name_check='未知' then 0 " +
+          "when work_type is not null and work_name_check is null then 0  " +
           "when work_type is null then 2 end as whether_recognition",
         "case when profession_type is null then '未知' when cast(risk as int) >= profession_type_slow and  cast(risk as int) <= profession_type_high then '已知' else '未知' end as plan_recognition" ,//方案级别已匹配未匹配
         "case when profession_type is null then '未知' when  gs_work_risk >=profession_type_slow and gs_work_risk <= profession_type_high then '已知' else '未知' end as gs_plan_recognition"
@@ -224,7 +225,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
       "insured_subject","sum_premium", "insure_company_name", "short_name as insure_company_short_name",
       "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
-      "bzn_work_name","work_name","bzn_work_risk","cast(gs_work_risk as string) as gs_work_risk","recognition", "whether_recognition","plan_recognition","gs_plan_recognition","getNow() as dw_create_time")
+      "bzn_work_name","work_name","work_name_check","bzn_work_risk","cast(gs_work_risk as string) as gs_work_risk","recognition", "whether_recognition","plan_recognition","gs_plan_recognition","getNow() as dw_create_time")
     res
 
   }
