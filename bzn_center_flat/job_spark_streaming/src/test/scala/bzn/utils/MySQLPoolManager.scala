@@ -25,7 +25,7 @@ object MySQLPoolManager {
   class MysqlPool extends Serializable {
     private val cpds: ComboPooledDataSource = new ComboPooledDataSource(true)
     try {
-      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url"))
+      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.dwdb"))
       cpds.setDriverClass(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.pool.jdbc.driverClass"))
       cpds.setUser(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.username"))
       cpds.setPassword(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.password"))

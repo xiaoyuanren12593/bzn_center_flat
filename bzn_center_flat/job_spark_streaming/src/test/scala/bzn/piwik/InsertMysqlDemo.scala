@@ -26,15 +26,15 @@ object InsertMysqlDemo {
       CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
       CardMember(3, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
       CardMember(4, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1259", 0.32f,"member_test"),
-      CardMember(5, "季卡", null, 12, 1, null, null, 0.95f,"member_test"),
+      CardMember(5, "季卡", new Timestamp(System.currentTimeMillis()), 12, 1, new Date(System.currentTimeMillis()), "1259", 0.95f,"member_test"),
       CardMember(6, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "1", 0.32f,"member_test"),
       CardMember(7, "季卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "2", 0.32f,"member_test"),
       CardMember(8, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "3", 0.32f,"member_test"),
       CardMember(9, "月卡", new Timestamp(System.currentTimeMillis()), 31, 1, new Date(System.currentTimeMillis()), "45", 0.32f,"member_test"),
-      CardMember(10, "月卡", new Timestamp(System.currentTimeMillis()), 31, 0, new Date(System.currentTimeMillis()), "8", 0.66f,"member_test")
+      CardMember(10, null, null, 31, 0, null, "8", 0.66f,"member_test")
       //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
     )
-    val memberDF = memberSeq.toDF().repartition(5)
+    val memberDF = memberSeq.toDF().repartition(20)
 
     val memberSeq1 = Seq(
       CardMember1(1),
@@ -49,10 +49,10 @@ object InsertMysqlDemo {
       CardMember1(10)
       //CardMember(2, "季卡", new Timestamp(System.currentTimeMillis()), 93, false, new Date(System.currentTimeMillis()), 124224, 0.362f)
     )
-    val memberDF1 = memberSeq1.toDF().repartition(5)
+    val memberDF1 = memberSeq1.toDF().repartition(10)
 //    MySQLUtils.saveDFtoDBCreateTableIfNotExist("member_test", memberDF)
     MySQLUtils.insertOrUpdateDFtoDBUsePool("member_test", memberDF, Array("expire","duration","date","card_type","user", "salary"))
-//    MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF1, "member_test")
+    MySQLUtils.deleteMysqlTableDataBatch(hiveContext: SQLContext,memberDF1, "member_test")
     MySQLUtils.getDFFromMysql(hiveContext, "member_test", null).show()
 
     sparkContext.stop()

@@ -79,7 +79,7 @@ object Dependencies {
 
   //--------------------------------------------ods层----------------------------------------------------------------
   val bznOdsLevelDepsProvided = Seq(mysqlConnectorJava,clickhouseConnector,fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,
-    hbaseHadoopCompatProvided)
+    hbaseHadoopCompatProvided,sparkCsvProvided)
 
   //--------------------------------------------dw层----------------------------------------------------------------
   val bznDwLevelDepsProvided = Seq(mysqlConnectorJava,clickhouseConnector, fastjson, sparkHiveProvided,hbaseClientProvided,hbaseCommonProvided,hbaseServerProvided,

@@ -90,7 +90,7 @@ object MySQLUtils {
 
   /** 以元组的方式返回mysql属性信息 **/
   def getMySQLInfo: (String, String, String) = {
-    val jdbcURL = PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url")
+    val jdbcURL = PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.odsdb")
     val userName = PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.username")
     val passWord = PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.password")
     (jdbcURL, userName, passWord)
@@ -332,7 +332,7 @@ object MySQLUtils {
                 case _ => throw new RuntimeException(s"nonsupport ${dataType} !!!")
               }
             } else { //如果值为空,将值设为对应类型的空值
-              metaData.absolute(fieldIndex)
+              metaData.absolute(fieldIndex+1)
               preparedStatement.setNull(colNumbers+i, metaData.getInt("DATA_TYPE"))
             }
           }
