@@ -556,7 +556,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "case when big_policy = '' then null end as big_policy",
         "invoice_type",
         "pay_type",
-        "case when `status` = 1 or `status`= 7 then 1  when `status` = 0 or `status` = 9  or `status` = 10 then 0 else 99  end  as policy_status",
+        "case when `status` = 1 or `status`= 7 or `status` = 6 then 1  when `status` = 0 or `status` = 9  or `status` = 10 then 0 else 99  end  as policy_status",
         "renewal_policy_code as preserve_policy_no",
         "order_date",
         "insure_company_name",

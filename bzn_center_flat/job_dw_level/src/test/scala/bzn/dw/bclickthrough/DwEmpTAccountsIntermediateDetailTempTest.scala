@@ -13,7 +13,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/11/6
 * @Describe:
-*/ object DwEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with MysqlUntil {
+*/ object DwEmpTAccountsIntermediateDetailTempTest extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")

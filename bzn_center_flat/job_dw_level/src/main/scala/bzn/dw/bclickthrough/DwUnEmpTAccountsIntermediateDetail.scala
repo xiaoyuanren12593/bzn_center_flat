@@ -11,7 +11,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/28
 * @Describe:
-*/ object DwUnEmpTaccounts extends SparkUtil with Until  with  MysqlUntil{
+*/ object DwUnEmpTAccountsIntermediateDetail extends SparkUtil with Until  with  MysqlUntil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -289,9 +289,10 @@ import org.apache.spark.sql.hive.HiveContext
 
     val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
-      .selectExpr("policy_no as policy_no_salve")
+      .selectExpr("policy_no as policy_no_salve","business_type as business_type_salve")
 
-    val res = policyAndPlanAndTeamAndProductRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
+    val res = policyAndPlanAndTeamAndProductRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve
+      and 'business_type==='business_type_salve, "leftouter")
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
@@ -435,17 +436,17 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_id_salve", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "case when business_type = '3' then '5' else  '0' end  as business_type",
+        "business_region", "business_source", "case when business_type = '3' then '5' else '0' end  as business_type",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
         "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
-      .where("preserve_id_salve is null")
+      .where("preserve_id_salve is null and business_type in ('0','5')")
     val resfin = res
       .selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "case when business_type = '3' then '5' else  '0' end  as business_type",
+        "business_region", "business_source", "business_type",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -478,7 +479,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取健康批单数据
       */
     val odsHealthPreserceDetail = hqlContext.sql("select insurance_policy_no as policy_code_preserve,preserve_id,premium_total,holder_name as holder_name_master,insurer_name,channel_name as channel_name_master," +
-      "policy_effective_time,create_time from odsdb.ods_health_preserce_detail")
+      "policy_effective_time,create_time from odsdb.ods_health_installment_plan")
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes.join(odsSportProductDetail, policyAndPlanAndTeamRes("product_code") === odsSportProductDetail("product_code_slave"))
       .selectExpr(
@@ -531,7 +532,7 @@ import org.apache.spark.sql.hive.HiveContext
         "sales_name as business_owner",
         "team_name as business_region",
         "clean('')  as business_source",
-        "'1' as business_type",
+        "'6' as business_type",
         "policy_effective_time as performance_accounting_day",
         "holder_name_master",
         "insurer_name",
@@ -578,7 +579,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_id_salve", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "case when business_type = '3' then '5' else  '0' end  as business_type",
+        "business_region", "business_source", "business_type",
         "performance_accounting_day", "holder_name_master as holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -589,7 +590,7 @@ import org.apache.spark.sql.hive.HiveContext
     val resfin = res
       .selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "case when business_type = '3' then '5' else  '0' end  as business_type",
+        "business_region", "business_source", "business_type",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",

@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:14:16
   * describe: 费雇主电子台账
   **/
-object DwUnEmpTAccountIntermediateDetail extends SparkUtil with Until {
+object DwUnEmpTAccountIntermediateTempDetail extends SparkUtil with Until {
   def main (args: Array[String]): Unit = {
     System.setProperty ("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
