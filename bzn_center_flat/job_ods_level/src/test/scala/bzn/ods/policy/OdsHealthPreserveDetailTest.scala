@@ -57,11 +57,13 @@ object OdsHealthPreserveDetailTest extends SparkUtil with Until{
     val healthPolicyBznrobot = readMysqlTable(sqlContext,"health_policy_bznrobot")
       .selectExpr("policy_no","product_code","premium","create_time")
 
+
     /**
       * 读取健康投保单表
       */
     val tProposalBznrobot = readMysqlTable(sqlContext,"t_proposal_bznrobot")
       .selectExpr("proposal_no","policy_no as policy_no_slave","insurance_policy_no","holder_name","sell_channel_name")
+
 
     /**
       * 读取
@@ -71,18 +73,20 @@ object OdsHealthPreserveDetailTest extends SparkUtil with Until{
 
     val resTemp = healthPolicyBznrobot.join(tProposalBznrobot,healthPolicyBznrobot("policy_no")===tProposalBznrobot("policy_no_slave"),"leftouter")
       .selectExpr("policy_no","product_code","premium","create_time","proposal_no","insurance_policy_no","holder_name","sell_channel_name")
+    resTemp.show(100)
 
     val res = resTemp.join(tProposalSubjectPersonMasterBznrobot,resTemp("proposal_no")===tProposalSubjectPersonMasterBznrobot("proposal_no_slave"),"leftouter")
-      .where("product_code='P00001619' and insurance_policy_no != '' and premium>1")
+      .where("product_code in('P00001619','P00001790','P00001687')  and insurance_policy_no != '' and premium>1")
       .selectExpr(
         "getUUID() as id",
         "insurance_policy_no",
-        "concat(insurance_policy_no,'_',date_format(create_time,'yyyy-MM-dd HH:mm:ss')) as preserve_id",
+        "concat(insurance_policy_no,'_',date_format(create_time,'yyyyMMddHHmmss')) as preserve_id",
         "premium as premium_total","holder_name","name as insurer_name","sell_channel_name as channel_name","create_time as policy_effective_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time")
+    val frame = res.where("insurance_policy_no = '8G2013016201900000000010'")
+    frame.show(100)
     res.printSchema()
-    res.take(100).foreach(println)
     res
   }
 

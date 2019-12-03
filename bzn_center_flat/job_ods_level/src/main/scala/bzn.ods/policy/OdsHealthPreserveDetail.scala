@@ -28,8 +28,8 @@ object OdsHealthPreserveDetail extends SparkUtil with Until{
     val hiveContext = sparkConf._4
 
     val res = twoOdsPolicyDetail(hiveContext)
-    hiveContext.sql("truncate table odsdb.ods_health_preserce_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_health_preserce_detail")
+    hiveContext.sql("truncate table odsdb.ods_health_installment_plan")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_health_installment_plan")
     sc.stop()
 
   }
@@ -73,11 +73,11 @@ object OdsHealthPreserveDetail extends SparkUtil with Until{
       .selectExpr("policy_no","product_code","premium","create_time","proposal_no","insurance_policy_no","holder_name","sell_channel_name")
 
     val res = resTemp.join(tProposalSubjectPersonMasterBznrobot,resTemp("proposal_no")===tProposalSubjectPersonMasterBznrobot("proposal_no_slave"),"leftouter")
-      .where("product_code='P00001619' and insurance_policy_no != '' and premium>1")
+      .where("product_code in('P00001619','P00001790','P00001687')  and insurance_policy_no != '' and premium>1")
       .selectExpr(
         "getUUID() as id",
         "insurance_policy_no",
-        "concat(insurance_policy_no,'_',date_format(create_time,'yyyy-MM-dd HH:mm:ss')) as preserve_id",
+        "concat(insurance_policy_no,'_',date_format(create_time,'yyyyMMddHHmmss')) as preserve_id",
         "premium as premium_total","holder_name","name as insurer_name","sell_channel_name as channel_name","create_time as policy_effective_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time")
