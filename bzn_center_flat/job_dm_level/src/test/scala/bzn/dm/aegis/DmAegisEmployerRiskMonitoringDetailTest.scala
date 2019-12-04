@@ -316,7 +316,9 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
     val res = sqlContext.sql(
       """
         select
-            id,channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id,week_id,week_day,week_long_desc,month_id,month_end_date,month_long_desc,curr_insured,
+ |          id,channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id,week_id,week_day,week_long_desc,month_id,month_end_date,month_long_desc,
+ |          curr_insured,
+ |          sum(t.curr_insured) over(partition by t.channel_id,t.insurance_company_short_name,t.sku_charge_type order by day_id asc) as acc_curr_insured,
  |          charge_premium,
  |          sum(t.charge_premium) over(partition by t.channel_id,t.insurance_company_short_name,t.sku_charge_type order by day_id asc) as acc_charge_premium,
  |          sum_premium,
@@ -339,7 +341,6 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
             from toNowDataAndBaseDataAndDateDimension
             order by channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id
         ) t
-        order by t.day_id asc
       """.stripMargin)
       .selectExpr(
         "id",
@@ -355,6 +356,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
         "month_end_date",
         "month_long_desc",
         "curr_insured",
+        "cast(acc_curr_insured as int) as acc_curr_insured",
         "charge_premium",
         "cast (acc_charge_premium as decimal(14,4)) as acc_charge_premium",
         "sum_premium",

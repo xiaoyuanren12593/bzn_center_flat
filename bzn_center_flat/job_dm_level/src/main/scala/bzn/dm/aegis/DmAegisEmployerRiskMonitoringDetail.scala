@@ -23,15 +23,17 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-    val res = getAegisEmployerRiskMonitoring(hiveContext)
+    val res = getAegisEmployerRiskMonitoring(hiveContext).cache()
     hiveContext.sql("truncate table dmdb.dm_aegis_emp_risk_monitor_detail")
     res.repartition(100).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_aegis_emp_risk_monitor_detail")
+
+    val resNew = hiveContext.sql("select * from dmdb.dm_aegis_emp_risk_monitor_detail")
     val tableName = "emp_risk_monitor_kri_detail"
     val url = "clickhouse.url"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
-    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+    writeClickHouseTable(resNew:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
     sc.stop()
   }
 
@@ -318,13 +320,15 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
       "cast(getNow() as timestamp ) as create_time",
       "cast(getNow() as timestamp ) as update_time"
     )
-      .where("channel_name is not null")
+      .where("channel_name is not null").cache()
       .registerTempTable("toNowDataAndBaseDataAndDateDimension")
 
     val res = sqlContext.sql(
       """
         select
-            id,channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id,week_id,week_day,week_long_desc,month_id,month_end_date,month_long_desc,curr_insured,
+ |          id,channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id,week_id,week_day,week_long_desc,month_id,month_end_date,month_long_desc,
+ |          curr_insured,
+ |          sum(t.curr_insured) over(partition by t.channel_id,t.insurance_company_short_name,t.sku_charge_type order by day_id asc) as acc_curr_insured,
  |          charge_premium,
  |          sum(t.charge_premium) over(partition by t.channel_id,t.insurance_company_short_name,t.sku_charge_type order by day_id asc) as acc_charge_premium,
  |          sum_premium,
@@ -345,9 +349,8 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
             select id,channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id,week_id,week_day,week_long_desc,month_id,month_end_date,month_long_desc,
             curr_insured,charge_premium,sum_premium,case_num,settled_claim_premium,prepare_claim_premium,expire_premium,expire_claim_premium,create_time,update_time
             from toNowDataAndBaseDataAndDateDimension
-            order by channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id
+            order by channel_id,channel_name,insurance_company_short_name,sku_charge_type,day_id asc
         ) t
-        order by t.day_id asc
       """.stripMargin)
       .selectExpr(
         "id",
@@ -363,6 +366,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         "month_end_date",
         "month_long_desc",
         "curr_insured",
+        "cast(acc_curr_insured as int) as acc_curr_insured",
         "charge_premium",
         "cast (acc_charge_premium as decimal(14,4)) as acc_charge_premium",
         "sum_premium",
