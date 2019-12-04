@@ -4,11 +4,11 @@ import bzn.util.SparkUtil
 import bzn.utils.ToMysqlUtils
 import kafka.serializer.StringDecoder
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka.KafkaUtils
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -16,7 +16,7 @@ import org.apache.spark.streaming.kafka.KafkaUtils
   * Time:14:10
   * describe: 实时抽取将piwik数据写入mysql
   **/
-object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with ToMysqlUtils {
+object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -50,7 +50,7 @@ object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with ToMysqlUtils 
       KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](strContext, kafkaParam, topicSet)
     val lines: DStream[String] = directKafka.map(x => x._2)
 
-    val table = "piwik_log_visit"
+    val table = "piwik_log_action"
 
     val insertType = "INSERT"
     val updateType = "UPDATE"
@@ -70,27 +70,28 @@ object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with ToMysqlUtils 
       .filter (x => x.contains (table))
       .filter (x => x.contains (deleteType))
 
+    //############################### 删除 ######################################
     /**
       * 主键的字段
       */
-    val idColumnsDelete = Array ("idzz")
+    val idColumnsDelete = Array ("idaction")
 
     val colNumbersDelete = idColumnsDelete.length
 
     /**
       * 字段类型
       */
-    val columnDataTypesDelete = Array [String]("String")
+    val columnDataTypesDelete = Array [String]("Int")
 
     /**
       * 表名
       */
-    val tableName = "piwik_log_visit_piwik_test"
+    val tableName = "piwik_log_action_piwik"
 
     /**
       * 主键
       */
-    val idDelete = "idzz"
+    val idDelete = "idaction"
 
     /**
       * 删除需要的属性：插入的字段，字段长度，字段类型，表名，主键
@@ -101,12 +102,14 @@ object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with ToMysqlUtils 
     /**
       * 处理删除操作
       */
-//    getPiwikDataDelete(strContext,canalTestDelete,deleteArray)
+    getPiwikDataDelete(strContext,canalTestDelete,deleteArray)
+
+    //############################### 插入和更新 ######################################
 
     /**
       * 插入的字段
       */
-    val insertColumns = Array ("idvisit", "idsite", "idvisitor","visit_last_action_time","config_id","location_ip")
+    val insertColumns = Array ("idaction", "name", "hash","type","url_prefix")
 
     /**
       * 字段个数
@@ -116,12 +119,12 @@ object PiwikCanalToMysqlSparkStreamingTest extends SparkUtil  with ToMysqlUtils 
     /**
       * 更新的字段
       */
-    val updateColumns = Array ( "idsite", "idvisitor","visit_last_action_time","config_id","location_ip")
+    val updateColumns = Array ( "name", "hash","type","url_prefix")
 
     /**
       * 字段类型
       */
-    val columnDataTypesInsert = Array [String]("Long", "Int", "String","String","String","String")
+    val columnDataTypesInsert = Array [String]("Int", "String", "Int","Int","Int")
 
     val insertArray: (Array[String], Int, Array[String], Array[String], String) =
       (insertColumns,colNumbersInsert,updateColumns,columnDataTypesInsert,tableName)

@@ -2,6 +2,7 @@ package bzn.utils
 
 import java.sql.{Date, ResultSet, Timestamp}
 
+import bzn.piwik.PiwikCanalToMysqlSparkStreamingTest.insertOrUpdateDFtoDBUsePool
 import com.alibaba.fastjson.JSON
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext
@@ -18,11 +19,105 @@ import scala.collection.mutable.ArrayBuffer
 trait ToMysqlUtils {
 
   /**
+    * 实时删除mysql数据
+    * @param strContext sparkStreaming上下文
+    * @param dsTreamData streamingData
+    */
+  def getPiwikDataDelete(strContext:StreamingContext,dsTreamData:DStream[String],deleteArray:(Array[String], Int, Array[String], String, String)) = {
+    /**
+      * 主键的字段
+      */
+    val idColumns = deleteArray._1
+
+    val colNumbers = deleteArray._2
+
+    /**
+      * 字段类型
+      */
+    val columnDataTypes = deleteArray._3
+
+    /**
+      * 表名
+      */
+    val tableName = deleteArray._4
+
+    /**
+      * 主键
+      */
+    val id = deleteArray._5
+
+    /**
+      * 删除的sql
+      */
+    val sql = getDeleteSql(tableName,id)
+    println(sql)
+
+    val jsonToDStream: DStream[Array[ArrayBuffer[Any]]] = getJsonToDStream(dsTreamData:DStream[String],idColumns:Array[String],columnDataTypes:Array[String])
+
+    jsonToDStream.foreachRDD(rdds => {
+      if(!rdds.isEmpty()) {
+        /**
+          * 删除数据
+          */
+        deleteMysqlTableDataBatch(strContext:StreamingContext,tableName: String, rdds: RDD[Array[ArrayBuffer[Any]]],idColumns:Array[String],
+          columnDataTypes:Array[String],colNumbers:Int,sql:String)
+      }
+    })
+  }
+
+  /**
+    * 实时读取kafka数据到MySQL
+    * @param strContext streaming 上下文
+    */
+  def getPiwikDataToMysql(strContext:StreamingContext,dsTreamData:DStream[String],insertArray: (Array[String], Int, Array[String], Array[String], String)): Unit = {
+
+    /**
+      * 插入的字段
+      */
+    val insertColumns = insertArray._1
+
+    val colNumbers = insertArray._2
+
+    /**
+      * 更新的字段
+      */
+    val updateColumns = insertArray._3
+
+    /**
+      * 字段类型
+      */
+    val columnDataTypes = insertArray._4
+
+    /**
+      * 插入的表名
+      */
+    val tableName = insertArray._5
+
+    /**
+      * 插入和更新的sql
+      */
+    val sql = getInsertOrUpdateSql (tableName, insertColumns, updateColumns)
+    println(sql)
+
+    val jsonToDStream: DStream[Array[ArrayBuffer[Any]]] = getJsonToDStream(dsTreamData:DStream[String],insertColumns:Array[String],columnDataTypes:Array[String])
+
+    jsonToDStream.foreachRDD(rdds => {
+      if(!rdds.isEmpty()) {
+        /**
+          * 插入更新数据
+          */
+        insertOrUpdateDFtoDBUsePool (strContext,tableName,rdds:RDD[Array[ArrayBuffer[Any]]], insertColumns, columnDataTypes, updateColumns, colNumbers, sql)
+      }
+    })
+  }
+
+  /**
     * 将json的数据转化为数据rdd
     * @param DStreamData dstream数据
     */
   def getJsonToDStream(DStreamData:DStream[String],insertColumn:Array[String],columnDataTypes:Array[String]): DStream[Array[ArrayBuffer[Any]]] = {
     val result = DStreamData.map(record => {
+      println(record)
 
       /**
         * 获取data数据-存储插入和更新的值
@@ -64,15 +159,16 @@ trait ToMysqlUtils {
               case  "Float" => columnArray.insert(i-1,data.getFloat(columnValue))
               case  "Double" => columnArray.insert(i-1,data.getDouble(columnValue))
               case  "String" => columnArray.insert(i-1,data.getString(columnValue))
-              case  "Timestamp" => columnArray.insert(i-1,data.getTimestamp(columnValue))
-              case  "Date" => columnArray.insert(i-1,data.getDate(columnValue))
+              case  "Timestamp" => columnArray.insert(i-1,data.getString(columnValue))
+              case  "Date" => columnArray.insert(i-1,data.getString(columnValue))
               case _ => throw new RuntimeException (s"nonsupport $dateType !!!")
             }
           }
         }
         columnArray ++ Array(database,pkNames,table,sqlType)
       })
-      for(elem <- res) {elem.foreach(x => print(x + "  "))}
+      for(elem <- res) {elem.foreach(x => print(x + "--->"))}
+      println()
       res
     })
     result
@@ -103,6 +199,7 @@ trait ToMysqlUtils {
               val value = arrayOne(x-1)(i-1)
               val dateType= columnDataTypes (i-1)
               if( value != null ) { //如何值不为空,将类型转换为String
+                print(value + "   ")
                 preparedStatement.setString (i, value.toString)
                 dateType match {
                   case  "Byte" => preparedStatement.setInt (i, arrayOne(x - 1)(i-1).toString.toInt)
@@ -113,7 +210,7 @@ trait ToMysqlUtils {
                   case  "Float" => preparedStatement.setFloat (i, arrayOne(x - 1)(i-1).toString.toFloat)
                   case  "Double" => preparedStatement.setDouble (i,arrayOne(x - 1)(i-1).toString.toDouble)
                   case  "String" => preparedStatement.setString (i, arrayOne(x - 1)(i-1).toString)
-                  case  "Timestamp" => preparedStatement.setTimestamp (x, Timestamp.valueOf(arrayOne(i - 1)(i-1).toString))
+                  case  "Timestamp" => preparedStatement.setTimestamp (i, Timestamp.valueOf(arrayOne(i - 1)(i-1).toString))
                   case  "Date" => preparedStatement.setDate (i, Date.valueOf(arrayOne(x - 1)(i-1).toString))
                   case _ => throw new RuntimeException (s"nonsupport $dateType !!!")
                 }
@@ -139,7 +236,7 @@ trait ToMysqlUtils {
                   case  "Float" => preparedStatement.setFloat (colNumbers+i, arrayOne(x - 1)(fieldIndex).toString.toFloat)
                   case  "Double" => preparedStatement.setDouble (colNumbers+i,arrayOne(x - 1)(fieldIndex).toString.toDouble)
                   case  "String" => preparedStatement.setString (colNumbers+i, arrayOne(x - 1)(fieldIndex).toString)
-                  case  "Timestamp" => preparedStatement.setTimestamp (x, Timestamp.valueOf(arrayOne(i - 1)(fieldIndex).toString))
+                  case  "Timestamp" => preparedStatement.setTimestamp (colNumbers+i, Timestamp.valueOf(arrayOne(i - 1)(fieldIndex).toString))
                   case  "Date" => preparedStatement.setDate (colNumbers+i, Date.valueOf(arrayOne(x - 1)(fieldIndex).toString))
                   case _ => throw new RuntimeException (s"nonsupport $dataType !!!")
                 }
@@ -202,7 +299,7 @@ trait ToMysqlUtils {
                   case  "Float" => preparedStatement.setFloat (i, arrayOne(x - 1)(i-1).toString.toFloat)
                   case  "Double" => preparedStatement.setDouble (i,arrayOne(x - 1)(i-1).toString.toDouble)
                   case  "String" => preparedStatement.setString (i, arrayOne(x - 1)(i-1).toString)
-                  case  "Timestamp" => preparedStatement.setTimestamp (x, Timestamp.valueOf(arrayOne(i - 1)(i-1).toString))
+                  case  "Timestamp" => preparedStatement.setTimestamp (i, Timestamp.valueOf(arrayOne(i - 1)(i-1).toString))
                   case  "Date" => preparedStatement.setDate (i, Date.valueOf(arrayOne(x - 1)(i-1).toString))
                   case _ => throw new RuntimeException (s"nonsupport $dateType !!!")
                 }
