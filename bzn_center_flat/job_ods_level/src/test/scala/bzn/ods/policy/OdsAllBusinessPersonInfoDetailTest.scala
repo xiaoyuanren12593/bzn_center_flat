@@ -2,8 +2,8 @@ package bzn.ods.policy
 
 import java.sql.Timestamp
 
-
 import bzn.job.common.{MysqlUntil, Until}
+import bzn.ods.policy.OdsAllBusinessPersonInfoDetail.clean
 import bzn.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -48,12 +48,14 @@ import org.apache.spark.sql.hive.HiveContext
     // hqlContext.sql("insert into odsdb.ods_all_business_person_base_info_detail select * from hiveInsuredData")
     /*hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail")
     res.write.mode(SaveMode.Append).partitionBy("yearandmonth").saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")*/
-   //val res1 = HiveDataPerson(hqlContext)
+   val res1 = HiveDataPerson(hqlContext)
 
-    //val res2 = hiveExpressData(hqlContext)
-    val res3 = hiveOfoData(hqlContext)
+    val res2 = hiveExpressData(hqlContext)
+
+    val res = res1.unionAll(res2)
     //val res4 = res1.unionAll(res2)
-    res3.printSchema()
+    res.printSchema()
+
     //res4.printSchema()
    /*hqlContext.sql("truncate table odsdb.ods_all_business_person_base_info_detail")
     res4.write.mode(SaveMode.Append).format("parquet").partitionBy("business_line")
@@ -64,16 +66,18 @@ import org.apache.spark.sql.hive.HiveContext
 
   }
 
+
   /**
-    * 获取hive中核心库的数据
-    *
+    *  核心库数据
     * @param hqlContext
+    * @return
     */
   def HiveDataPerson(hqlContext: HiveContext): DataFrame = {
+    hqlContext.udf.register("clean", (str: String) => clean(str))
     import hqlContext.implicits._
 
     //读取保单明细表
-    val odsPolicyDetail = hqlContext.sql("select policy_code,policy_status from odsdb.ods_policy_detail")
+    val odsPolicyDetail = hqlContext.sql("select policy_code,policy_id,policy_status from odsdb.ods_policy_detail")
 
     //读取被保人表
 
@@ -84,7 +88,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     //拿到保单在保退保终止的保单
     val odsPolicyAndInsured = odsPolicyInsuredDetail.join(odsPolicyDetail, 'policy_code_salve === 'policy_code, "leftouter")
-      .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "policy_status", "create_time", "update_time")
+      .selectExpr("insured_name","policy_id", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "policy_status", "create_time", "update_time")
       .where("policy_status in (0,1,-1)")
 
     //拿到产品
@@ -94,15 +98,19 @@ import org.apache.spark.sql.hive.HiveContext
         "insured_cert_no",
         "insured_mobile",
         "policy_code_salve",
+        "policy_id",
         "start_date",
         "end_date",
         "create_time",
         "update_time",
         "product_code",
         "sku_price",
+        "'official' as business_line",
         "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
-          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years","'官网' as business_line")
+          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years"
+      )
     res
+
 
   }
 
@@ -119,17 +127,20 @@ import org.apache.spark.sql.hive.HiveContext
         "courier_name as insured_name",
         "courier_card_no as insured_cert_no",
         "client_mobile as insured_mobile",
-        "policy_no as policy_code_salve",
+        "order_id as policy_code_salve",
+        "policy_id",
         "cast(start_time as timestamp) as start_date",
         "cast(end_time as timestamp) as end_date",
         "cast(create_time as timestamp)",
         "cast(create_time as timestamp) as update_time",
         "clean('') as product_code",
-        "cast(clean('') as decimal(14,4)) as sku_price",
-        "month_id as years",
-        "'58' as business_line")
+        "cast(clean('') as decimal(14,4)) as sku_price","'58' as business_line",
+        "month_id as years"
+      )
     odsExpressPolicy
   }
+
+
   /**
     * 获取ofo的数据
     *
