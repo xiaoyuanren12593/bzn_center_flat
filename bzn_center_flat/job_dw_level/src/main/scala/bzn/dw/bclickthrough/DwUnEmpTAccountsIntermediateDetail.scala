@@ -29,8 +29,13 @@ import org.apache.spark.sql.hive.HiveContext
 
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
 
-    saveASMysqlTable(finRes, "t_accounts_un_employer", SaveMode.Append, "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    //105
+    saveASMysqlTable(finRes, "t_accounts_un_employer", SaveMode.Append, "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
+
+    //106
+    saveASMysqlTable(finRes, "ods_t_accounts_un_employer", SaveMode.Append, "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
 
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
     sc.stop()
@@ -287,8 +292,8 @@ import org.apache.spark.sql.hive.HiveContext
       * 拿出增量数据
       */
 
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve","business_type as business_type_salve")
 
     val res = policyAndPlanAndTeamAndProductRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve
@@ -428,8 +433,8 @@ import org.apache.spark.sql.hive.HiveContext
       */
 
 
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
 
     val res = policyAndPlanAndTeamAndProductPreserveRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
@@ -571,8 +576,8 @@ import org.apache.spark.sql.hive.HiveContext
       */
 
 
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
 
     val res = policyAndPlanAndTeamAndProductPreserveRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
