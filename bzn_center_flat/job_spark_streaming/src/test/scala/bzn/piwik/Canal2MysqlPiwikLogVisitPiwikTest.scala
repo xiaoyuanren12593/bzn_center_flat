@@ -28,8 +28,8 @@ object Canal2MysqlPiwikLogVisitPiwikTest extends SparkUtil  with ToMysqlUtils {
     /**
       * ############################---kafka的配置----##########################################
       */
-    val groupId = "piwik_example"
-    val clientId = "client_example"
+    val groupId = "piwik_example_piwik_log_visit"
+    val clientId = "client_example_piwik_log_visit"
 
     val kafkaParam: Map[String, String] = Map[String, String](
       //-----------kafka低级api配置-----------
@@ -50,7 +50,7 @@ object Canal2MysqlPiwikLogVisitPiwikTest extends SparkUtil  with ToMysqlUtils {
       KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](strContext, kafkaParam, topicSet)
     val lines: DStream[String] = directKafka.map(x => x._2)
 
-    val table = "piwik_log_action"
+    val table = "piwik_log_visit"
 
     val insertType = "INSERT"
     val updateType = "UPDATE"
@@ -173,7 +173,6 @@ object Canal2MysqlPiwikLogVisitPiwikTest extends SparkUtil  with ToMysqlUtils {
       "custom_var_v4",
       "custom_var_k5",
       "custom_var_v5"
-
     )
 
     /**
@@ -254,7 +253,70 @@ object Canal2MysqlPiwikLogVisitPiwikTest extends SparkUtil  with ToMysqlUtils {
     /**
       * 字段类型
       */
-    val columnDataTypesInsert = Array [String]("Int", "String", "Int","Int","Int")
+    val columnDataTypesInsert = Array [String]("Long",
+      "Int",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "String",
+      "String",
+      "Int",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "Int",
+      "String",
+      "String",
+      "Int",
+      "String",
+      "Int",
+      "String",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "String",
+      "String",
+      "Decimal",
+      "Decimal",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String")
 
     val insertArray: (Array[String], Int, Array[String], Array[String], String) =
       (insertColumns,colNumbersInsert,updateColumns,columnDataTypesInsert,tableName)

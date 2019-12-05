@@ -16,7 +16,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:14:10
   * describe: 实时抽取将piwik数据写入mysql
   **/
-object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
+object Canal2MysqlPiwikLogLinkVisitActionPiwikTest extends SparkUtil  with ToMysqlUtils {
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -28,8 +28,8 @@ object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
     /**
       * ############################---kafka的配置----##########################################
       */
-    val groupId = "piwik_example_piwik_log_action"
-    val clientId = "client_example_piwik_log_action"
+    val groupId = "piwik_example_piwik_log_link_visit_action"
+    val clientId = "client_example_piwik_log_link_visit_action"
 
     val kafkaParam: Map[String, String] = Map[String, String](
       //-----------kafka低级api配置-----------
@@ -50,7 +50,7 @@ object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
       KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](strContext, kafkaParam, topicSet)
     val lines: DStream[String] = directKafka.map(x => x._2)
 
-    val table = "piwik_log_action"
+    val table = "piwik_log_link_visit_action"
 
     val insertType = "INSERT"
     val updateType = "UPDATE"
@@ -74,24 +74,24 @@ object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
     /**
       * 主键的字段
       */
-    val idColumnsDelete = Array ("idaction")
+    val idColumnsDelete = Array ("idlink_va")
 
     val colNumbersDelete = idColumnsDelete.length
 
     /**
       * 字段类型
       */
-    val columnDataTypesDelete = Array [String]("Int")
+    val columnDataTypesDelete = Array [String]("Long")
 
     /**
       * 表名
       */
-    val tableName = "piwik_log_action_piwik"
+    val tableName = "piwik_log_link_visit_action_piwik"
 
     /**
       * 主键
       */
-    val idDelete = "idaction"
+    val idDelete = "idlink_va"
 
     /**
       * 删除需要的属性：插入的字段，字段长度，字段类型，表名，主键
@@ -109,7 +109,37 @@ object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
     /**
       * 插入的字段
       */
-    val insertColumns = Array ("idaction", "name", "hash","type","url_prefix")
+    val insertColumns = Array (
+      "idlink_va",
+      "idsite",
+      "idvisitor",
+      "idvisit",
+      "idaction_url_ref",
+      "idaction_name_ref",
+      "custom_float",
+      "server_time",
+      "idpageview",
+      "interaction_position",
+      "idaction_name",
+      "idaction_url",
+      "time_spent_ref_action",
+      "idaction_event_action",
+      "idaction_event_category",
+      "idaction_content_interaction",
+      "idaction_content_name",
+      "idaction_content_piece",
+      "idaction_content_target",
+      "custom_var_k1",
+      "custom_var_v1",
+      "custom_var_k2",
+      "custom_var_v2",
+      "custom_var_k3",
+      "custom_var_v3",
+      "custom_var_k4",
+      "custom_var_v4",
+      "custom_var_k5",
+      "custom_var_v5"
+    )
 
     /**
       * 字段个数
@@ -119,12 +149,71 @@ object Canal2MysqlPiwikLogActionTest extends SparkUtil  with ToMysqlUtils {
     /**
       * 更新的字段
       */
-    val updateColumns = Array ( "name", "hash","type","url_prefix")
+    val updateColumns = Array (
+      "idlink_va",
+      "idsite",
+      "idvisitor",
+      "idvisit",
+      "idaction_url_ref",
+      "idaction_name_ref",
+      "custom_float",
+      "server_time",
+      "idpageview",
+      "interaction_position",
+      "idaction_name",
+      "idaction_url",
+      "time_spent_ref_action",
+      "idaction_event_action",
+      "idaction_event_category",
+      "idaction_content_interaction",
+      "idaction_content_name",
+      "idaction_content_piece",
+      "idaction_content_target",
+      "custom_var_k1",
+      "custom_var_v1",
+      "custom_var_k2",
+      "custom_var_v2",
+      "custom_var_k3",
+      "custom_var_v3",
+      "custom_var_k4",
+      "custom_var_v4",
+      "custom_var_k5",
+      "custom_var_v5"
+    )
 
     /**
       * 字段类型
       */
-    val columnDataTypesInsert = Array [String]("Int", "String", "Long","Int","Int")
+    val columnDataTypesInsert = Array [String]("Long",
+      "Int",
+      "String",
+      "Long",
+      "Int",
+      "Int",
+      "Float",
+      "String",
+      "String",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "Int",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String",
+      "String"
+    )
 
     val insertArray: (Array[String], Int, Array[String], Array[String], String) =
       (insertColumns,colNumbersInsert,updateColumns,columnDataTypesInsert,tableName)

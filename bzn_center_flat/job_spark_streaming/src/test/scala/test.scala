@@ -6,7 +6,10 @@
   **/
 object test {
   def main (args: Array[String]): Unit = {
-    val cert = "232325199304143617  "
+    val cert = "\\u0012"
+
+    println (new String(cert.getBytes ("ISO8859-1"),"ISO8859-1"))
+    println (new String(cert.getBytes ("ISO8859-1"),"utf-8"))
   }
 
   
