@@ -97,7 +97,6 @@ trait ToMysqlUtils {
       * 插入和更新的sql
       */
     val sql = getInsertOrUpdateSql (tableName, insertColumns, updateColumns)
-    println(sql)
 
     val jsonToDStream: DStream[Array[ArrayBuffer[Any]]] = getJsonToDStream(dsTreamData:DStream[String],insertColumns:Array[String],columnDataTypes:Array[String])
 
@@ -117,7 +116,6 @@ trait ToMysqlUtils {
     */
   def getJsonToDStream(DStreamData:DStream[String],insertColumn:Array[String],columnDataTypes:Array[String]): DStream[Array[ArrayBuffer[Any]]] = {
     val result = DStreamData.map(record => {
-      println(record)
 
       /**
         * 获取data数据-存储插入和更新的值
@@ -143,6 +141,14 @@ trait ToMysqlUtils {
 
         val colNumbers = insertColumn.length
 
+//        val byte = data.toString.getBytes("ISO8859-1")
+//
+//        val str = new String(byte,"ISO8859-1")
+//
+//        println("str      "+str)
+//
+//        println (JSON.parseObject (str).get ("idvisitor"))
+
         val columnArray = scala.collection.mutable.ArrayBuffer[Any]()
 
         for(i <- 1 to colNumbers) {
@@ -158,6 +164,7 @@ trait ToMysqlUtils {
               case  "Boolean" => columnArray.insert(i-1,if(data.getBoolean(columnValue)) 1 else 0)
               case  "Float" => columnArray.insert(i-1,data.getFloat(columnValue))
               case  "Double" => columnArray.insert(i-1,data.getDouble(columnValue))
+              case  "Decimal" => columnArray.insert(i-1,data.getBigDecimal(columnValue))
               case  "String" => columnArray.insert(i-1,data.getString(columnValue))
               case  "Timestamp" => columnArray.insert(i-1,data.getString(columnValue))
               case  "Date" => columnArray.insert(i-1,data.getString(columnValue))
@@ -168,7 +175,7 @@ trait ToMysqlUtils {
         columnArray ++ Array(database,pkNames,table,sqlType)
       })
       for(elem <- res) {elem.foreach(x => print(x + "--->"))}
-      println()
+//      println()
       res
     })
     result
@@ -199,7 +206,6 @@ trait ToMysqlUtils {
               val value = arrayOne(x-1)(i-1)
               val dateType= columnDataTypes (i-1)
               if( value != null ) { //如何值不为空,将类型转换为String
-                print(value + "   ")
                 preparedStatement.setString (i, value.toString)
                 dateType match {
                   case  "Byte" => preparedStatement.setInt (i, arrayOne(x - 1)(i-1).toString.toInt)
@@ -209,6 +215,7 @@ trait ToMysqlUtils {
                   case  "Boolean" => preparedStatement.setInt (i, if(arrayOne(x - 1)(i-1).toString== "1" ) 1 else 0)
                   case  "Float" => preparedStatement.setFloat (i, arrayOne(x - 1)(i-1).toString.toFloat)
                   case  "Double" => preparedStatement.setDouble (i,arrayOne(x - 1)(i-1).toString.toDouble)
+                  case  "Decimal" => preparedStatement.setBigDecimal(i,java.math.BigDecimal.valueOf(arrayOne(x - 1)(i-1).toString.toDouble))
                   case  "String" => preparedStatement.setString (i, arrayOne(x - 1)(i-1).toString)
                   case  "Timestamp" => preparedStatement.setTimestamp (i, Timestamp.valueOf(arrayOne(i - 1)(i-1).toString))
                   case  "Date" => preparedStatement.setDate (i, Date.valueOf(arrayOne(x - 1)(i-1).toString))
@@ -225,7 +232,7 @@ trait ToMysqlUtils {
               val value = arrayOne(x-1)(fieldIndex)
               val dataType = columnDataTypes (fieldIndex)
 //              println(s"@@ $i   $fieldIndex,$value,$dataType")
-//              println(s"%% $i   " + arrayOne(x - 1)(fieldIndex))  //测试
+              println(s"%% $i   " +"dataType  "+ dataType  +"  "+ arrayOne(x - 1)(fieldIndex))  //测试
               if( value != null ) { //如何值不为空,将类型转换为String
                 dataType match {
                   case  "Byte" => preparedStatement.setInt (colNumbers+i, arrayOne(x - 1)(fieldIndex).toString.toInt)
@@ -235,6 +242,7 @@ trait ToMysqlUtils {
                   case  "Boolean" => preparedStatement.setInt (colNumbers+i, if(arrayOne(x - 1)(fieldIndex).toString == "1" ) 1 else 0)
                   case  "Float" => preparedStatement.setFloat (colNumbers+i, arrayOne(x - 1)(fieldIndex).toString.toFloat)
                   case  "Double" => preparedStatement.setDouble (colNumbers+i,arrayOne(x - 1)(fieldIndex).toString.toDouble)
+                  case  "Decimal" => preparedStatement.setBigDecimal(colNumbers+i,java.math.BigDecimal.valueOf(arrayOne(x - 1)(i-1).toString.toDouble))
                   case  "String" => preparedStatement.setString (colNumbers+i, arrayOne(x - 1)(fieldIndex).toString)
                   case  "Timestamp" => preparedStatement.setTimestamp (colNumbers+i, Timestamp.valueOf(arrayOne(i - 1)(fieldIndex).toString))
                   case  "Date" => preparedStatement.setDate (colNumbers+i, Date.valueOf(arrayOne(x - 1)(fieldIndex).toString))
@@ -298,6 +306,7 @@ trait ToMysqlUtils {
                   case  "Boolean" => preparedStatement.setInt (i, if(arrayOne(x - 1)(i-1).toString== "1" ) 1 else 0)
                   case  "Float" => preparedStatement.setFloat (i, arrayOne(x - 1)(i-1).toString.toFloat)
                   case  "Double" => preparedStatement.setDouble (i,arrayOne(x - 1)(i-1).toString.toDouble)
+                  case  "Decimal" => preparedStatement.setBigDecimal(i,java.math.BigDecimal.valueOf(arrayOne(x - 1)(i-1).toString.toDouble))
                   case  "String" => preparedStatement.setString (i, arrayOne(x - 1)(i-1).toString)
                   case  "Timestamp" => preparedStatement.setTimestamp (i, Timestamp.valueOf(arrayOne(i - 1)(i-1).toString))
                   case  "Date" => preparedStatement.setDate (i, Date.valueOf(arrayOne(x - 1)(i-1).toString))
