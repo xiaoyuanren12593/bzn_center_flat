@@ -1,15 +1,9 @@
 package bzn.util
 
-import java.text.SimpleDateFormat
-import java.util.{Date, Properties}
-
-import org.apache.spark.sql.catalyst.expressions.Second
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-
-import scala.io.Source
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen

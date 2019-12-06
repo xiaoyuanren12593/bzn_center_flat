@@ -16,13 +16,12 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:14:10
   * describe: 实时抽取将piwik数据写入mysql
   **/
-object Canal2MysqlPiwikLogVisitPiwikTest extends SparkUtil  with ToMysqlUtils {
+object Canal2MysqlPiwikLogVisitPiwik extends SparkUtil  with ToMysqlUtils {
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext,StreamingContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext,StreamingContext) = sparkConfInfo(appName, "")
 
-    val hqlContext = sparkConf._4
     val strContext = sparkConf._5
 
     /**

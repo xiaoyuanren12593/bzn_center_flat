@@ -2,7 +2,6 @@ package bzn.utils
 
 import java.sql.{Date, ResultSet, Timestamp}
 
-import bzn.piwik.PiwikCanalToMysqlSparkStreamingTest.insertOrUpdateDFtoDBUsePool
 import com.alibaba.fastjson.JSON
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext

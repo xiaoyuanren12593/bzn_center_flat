@@ -48,10 +48,20 @@ object DmAegisEmployerClaimInfoAndPlanWorkTypeDetailTest extends SparkUtil with 
       "risk_cert_no,case_type,scene,case_status,pre_com as prepare_claim_premium,final_payment,case_close_date,res_pay as final_prepare_claim_premium," +
       "cast(now() as timestamp) as create_time,cast(now() as timestamp) as update_time from dwdb.dw_policy_claim_detail")
 
-    val dwEmployerBaseinfoPersonDetail =
-      sqlContext.sql("select distinct policy_code as policy_code_slave,insured_cert_no as insured_cert_no_slave,work_type  from dwdb.dw_employer_baseinfo_person_detail")
+    val dwEmployerBaseinfoPersonDetailOne =
+      sqlContext.sql("select  policy_code,insured_cert_no,work_type ,row_number() over (partition by policy_code,insured_cert_no order by policy_start_date desc) as rand1 from dwdb.dw_employer_baseinfo_person_detail")
+      .where("rand1 = 1")
+      .selectExpr("policy_code as policy_code_slave","insured_cert_no as insured_cert_no_slave","work_type")
 
-    val dwPolicyClaimAndBaseInfo = dwPolicyClaimDetail.join(dwEmployerBaseinfoPersonDetail,'policy_code ==='policy_code_slave and 'risk_cert_no === 'insured_cert_no_slave ,"leftouter")
+    /**
+      * 得到雇主的保单号用户筛选出雇主的理赔的数据
+      */
+    val empData = dwEmployerBaseinfoPersonDetailOne.selectExpr("policy_code_slave").distinct()
+
+    val empRiskData = empData.join(dwPolicyClaimDetail,empData("policy_code_slave")===dwPolicyClaimDetail("policy_code"))
+      .drop("policy_code_slave")
+
+    val dwPolicyClaimAndBaseInfo = empRiskData.join(dwEmployerBaseinfoPersonDetailOne,'policy_code ==='policy_code_slave and 'risk_cert_no === 'insured_cert_no_slave ,"leftouter")
         .selectExpr(
           "channel_id",
           "channel_name",
@@ -73,6 +83,7 @@ object DmAegisEmployerClaimInfoAndPlanWorkTypeDetailTest extends SparkUtil with 
           "create_time",
           "update_time"
         )
+    dwPolicyClaimAndBaseInfo.printSchema()
     dwPolicyClaimAndBaseInfo.show()
     dwPolicyClaimAndBaseInfo
   }
