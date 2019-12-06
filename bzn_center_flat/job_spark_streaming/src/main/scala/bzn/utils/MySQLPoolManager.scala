@@ -26,7 +26,7 @@ object MySQLPoolManager {
     private val cpds: ComboPooledDataSource = new ComboPooledDataSource(true)
     try {
       cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.106.source"))
-//      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.odsdb"))
+      //      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.odsdb"))
       cpds.setDriverClass(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.pool.jdbc.driverClass"))
       cpds.setUser(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.username.106"))
       cpds.setPassword(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.password.106"))
