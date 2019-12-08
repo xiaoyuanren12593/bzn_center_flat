@@ -1,6 +1,5 @@
 package bzn.dw.premium
 
-import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.regex.Pattern
@@ -28,13 +27,13 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     val res = dwPolicyClaimDetail(hiveContext)
     hiveContext.sql("truncate table dwdb.dw_policy_claim_detail")
     res.repartition(1).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_policy_claim_detail")
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_policy_claim_detail")
+//    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_policy_claim_detail")
     sc.stop()
   }
 
   /**
     * 理赔数据和保单数据整合
-    * @param sqlContext
+    * @param sqlContext 上下文
     */
   def dwPolicyClaimDetail(sqlContext:HiveContext) ={
     import sqlContext.implicits._
@@ -43,7 +42,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
     /**
       * 读取保单表
@@ -73,37 +72,51 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     /**
       * 如果最终赔付有值就用最终赔付，如果没有值就用预估赔付
       */
-    val odsClaimDetailTwo = sqlContext.sql("select id,pre_com,final_payment from odsdb.ods_claims_detail")
+    val odsClaimDetailTwo = sqlContext.sql("select id,pre_com,final_payment,trim(risk_date) as risk_date from odsdb.ods_claims_detail")
       .map(x => {
         val id: String = clean(x.getAs[Long]("id").toString)
 
         val preCom: String = x.getAs[String]("pre_com")
 
-        val finalPayment: String = x.getAs[String]("final_payment")
+        val riskDate = x.getAs[String]("risk_date")
+
+        /**
+          * 将出险时间改为正常的时间格式
+          */
+        val riskDateRes = if (riskDate != null && riskDate.length > 7){
+          java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(riskDate.replaceAll("/", "-").concat(" 00:00:00"))))
+        }else{
+          null
+        }
+
+        val finalPayment: String =  x.getAs[String]("final_payment")
         val finalPaymentRes = if (finalPayment == null || finalPayment == "" ) preCom else finalPayment
         //保单号  预估赔付   最终赔付        赔付
-        (id,preCom,finalPayment,finalPaymentRes)
+        (id,preCom,finalPayment,finalPaymentRes,riskDateRes)
       })
-      .toDF("id_slave","pre_com_new","final_payment_new","res_pay")
+      .toDF("id_slave","pre_com_new","final_payment_new","res_pay","risk_date_res")
 
-    val odsClaimDetail = odsClaimDetailOne.join(odsClaimDetailTwo,odsClaimDetailOne("id") ===odsClaimDetailTwo("id_slave"))
-      .selectExpr("id_slave","case_no","policy_no",
-        "risk_date","report_date","risk_name","risk_cert_no",
+    val odsClaimDetail = odsClaimDetailOne.join(odsClaimDetailTwo,odsClaimDetailOne("id") === odsClaimDetailTwo("id_slave"))
+      .selectExpr(
+        "id_slave","case_no","policy_no",
+        "risk_date","risk_date_res","report_date","risk_name","risk_cert_no",
         "mobile","insured_company",
-        "cast(pre_com_new as decimal(14,4)) as pre_com_new",
+        "pre_com_new",
         "disable_level","scene","case_type","case_status","case_close_date",
         "hos_benefits","medical_coverage",
         "delay_payment","disable_death_payment",
-        "cast( final_payment_new as decimal(14,4)) as final_payment_new",
-        "cast( res_pay as decimal(14,4)) as res_pay")
+        "final_payment_new",
+        "res_pay"
+      )
 
+    odsClaimDetail.where("policy_no is not null and res_pay is not null").show()
     /**
       * 保单明细数据和理赔明细数据通过保单号关联
       */
-    val res = odsPolicyDetail.join(odsClaimDetail,odsPolicyDetail("policy_code") === odsClaimDetail("policy_no"))
-      .selectExpr("getUUID() as id","id_slave","policy_id","policy_code","product_code",
+    val res = odsPolicyDetail.join(odsClaimDetail,odsPolicyDetail("policy_code") === odsClaimDetail("policy_no"),"leftouter")
+      .selectExpr("getUUID() as id","id_slave","policy_id","policy_code","product_code","policy_no",
         "policy_status","case_no","policy_no as risk_policy_code",
-        "risk_date","report_date","risk_name","holder_name","risk_cert_no",
+        "risk_date","risk_date_res","report_date","risk_name","holder_name","risk_cert_no",
         "mobile","insured_company","cast(pre_com_new as decimal(14,4)) as pre_com",
         "disable_level",
         "scene","case_type","case_status","case_close_date","hos_benefits",
@@ -125,19 +138,19 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
         .selectExpr("entid","entname","channel_id","channel_name")
 
     // 将理赔表与保单明细表的结果 与 客户归属销售表和企业信息表的结果关联
-    val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("entname"),
-      "leftouter").selectExpr(
-      "id","policy_id", "policy_code", "product_code", "policy_status",
-      "case_no", "risk_policy_code",
-      "risk_date", "report_date", "risk_name", "risk_cert_no", "mobile",
-      " entid as ent_id","entname as ent_name","channel_id ","channel_name", "insured_company",
-      "pre_com", "disable_level",
-      "scene", "case_type", "case_status", "case_close_date", "hos_benefits",
-      "medical_coverage",
-      "delay_payment", "disable_death_payment",
-      "final_payment",
-      "res_pay", "dw_create_time"
-    )
+    val resEnd: DataFrame = res.join(enterAndsalesman, res("holder_name") === enterAndsalesman("entname"), "leftouter")
+      .selectExpr(
+        "id","id_slave as id_risk","policy_id", "policy_code", "product_code", "policy_status",
+        "case_no", "risk_policy_code",
+        "risk_date", "cast(risk_date_res as timestamp) as risk_date_res","report_date", "risk_name", "risk_cert_no", "mobile",
+        " entid as ent_id","entname as ent_name","channel_id ","channel_name", "insured_company",
+        "pre_com", "disable_level",
+        "scene", "case_type", "case_status", "case_close_date", "hos_benefits",
+        "medical_coverage",
+        "delay_payment", "disable_death_payment",
+        "final_payment",
+        "res_pay", "dw_create_time"
+      )
     resEnd
   }
 
