@@ -26,10 +26,16 @@ import org.apache.spark.sql.hive.HiveContext
 
     hiveContext.setConf("hive.exec.dynamic.partition", "true")
     hiveContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
-    val res = OdsOtherToHive(hiveContext)
 
+   // 接口数据拿到增量,核心库的数据全量写入
+    val res = OdsOtherToHive(hiveContext)
     res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line","years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
+
+    val frame = HiveDataPerson(hiveContext)
+    frame.registerTempTable("PersonBaseInfoData")
+    hiveContext.sql("INSERT OVERWRITE table odsdb.ods_all_business_person_base_info_detail_test PARTITION(business_line = 'official',years) select * from PersonBaseInfoData")
+
 
 
     sc.stop()
@@ -78,6 +84,51 @@ import org.apache.spark.sql.hive.HiveContext
     res
   }
 
-  //
+  def HiveDataPerson(hqlContext: HiveContext): DataFrame = {
+    hqlContext.udf.register("clean", (str: String) => clean(str))
+    import hqlContext.implicits._
+
+    //读取保单明细表
+    val odsPolicyDetail = hqlContext.sql("select policy_code,policy_id,policy_status from odsdb.ods_policy_detail")
+
+    //读取被保人表
+
+    val odsPolicyInsuredDetail = hqlContext.sql("select insured_name,insured_cert_no,insured_mobile,policy_code as policy_code_salve,start_date," +
+      "end_date,create_time,update_time from odsdb.ods_policy_insured_detail")
+
+    //读取产品方案表
+    val odsProductPlanDetail = hqlContext.sql("select policy_code,product_code,sku_price from odsdb.ods_policy_product_plan_detail")
+
+    //拿到保单在保退保终止的保单
+    val odsPolicyAndInsured = odsPolicyInsuredDetail.join(odsPolicyDetail, 'policy_code_salve === 'policy_code, "leftouter")
+      .selectExpr("insured_name", "policy_id", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "policy_status", "create_time", "update_time")
+      .where("policy_status in (0,1,-1)")
+
+    //拿到产品
+    val res = odsPolicyAndInsured.join(odsProductPlanDetail, 'policy_code_salve === 'policy_code, "leftouter")
+      .selectExpr(
+        "insured_name",
+        "insured_cert_no",
+        "insured_mobile",
+        "policy_code_salve",
+        "policy_id",
+        "start_date",
+        "end_date",
+        "create_time",
+        "update_time",
+        "product_code",
+        "sku_price",
+        "'official' as business_line",
+        "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
+          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years"
+      )
+
+    res
+
+  }
+
+
+
+
 
 }
