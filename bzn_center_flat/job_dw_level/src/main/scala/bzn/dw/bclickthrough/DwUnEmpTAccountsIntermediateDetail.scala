@@ -52,7 +52,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取保单明细表
       */
     val odsPolicyDetail = sqlContext.sql("select policy_code,case when source_system = '2.0' then '2' when source_system = '1.0' then '1' end as source_system,policy_status,policy_effect_date," +
-      "policy_start_date,policy_end_date,insure_company_name,channel_id,channel_name,sales_name,first_premium,holder_name,invoice_type,product_code,policy_create_time,insured_subject from odsdb.ods_policy_detail")
+      "policy_start_date,policy_end_date,insure_company_name,channel_id,channel_name,sales_name,first_premium,holder_name,invoice_type,product_code,policy_create_time,insured_subject,order_date,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
       .where("policy_status in (0,1,-1) and policy_code is not null")
 
     /**
@@ -108,7 +108,10 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_append",
         "tech_service_rate",
         "economic_rate",
-        "commission_discount_rate"
+        "commission_discount_rate",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name"
       )
 
     /**
@@ -142,7 +145,10 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_append",
         "tech_service_rate",
         "economic_rate",
-        "commission_discount_rate"
+        "commission_discount_rate",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name"
       )
 
     // 体育销售的处理
@@ -175,7 +181,10 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_append",
         "tech_service_rate",
         "economic_rate",
-        "commission_discount_rate"
+        "commission_discount_rate",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name"
       )
 
     /**
@@ -210,7 +219,10 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_append",
         "tech_service_rate",
         "economic_rate",
-        "commission_discount_rate"
+        "commission_discount_rate",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name"
       ).distinct
 
     /**
@@ -236,56 +248,59 @@ import org.apache.spark.sql.hive.HiveContext
     hqlContext.udf.register("clean", (str: String) => clean(str))
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
-    //  .where("policy_start_date>='2019-01-01 00:00:00'")
+      //  .where("policy_start_date>='2019-01-01 00:00:00'")
       .selectExpr(
-        "getUUID() as id",
-        "clean('') as batch_no",
-        "policy_code as policy_no",
-        "clean('') as preserve_id",
-        "clean('') as preserve_status",
-        "clean('') as add_batch_code",
-        "clean('') as del_batch_code",
-        "source_system as data_source",
-        "business_line as project_name",
-        "product_code",
-        "product_name",
-        "product_desc as product_detail",
-        "channel_name",
-        "sales_name as business_owner",
-        "team_name as business_region",
-        "clean('') as business_source",
-        "'1' as business_type",
-        "if(policy_start_date >= policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day",
-        "holder_name",
-        "insured_subject as insurer_name",
-        "insure_company_name as underwriting_company",
-        "policy_effect_date",
-        "policy_start_date as policy_effective_time",
-        "policy_end_date as policy_expire_time",
-        "cast(policy_status as string) as policy_status",
-        "sku_coverage as plan_coverage",
-        "first_premium as premium_total",
-        "'1' as premium_pay_status", //保费实收状态
-        "clean('') as  behalf_number",
-        "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-        "clean('') as economy_company",
-        "economic_rate as economy_rates",
-        "cast((first_premium * economic_rate) as decimal(14,4)) as economy_fee",
-        "tech_service_rate as technical_service_rates",
-        "cast((first_premium * tech_service_rate) as decimal(14,4)) as technical_service_fee",
-        "clean('') as consulting_service_rates",
-        "clean('') as consulting_service_fee",
-        "clean('') as service_fee_check_time",
-        "clean('') as service_fee_check_status",
-        "clean('') as has_brokerage",
-        "commission_discount_rate as brokerage_ratio",
-        "cast((first_premium * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
-        "clean('') as brokerage_pay_status",
-        "clean('') as remake",
-        "now() as create_time",
-        "now() as update_time",
-        "cast(clean('') as int) as operator"
-      )
+      "getUUID() as id",
+      "clean('') as batch_no",
+      "policy_code as policy_no",
+      "clean('') as preserve_id",
+      "clean('') as preserve_status",
+      "clean('') as add_batch_code",
+      "clean('') as del_batch_code",
+      "source_system as data_source",
+      "business_line as project_name",
+      "product_code",
+      "product_name",
+      "product_desc as product_detail",
+      "channel_name",
+      "sales_name as business_owner",
+      "team_name as business_region",
+      "clean('') as business_source",
+      "'1' as business_type",
+      "order_date",
+      "policy_source_code",
+      "policy_source_name",
+      "if(policy_start_date >= policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day",
+      "holder_name",
+      "insured_subject as insurer_name",
+      "insure_company_name as underwriting_company",
+      "policy_effect_date",
+      "policy_start_date as policy_effective_time",
+      "policy_end_date as policy_expire_time",
+      "cast(policy_status as string) as policy_status",
+      "sku_coverage as plan_coverage",
+      "first_premium as premium_total",
+      "'1' as premium_pay_status", //保费实收状态
+      "clean('') as  behalf_number",
+      "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
+      "clean('') as economy_company",
+      "economic_rate as economy_rates",
+      "cast((first_premium * economic_rate) as decimal(14,4)) as economy_fee",
+      "tech_service_rate as technical_service_rates",
+      "cast((first_premium * tech_service_rate) as decimal(14,4)) as technical_service_fee",
+      "clean('') as consulting_service_rates",
+      "clean('') as consulting_service_fee",
+      "clean('') as service_fee_check_time",
+      "clean('') as service_fee_check_status",
+      "clean('') as has_brokerage",
+      "commission_discount_rate as brokerage_ratio",
+      "cast((first_premium * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
+      "clean('') as brokerage_pay_status",
+      "clean('') as remake",
+      "now() as create_time",
+      "now() as update_time",
+      "cast(clean('') as int) as operator"
+    )
 
 
     /** *
@@ -294,14 +309,14 @@ import org.apache.spark.sql.hive.HiveContext
 
     val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username",
       "mysql.password", "mysql.driver", "mysql.url")
-      .selectExpr("policy_no as policy_no_salve","business_type as business_type_salve")
+      .selectExpr("policy_no as policy_no_salve", "business_type as business_type_salve")
 
     val res = policyAndPlanAndTeamAndProductRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve
-      and 'business_type==='business_type_salve, "leftouter")
+      and 'business_type === 'business_type_salve, "leftouter")
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
+        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
@@ -310,7 +325,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     val resfin = res.selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
       "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-      "business_region", "business_source", "business_type", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
+      "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
       "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
       "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
       "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
@@ -369,7 +384,10 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_append",
         "tech_service_rate",
         "economic_rate",
-        "commission_discount_rate"
+        "commission_discount_rate",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name"
       )
 
     val policyAndPlanAndTeamAndProductPreserveRes = policyAndPlanAndTeamAndProductRes.join(odsPreservationDetail, policyAndPlanAndTeamAndProductRes("policy_code") === odsPreservationDetail("policy_code_preserve"))
@@ -394,6 +412,9 @@ import org.apache.spark.sql.hive.HiveContext
         "team_name as business_region",
         "clean('')  as business_source",
         "cast(preserve_type as string) as business_type",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name",
         "if(preserve_start_date is null," +
           "if(preserve_end_date is not null and preserve_end_date>create_time,preserve_end_date,create_time)," +
           "if(preserve_start_date >= create_time,preserve_start_date,create_time)) as performance_accounting_day",
@@ -441,7 +462,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_id_salve", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "case when business_type = '3' then '5' else '0' end  as business_type",
+        "business_region", "business_source", "case when business_type = '3' then '5' else '0' end  as business_type", "order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -451,7 +472,7 @@ import org.apache.spark.sql.hive.HiveContext
     val resfin = res
       .selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type",
+        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -515,60 +536,66 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_append",
         "tech_service_rate",
         "economic_rate",
-        "commission_discount_rate"
+        "commission_discount_rate",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name"
       )
 
     val policyAndPlanAndTeamAndProductPreserveRes = odsHealthPreserceDetail.join(policyAndPlanAndTeamAndProductRes, odsHealthPreserceDetail("policy_code_preserve") === policyAndPlanAndTeamAndProductRes("policy_code"))
-     // .where("policy_start_date >= '2019-01-01 00:00:00'")
+      // .where("policy_start_date >= '2019-01-01 00:00:00'")
       .selectExpr(
-        "getUUID() as id",
-        "clean('')  as batch_no",
-        "policy_code as policy_no",
-        "preserve_id",
-        "clean('') as preserve_status",
-        "clean('') as add_batch_code",
-        "clean('') as del_batch_code",
-        "source_system as data_source",
-        "business_line as project_name",
-        "product_code",
-        "product_name",
-        "product_desc as product_detail",
-        "channel_name_master as  channel_name",
-        "sales_name as business_owner",
-        "team_name as business_region",
-        "clean('')  as business_source",
-        "'6' as business_type",
-        "policy_effective_time as performance_accounting_day",
-        "holder_name_master",
-        "insurer_name",
-        "insure_company_name as underwriting_company",
-        "cast(clean('') as timestamp) as policy_effect_date",
-        "policy_effective_time",
-        "cast(clean('') as timestamp) as policy_expire_time",
-        "cast(policy_status as string) as policy_status",
-        "sku_coverage as plan_coverage",
-        "premium_total as premium_total",
-        "'1' as premium_pay_status", //保费实收状态
-        "clean('')  as behalf_number",
-        "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-        "clean('') as economy_company",
-        "economic_rate as economy_rates",
-        "cast((premium_total * economic_rate) as decimal(14,4)) as economy_fee",
-        "tech_service_rate as technical_service_rates",
-        "cast((premium_total * tech_service_rate) as decimal(14,4)) as technical_service_fee",
-        "clean('')  as consulting_service_rates",
-        "clean('')  as consulting_service_fee",
-        "clean('')  as service_fee_check_time",
-        "clean('')  as service_fee_check_status",
-        "clean('')  as has_brokerage",
-        "commission_discount_rate as brokerage_ratio",
-        "cast((premium_total * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
-        "clean('')  as brokerage_pay_status",
-        "clean('')  as remake",
-        "now() as create_time",
-        "now() as update_time",
-        "cast(clean('') as int) as operator"
-      )
+      "getUUID() as id",
+      "clean('')  as batch_no",
+      "policy_code as policy_no",
+      "preserve_id",
+      "clean('') as preserve_status",
+      "clean('') as add_batch_code",
+      "clean('') as del_batch_code",
+      "source_system as data_source",
+      "business_line as project_name",
+      "product_code",
+      "product_name",
+      "product_desc as product_detail",
+      "channel_name_master as  channel_name",
+      "sales_name as business_owner",
+      "team_name as business_region",
+      "clean('')  as business_source",
+      "'6' as business_type",
+      "order_date",
+      "policy_source_code",
+      "policy_source_name",
+      "policy_effective_time as performance_accounting_day",
+      "holder_name_master",
+      "insurer_name",
+      "insure_company_name as underwriting_company",
+      "cast(clean('') as timestamp) as policy_effect_date",
+      "policy_effective_time",
+      "cast(clean('') as timestamp) as policy_expire_time",
+      "cast(policy_status as string) as policy_status",
+      "sku_coverage as plan_coverage",
+      "premium_total as premium_total",
+      "'1' as premium_pay_status", //保费实收状态
+      "clean('')  as behalf_number",
+      "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
+      "clean('') as economy_company",
+      "economic_rate as economy_rates",
+      "cast((premium_total * economic_rate) as decimal(14,4)) as economy_fee",
+      "tech_service_rate as technical_service_rates",
+      "cast((premium_total * tech_service_rate) as decimal(14,4)) as technical_service_fee",
+      "clean('')  as consulting_service_rates",
+      "clean('')  as consulting_service_fee",
+      "clean('')  as service_fee_check_time",
+      "clean('')  as service_fee_check_status",
+      "clean('')  as has_brokerage",
+      "commission_discount_rate as brokerage_ratio",
+      "cast((premium_total * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
+      "clean('')  as brokerage_pay_status",
+      "clean('')  as remake",
+      "now() as create_time",
+      "now() as update_time",
+      "cast(clean('') as int) as operator"
+    )
 
 
     /**
@@ -584,7 +611,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_id_salve", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type",
+        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name_master as holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -595,7 +622,7 @@ import org.apache.spark.sql.hive.HiveContext
     val resfin = res
       .selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type",
+        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
