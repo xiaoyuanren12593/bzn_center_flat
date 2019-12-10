@@ -156,7 +156,6 @@ object DwYearAndMonthInsuredPremiumDetail extends SparkUtil with Until{
         val insuredStartDate = insuredStartDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
         val insuredEndDate = insuredEndDateRes.toString.split(" ")(0).replaceAll("-", "").replaceAll("/", "")
 
-
         val insurePolicyStatus = x.getAs[Int]("insured_policy_status")
         // sku_charge_type:1是月单，2是年单子
         //判断是年单还是月单

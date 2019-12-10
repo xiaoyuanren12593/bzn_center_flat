@@ -87,14 +87,14 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       "subStr(c_month_end_date,1,10) as c_month_end_date,c_month_long_desc from odsdb.ods_t_day_dimension")
 
     /**
-      * 理赔表
+      * 雇主理赔数据
       */
     val dwPolicyClaimDetail =
-      sqlContext.sql("select policy_id,policy_code,case_no,risk_date,case_status,res_pay from dwdb.dw_policy_claim_detail")
-      .where("risk_date is not null")
+      sqlContext.sql("select day_id,policy_id,policy_code,case_no,case_status,res_pay from dwdb.dw_emp_claim_correct_info_detail")
+      .where("day_id is not null")
 
     val claimData = getClaimData(sqlContext,dwPolicyClaimDetail)
-      .selectExpr("policy_id","policy_code","risk_date","case_no","cast(end_risk_premium as decimal(14,4)) as end_risk_premium",
+      .selectExpr("policy_id","policy_code","risk_date_day_id","case_no","cast(end_risk_premium as decimal(14,4)) as end_risk_premium",
         "cast(res_pay as decimal(14,4)) as res_pay")
 
     /**
@@ -129,7 +129,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
     /**
       * 上述结果与理赔结果
       */
-    val insuredAndPremiumAccPremiumClaim = insuredAndPremiumAccPremium.join(claimData,'policy_code_insured === 'policy_code and 'day_id_insured==='risk_date ,"leftouter")
+    val insuredAndPremiumAccPremiumClaim = insuredAndPremiumAccPremium.join(claimData,'policy_code_insured === 'policy_code and 'day_id_insured==='risk_date_day_id ,"leftouter")
       .selectExpr(
         "policy_code_insured",
         "day_id_insured",
@@ -577,10 +577,10 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
     import sqlContext.implicits._
 
     val res = dwPolicyClaimDetail.map(x => {
-      //policy_id,policy_code,case_no,risk_date,case_status,res_pay
+      //day_id,policy_id,policy_code,case_no,case_status,res_pay
+      val dayId = x.getAs[String]("day_id")//出险时间的day_id
       val policyId = x.getAs[String]("policy_id")
       val policyCode = x.getAs[String]("policy_code")
-      val riskDate = getFormatTime(getBeginTime(x.getAs[String]("risk_date").replaceAll("/", "-").concat(" 00:00:00"))).substring(0,10).replaceAll("-","")
       val caseStatus = x.getAs[String]("case_status")
       //已决预估赔付
       val endRiskPremium = if(caseStatus == "结案"){
@@ -591,7 +591,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       //预估赔付
       val resPay = x.getAs[java.math.BigDecimal]("res_pay")
                                        //案件数,结案赔付，预估赔付
-      ((policyId,policyCode,riskDate),(1,endRiskPremium,resPay))
+      ((policyId,policyCode,dayId),(1,endRiskPremium,resPay))
     })
       .reduceByKey((x1,x2)=>{
         val caseNo = x1._1+x2._1
@@ -602,7 +602,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       .map(x =>{
         (x._1._1,x._1._2,x._1._3,x._2._1,x._2._2,x._2._3)
       })
-      .toDF("policy_id","policy_code","risk_date","case_no","end_risk_premium","res_pay")
+      .toDF("policy_id","policy_code","risk_date_day_id","case_no","end_risk_premium","res_pay")
 
     res
   }

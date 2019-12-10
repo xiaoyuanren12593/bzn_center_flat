@@ -113,7 +113,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
     /**
       * 保单明细数据和理赔明细数据通过保单号关联
       */
-    val res = odsPolicyDetail.join(odsClaimDetail,odsPolicyDetail("policy_code") === odsClaimDetail("policy_no"),"leftouter")
+    val res = odsPolicyDetail.join(odsClaimDetail,odsPolicyDetail("policy_code") === odsClaimDetail("policy_no"))
       .selectExpr("getUUID() as id","id_slave","policy_id","policy_code","product_code","policy_no",
         "policy_status","case_no","policy_no as risk_policy_code",
         "risk_date","risk_date_res","report_date","risk_name","holder_name","risk_cert_no",
@@ -151,6 +151,7 @@ object DwPolicyClaimDetail extends SparkUtil with Until{
         "final_payment",
         "res_pay", "dw_create_time"
       )
+
     resEnd
   }
 

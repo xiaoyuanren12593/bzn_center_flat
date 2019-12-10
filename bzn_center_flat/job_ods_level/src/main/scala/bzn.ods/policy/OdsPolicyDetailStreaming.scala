@@ -23,11 +23,12 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
     val hiveContext = sparkConf._4
     val res = getOneAndTwoSystemData(hiveContext)
     hiveContext.sql("truncate table odsdb.ods_policy_streaming_detail")
-    res.repartition(1).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_streaming_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_policy_streaming_detail")
     sc.stop()
   }
 
   def getOneAndTwoSystemData(sqlContext:HiveContext): DataFrame = {
+    import sqlContext.implicits._
 
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
@@ -40,34 +41,75 @@ object OdsPolicyDetailStreaming extends SparkUtil with Until with MysqlUntil{
     /**
       * 2.0 业管保单表
       */
-    val tablebTpProposalStreamingbBznbusi = "t_proposal_streaming_bznbusi"
+    val tablebTpProposalStreamingbBznbusi = "t_proposal_bznbusi"
     val tpProposalStreamingbBznbusi = readMysqlTable(sqlContext: SQLContext, tablebTpProposalStreamingbBznbusi: String,user:String,pass:String,driver:String,url:String)
-      .where("business_type = 2")
+      .where("business_type = 2 and create_time >= DATE_ADD(date_format(cast(now() as string),'yyyy-MM-dd 00:00:00'),-5) and product_code not in ('P00001597','P00001638')")
       .selectExpr(
-        "holder_name",
+        "proposal_no",
+        "policy_category",//出单类型：年月单
         "insurance_policy_no as policy_code",
+        "policy_no",
+        "holder_name",
         "sell_channel_code as channel_id",
         "sell_channel_name as channel_name",
         "status",
         "payment_status",//支付状态
         "ledger_status",//实收状态
+        "big_policy",//是否是大保单
+        "proposal_time",//投保时间
+        "start_date",//保单起期
+        "end_date",//投保止期
         "case when first_insure_master_num is null then 0 else first_insure_master_num end as insured_count",
-        "product_code",
-        "create_time","update_time"
+        "now() as update_data_time",
+        "insurance_name",
+        "create_time",
+        "update_time"
       )
 
-    val res = tpProposalStreamingbBznbusi
+    //    /**
+    //      * 读取投保方案信息表
+    //      */
+    //    val tableTpProposalProductPlanBznbusi = "t_proposal_product_plan_bznbusi"
+    //    val tpProposalProductPlanBznbusi = readMysqlTable(sqlContext: SQLContext, tableTpProposalProductPlanBznbusi: String,user:String,pass:String,driver:String,url:String)
+    //      .selectExpr(
+    //        "proposal_no as proposal_no_plan",
+    //        "payment_type"
+    //      )
+
+    /**
+      * 读取被保人企业表
+      */
+    val tableTpProposalSubjectCompanyBznbusi = "t_proposal_subject_company_bznbusi"
+    val tpProposalSubjectCompanyBznbusi = readMysqlTable(sqlContext: SQLContext, tableTpProposalSubjectCompanyBznbusi: String,user:String,pass:String,driver:String,url:String)
+      .selectExpr(
+        "proposal_no as proposal_no_subject",
+        "name"
+      )
+
+    /**
+      * 上述结果和被保人企业数据进行关联
+      */
+    val res = tpProposalStreamingbBznbusi.join(tpProposalSubjectCompanyBznbusi,'proposal_no==='proposal_no_subject,"leftouter")
       .selectExpr(
         "getUUID() as id",
-        "clean(holder_name) as holder_name",
-        "clean(policy_code) as policy_code",
-        "clean(channel_id) as channel_id",
-        "clean(channel_name) as channel_name",
+        "proposal_no",
+        "policy_code",
+        "policy_no",
+        "holder_name",
+        "channel_id",
+        "channel_name",
         "status",
         "payment_status",//支付状态
         "ledger_status",//实收状态
+        "big_policy",//是否是大保单
+        "proposal_time",//投保时间
+        "start_date as policy_start_date",//保单起期
+        "end_date as policy_end_date",//投保止期
         "insured_count",
-        "clean(product_code) as product_code",
+        "trim(name) as insured_company",//被保人企业
+        "policy_category as sku_charge_type",//方案类别
+        "update_data_time",
+        "trim(insurance_name) as insurance_name",
         "create_time",
         "update_time"
       )

@@ -91,14 +91,12 @@ import org.apache.spark.sql.hive.HiveContext
 
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-
       .selectExpr("policy_id", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject", "product_code","product_name", "policy_status","one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name",
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName","insure_company_name","short_name","team_name","biz_operator")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
 
     //读取被保人表
     val odsPolicyInsured = sqlContext.sql("select policy_id as policy_id_salve,insured_name,insured_cert_no,insured_mobile,start_date,end_date,work_type from odsdb.ods_policy_insured_detail")
-
 
     /**
       * 将上述结果与被保人表关联
@@ -111,7 +109,6 @@ import org.apache.spark.sql.hive.HiveContext
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "insure_company_name","short_name","team_name","biz_operator")
 
     val res1 = resProductAndInsuredDetail.selectExpr("policy_id","insured_cert_no","start_date","end_date")
-
 
     /**
       * 读取理赔表
