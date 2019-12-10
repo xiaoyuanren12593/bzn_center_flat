@@ -24,9 +24,9 @@ object DmAegisEmployerClaimInfoAndPlanWorkTypeDetail extends SparkUtil with Unti
     val aegisEmployerPlanAndWorkTypeInfoData = getAegisEmployerPlanAndWorkTypeInfoData(hiveContext)
     val tableAegisEmployerClaimInfoDataName = "dm_aegis_emp_claim_info_detail"
     val tableAegisEmployerPlanAndWorkTypeInfoDataName = "dm_aegis_emp_plan_work_type_detail"
-    val url = "mysql_url.103.dmdb"
-    val user = "mysql.username.103"
-    val pass = "mysql.password.103"
+    val url = "mysql_url.106.dmdb"
+    val user = "mysql.username.106"
+    val pass = "mysql.password.106"
     val driver = "mysql.driver"
     saveASMysqlTable(aegisEmployerClaimInfoData: DataFrame, tableAegisEmployerClaimInfoDataName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,url:String)
     saveASMysqlTable(aegisEmployerPlanAndWorkTypeInfoData: DataFrame, tableAegisEmployerPlanAndWorkTypeInfoDataName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,url:String)

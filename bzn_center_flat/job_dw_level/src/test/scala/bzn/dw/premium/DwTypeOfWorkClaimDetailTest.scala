@@ -12,7 +12,8 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/9/26
 * @Describe:
-*/ object DwTypeOfWorkClaimDetailTest extends SparkUtil with Until {
+*/
+object DwTypeOfWorkClaimDetailTest extends SparkUtil with Until {
   def main(args: Array[String]): Unit = {
 
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -40,7 +41,7 @@ import org.apache.spark.sql.hive.HiveContext
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
       //设置日期格式
       val date = df.format(new Date()) // new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
 
     /**
