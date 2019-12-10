@@ -61,6 +61,7 @@ object OdsPolicyDetailStreamingTest extends SparkUtil with Until with MysqlUntil
         "case when first_insure_master_num is null then 0 else first_insure_master_num end as insured_count",
         "now() as update_data_time",
         "insurance_name",
+        "product_code",
         "create_time",
         "update_time"
       )
@@ -109,6 +110,7 @@ object OdsPolicyDetailStreamingTest extends SparkUtil with Until with MysqlUntil
         "policy_category as sku_charge_type",//方案类别
         "update_data_time",
         "trim(insurance_name) as insurance_name",
+        "trim(product_code) as product_code",
         "create_time",
         "update_time"
       )
