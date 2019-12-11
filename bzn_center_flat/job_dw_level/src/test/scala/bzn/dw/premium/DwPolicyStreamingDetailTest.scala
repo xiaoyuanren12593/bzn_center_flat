@@ -53,6 +53,9 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "sku_charge_type",//方案类别
         "update_data_time",
         "insurance_name",
+        "product_code",
+        "sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )
@@ -68,14 +71,12 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
       */
     val odsPolicyDetail = sqlContext.sql("select policy_code as policy_code_slave,policy_status from odsdb.ods_policy_detail")
       .where("policy_status in (0,1,-1) and policy_code_slave is not null")
-    odsPolicyDetail.show()
 
     /**
       * 读取批单表
       */
     val odsPreseveDetail = sqlContext.sql("select inc_dec_order_no as inc_dec_order_no_slave,preserve_status from odsdb.ods_preservation_detail")
       .where("preserve_status = 1 and inc_dec_order_no_slave is not null")
-    odsPreseveDetail.show()
 
     /**
       * 得到全部的雇主信息
@@ -116,6 +117,9 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "update_data_time",
         "insurance_name",
         "'' as inc_dec_order_no",
+        "product_code",
+        "sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )
@@ -143,6 +147,8 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "sku_charge_type",//方案类别
         "update_data_time",
         "inc_dec_order_no",
+        "sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )
@@ -199,6 +205,8 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "sku_charge_type",
         "update_data_time",
         "inc_dec_order_no",
+        "'' as sales_name",
+        "'' as biz_operator",
         "create_time",
         "update_time"
       )
@@ -211,7 +219,7 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
     /**
       * 读取雇主销售表
       */
-    val odsEntGuzhuSalesmanDetail = sqlContext.sql("select  ent_id,ent_name,salesman,biz_operator,channel_id as channel_id_slave," +
+    val odsEntGuzhuSalesmanDetail = sqlContext.sql("select  ent_id,ent_name,salesman as salesman_slave,biz_operator as biz_operator_slave,channel_id as channel_id_slave," +
       "case when channel_name = '直客' then ent_name else channel_name end as channel_name_slave from odsdb.ods_ent_guzhu_salesman_detail")
 
     val res = data5DBefore.join(odsEntGuzhuSalesmanDetail,odsPolicyStreamingDetail("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
@@ -235,6 +243,8 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "sku_charge_type",
         "update_data_time",
         "clean(inc_dec_order_no) as inc_dec_order_no",
+        "clean(case when salesman_slave is not null then salesman_slave else sales_name end) as  sales_name",
+        "clean(case when biz_operator_slave is not null then biz_operator_slave else biz_operator end) as biz_operator",
         "create_time",
         "update_time"
       )

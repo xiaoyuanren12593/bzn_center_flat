@@ -62,6 +62,8 @@ object OdsPolicyDetailStreamingTest extends SparkUtil with Until with MysqlUntil
         "now() as update_data_time",
         "insurance_name",
         "product_code",
+        "business_belong_user_name",
+        "operation_user_name",
         "create_time",
         "update_time"
       )
@@ -111,6 +113,8 @@ object OdsPolicyDetailStreamingTest extends SparkUtil with Until with MysqlUntil
         "update_data_time",
         "trim(insurance_name) as insurance_name",
         "trim(product_code) as product_code",
+        "clean(case when business_belong_user_name = '' then null when business_belong_user_name = '客户运营负责人' then null " + "when business_belong_user_name ='销售默认' then null when business_belong_user_name = '运营默认' then null else business_belong_user_name end) as sales_name",
+        "clean(operation_user_name) as biz_operator",
         "create_time",
         "update_time"
       )

@@ -37,16 +37,27 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
       */
     val odsPolicyStreamingDetail = sqlContext.sql("select * from odsdb.ods_policy_streaming_detail")
       .selectExpr(
-        "id",
-        "holder_name",
+        "proposal_no",
         "policy_code",
+        "policy_no",
+        "holder_name",
         "channel_id",
         "channel_name",
         "status",
         "payment_status",//支付状态
         "ledger_status",//实收状态
+        "big_policy",//是否是大保单
+        "proposal_time",//投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
         "insured_count",
+        "insured_company",//被保人企业
+        "sku_charge_type",//方案类别
+        "update_data_time",
+        "insurance_name",
         "product_code",
+        "sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )
@@ -75,9 +86,10 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     val policyStreaming = odsPolicyStreamingDetail.join(odsProductDetail,odsPolicyStreamingDetail("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .where("one_level_pdt_cate not in ('17000001','LGB000001') and one_level_pdt_cate = '蓝领外包'")
       .selectExpr(
-        "holder_name",
+        "proposal_no",
         "policy_code",
-        "'' as preserve_id",
+        "policy_no",
+        "holder_name",
         "channel_id",
         "channel_name",
         // 1	待提交
@@ -97,7 +109,19 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
           "when status = 5 then 5 " +
           "when status = 6 or status = 7 then 6 " +
           "else 8 end as status",
+        "big_policy",//是否是大保单
+        "proposal_time",//投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
         "insured_count",
+        "insured_company",//被保人企业
+        "sku_charge_type",//方案类别
+        "update_data_time",
+        "insurance_name",
+        "'' as inc_dec_order_no",
+        "product_code",
+        "sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )
@@ -108,13 +132,25 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     val policyStreamingRes = policyStreaming.join(odsPolicyDetail,policyStreaming("policy_code")===odsPolicyDetail("policy_code_slave"),"leftouter")
       .where("policy_code_slave is null")
       .selectExpr(
-        "holder_name",
+        "proposal_no",
         "policy_code",
-        "preserve_id",
+        "policy_no",
+        "holder_name",
         "channel_id",
         "channel_name",
         "status",
+        "big_policy",//是否是大保单
+        "proposal_time",//投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
         "insured_count",
+        "insured_company",//被保人企业
+        "insurance_name",
+        "sku_charge_type",//方案类别
+        "update_data_time",
+        "inc_dec_order_no",
+        "sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )
@@ -124,17 +160,26 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
       */
     val odsPreserveStreamingDetail = sqlContext.sql("select * from odsdb.ods_preserve_streaming_detail")
       .selectExpr(
-        "holder_name",
+        "proposal_no",
         "policy_code",
-        "preserve_id",
-        "inc_dec_order_no",
+        "policy_no",
+        "holder_name",
         "channel_id",
         "channel_name",
         "case when status = 1 then 1 " +
           "when status = 3 then 2 " +
           "when status = 7 then 5 " +
           "else 8 end as status",
+        "big_policy",
+        "proposal_time_preserve as proposal_time",//批单投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
         "insured_count",
+        "insured_company",//被保人企业
+        "insurance_name",
+        "sku_charge_type",
+        "update_data_time",
+        "inc_dec_order_no",
         "create_time",
         "update_time"
       )
@@ -145,13 +190,25 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     val odsPreserveStreamingDetailRes = odsPreserveStreamingDetail.join(odsPreseveDetail,odsPreserveStreamingDetail("inc_dec_order_no")===odsPreseveDetail("inc_dec_order_no_slave"),"leftouter")
       .where("inc_dec_order_no_slave is null")
       .selectExpr(
-        "holder_name",
+        "proposal_no",
         "policy_code",
-        "preserve_id",
+        "policy_no",
+        "holder_name",
         "channel_id",
         "channel_name",
         "status",
+        "big_policy",
+        "proposal_time",//批单投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
         "insured_count",
+        "insured_company",//被保人企业
+        "insurance_name",
+        "sku_charge_type",
+        "update_data_time",
+        "inc_dec_order_no",
+        "'' as sales_name",
+        "'' as biz_operator",
         "create_time",
         "update_time"
       )
@@ -164,22 +221,32 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     /**
       * 读取雇主销售表
       */
-    val odsEntGuzhuSalesmanDetail = sqlContext.sql("select  ent_id,ent_name,salesman,biz_operator,channel_id as channel_id_slave," +
+    val odsEntGuzhuSalesmanDetail = sqlContext.sql("select  ent_id,ent_name,salesman as salesman_slave,biz_operator as biz_operator_slave,channel_id as channel_id_slave," +
       "case when channel_name = '直客' then ent_name else channel_name end as channel_name_slave from odsdb.ods_ent_guzhu_salesman_detail")
 
     val res = data5DBefore.join(odsEntGuzhuSalesmanDetail,odsPolicyStreamingDetail("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
       .selectExpr(
         "getUUID() as id",
+        "proposal_no",
         "policy_code",
-        "clean(preserve_id) as preserve_id",
+        "policy_no",
         "case when channel_id_slave is null then null else ent_id end as ent_id",
         "case when channel_id_slave is null then holder_name else ent_name end as ent_name",
         "case when channel_id_slave is not null then channel_id_slave else channel_id end as channel_id",
         "case when channel_name_slave is not null then channel_name_slave else channel_name end as channel_name",
         "status",
+        "big_policy",
+        "proposal_time",//批单投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
         "insured_count",
-        "salesman as sale_name",
-        "biz_operator",
+        "insured_company",//被保人企业
+        "insurance_name",
+        "sku_charge_type",
+        "update_data_time",
+        "clean(inc_dec_order_no) as inc_dec_order_no",
+        "clean(case when salesman_slave is not null then salesman_slave else sales_name end) as  sales_name",
+        "clean(case when biz_operator_slave is not null then biz_operator_slave else biz_operator end) as biz_operator",
         "create_time",
         "update_time"
       )

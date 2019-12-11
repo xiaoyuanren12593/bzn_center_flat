@@ -38,13 +38,25 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
     val dwPolicyStreamingDetail =
       sqlContext.sql("select * from dwdb.dw_policy_streaming_detail")
       .selectExpr(
+        "id",
+        "proposal_no",
         "policy_code",
-        "preserve_id",
+        "policy_no",
         "ent_id",
         "ent_name",
         "channel_id",
         "channel_name",
         "status",
+        "big_policy",
+        "proposal_time",//批单投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
+        "insured_count",
+        "insured_company",//被保人企业
+        "insurance_name",
+        "sku_charge_type",
+        "update_data_time",
+        "inc_dec_order_no",
         "0 as now_insured_count",
         "insured_count as next_month_insured_count",
         "sale_name",
@@ -100,22 +112,22 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
       )
 
     val res = dwPolicyStreamingDetail.unionAll(nextMonthData)
-        .selectExpr(
-          "getUUID() as id",
-          "policy_code",
-          "clean(preserve_id) as preserve_id",
-          "ent_id",
-          "ent_name",
-          "channel_id",
-          "channel_name",
-          "status",
-          "now_insured_count as curr_insured",
-          "next_month_insured_count as pre_continue_person_count",
-          "sale_name",
-          "biz_operator",
-          "create_time",
-          "update_time"
-        )
+      .selectExpr(
+        "getUUID() as id",
+        "policy_code",
+        "clean(preserve_id) as preserve_id",
+        "ent_id",
+        "ent_name",
+        "channel_id",
+        "channel_name",
+        "status",
+        "now_insured_count as curr_insured",
+        "next_month_insured_count as pre_continue_person_count",
+        "sale_name",
+        "biz_operator",
+        "create_time",
+        "update_time"
+      )
 
 
     val tableName  = "dm_b_clickthrouth_emp_continue_policy_detail"
