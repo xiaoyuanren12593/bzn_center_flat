@@ -50,6 +50,8 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
         "start_date",//保单起期
         "end_date",//投保止期
         "proposal_time",//申请时间
+        "business_belong_user_name",
+        "operation_user_name",
         "now() as update_data_time"
       )
 
@@ -69,11 +71,18 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
     val proposalRes = tpProposalStreamingbBznbusi.join(tpProposalSubjectCompanyBznbusi,'proposal_no==='proposal_no_subject,"leftouter")
       .selectExpr(
         "proposal_no",
+        "policy_code",
         "policy_no",
         "start_date as policy_start_date",//保单起期
         "end_date as policy_end_date",//投保止期
         "proposal_time as proposal_time_policy",//投保止期
         "trim(name) as insured_company",//被保人企业
+        "case when business_belong_user_name = '' then null " +
+          "when business_belong_user_name = '客户运营负责人' then null " +
+          "when business_belong_user_name ='销售默认' then null " +
+          "when business_belong_user_name = '运营默认' then null " +
+          "else business_belong_user_name end as sales_name",
+        "operation_user_name as biz_operator",
         "update_data_time"
       )
 
@@ -98,6 +107,7 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
         "insurance_name",
         "big_policy",
         "payment_type as sku_charge_type",
+        "business_belong_user_name",
         "case when inc_revise_sum is null then 0 else inc_revise_sum end as inc_revise_sum",
         "case when dec_revise_sum is null then 0 else dec_revise_sum end as dec_revise_sum","create_time","update_time"
       ).selectExpr(
@@ -115,12 +125,11 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
       "insurance_name",
       "big_policy",
       "sku_charge_type",
+      "business_belong_user_name",
       "(inc_revise_sum - dec_revise_sum) as insured_count",
       "create_time",
       "update_time"
     )
-
-    bPolicyPreservationStreamingBznbusi.show()
 
     val res = bPolicyPreservationStreamingBznbusi.join(proposalRes,'policy_no_preserve==='policy_no,"leftouter")
       .selectExpr(
@@ -145,6 +154,8 @@ object OdsPreserveDetailStreaming extends SparkUtil with Until with MysqlUntil{
         "sku_charge_type",
         "update_data_time",
         "inc_dec_order_no",
+        "case when business_belong_user_name is null or business_belong_user_name = '' then sales_name else business_belong_user_name end as sales_name",
+        "biz_operator",
         "create_time",
         "update_time"
       )

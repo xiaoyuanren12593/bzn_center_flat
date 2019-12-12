@@ -48,7 +48,7 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
         "channel_name",
         "status",
         "big_policy",
-        "proposal_time",//批单投保时间
+        "proposal_time",//投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "insured_count",
@@ -57,18 +57,16 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
         "sku_charge_type",
         "update_data_time",
         "inc_dec_order_no",
-        "0 as now_insured_count",
-        "insured_count as next_month_insured_count",
-        "sale_name",
-        "biz_operator",
-        "create_time",
-        "update_time"
+        "sales_name",
+        "biz_operator"
       )
 
     /**
       * 读取雇主基础数据
       */
-    val dwEmployerBaseinfoDetail = sqlContext.sql("select policy_code,policy_id,holder_name,ent_id,7 as status,channel_id,channel_name,sale_name,biz_operator, " +
+    val dwEmployerBaseinfoDetail =
+      sqlContext.sql("select policy_code,policy_id,holder_name,ent_id,7 as status,ent_id,ent_name,channel_id,channel_name," +
+        "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
       "regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
       " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail")
 

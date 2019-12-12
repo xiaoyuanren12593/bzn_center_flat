@@ -57,9 +57,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "insurance_name",
         "product_code",
         "sales_name",
-        "biz_operator",
-        "create_time",
-        "update_time"
+        "biz_operator"
       )
 
     /**
@@ -121,9 +119,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "'' as inc_dec_order_no",
         "product_code",
         "sales_name",
-        "biz_operator",
-        "create_time",
-        "update_time"
+        "biz_operator"
       )
 
     /**
@@ -150,9 +146,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "update_data_time",
         "inc_dec_order_no",
         "sales_name",
-        "biz_operator",
-        "create_time",
-        "update_time"
+        "biz_operator"
       )
 
     /**
@@ -171,7 +165,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
           "when status = 7 then 5 " +
           "else 8 end as status",
         "big_policy",
-        "proposal_time_preserve as proposal_time",//批单投保时间
+        "proposal_time_policy as proposal_time",//批单投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "insured_count",
@@ -180,8 +174,8 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "sku_charge_type",
         "update_data_time",
         "inc_dec_order_no",
-        "create_time",
-        "update_time"
+        "sales_name",
+        "biz_operator"
       )
 
     /**
@@ -198,7 +192,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "channel_name",
         "status",
         "big_policy",
-        "proposal_time",//批单投保时间
+        "proposal_time",//投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "insured_count",
@@ -207,10 +201,8 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "sku_charge_type",
         "update_data_time",
         "inc_dec_order_no",
-        "'' as sales_name",
-        "'' as biz_operator",
-        "create_time",
-        "update_time"
+        "sales_name",
+        "biz_operator"
       )
 
     /**
@@ -236,19 +228,19 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "case when channel_name_slave is not null then channel_name_slave else channel_name end as channel_name",
         "status",
         "big_policy",
-        "proposal_time",//批单投保时间
+        "proposal_time",//投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",
         "sku_charge_type",
-        "update_data_time",
+        "date_format(update_data_time,'yyyy-MM-dd HH:mm:ss') as update_data_time",
         "clean(inc_dec_order_no) as inc_dec_order_no",
         "clean(case when salesman_slave is not null then salesman_slave else sales_name end) as  sales_name",
         "clean(case when biz_operator_slave is not null then biz_operator_slave else biz_operator end) as biz_operator",
-        "create_time",
-        "update_time"
+        "date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time",
+        "date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time"
       )
 
     res
