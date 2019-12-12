@@ -58,7 +58,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取产品表
       */
-    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,two_level_pdt_cate as product_name,product_desc,business_line from odsdb.ods_product_detail")
+    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,product_name,product_desc,business_line from odsdb.ods_product_detail")
 
     /**
       * 读取方案表

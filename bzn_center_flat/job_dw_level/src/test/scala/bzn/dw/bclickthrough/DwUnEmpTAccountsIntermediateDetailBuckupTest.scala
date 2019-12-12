@@ -22,7 +22,7 @@ import org.apache.spark.sql.hive.HiveContext
     val sqlContext = sparkConf._3
     val hiveContext = sparkConf._4
     val res = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username", "mysql.password", "mysql.driver", "mysql.url")
-    hiveContext.sql("truncate table dwdb.dw_t_accounts_un_employer_detail_backup")
+    hiveContext.sql("TRUNCATE TABLE dwdb.dw_t_accounts_un_employer_detail_backup")
     res.repartition(1).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_un_employer_detail_backup")
     sc.stop()
   }
