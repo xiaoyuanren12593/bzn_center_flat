@@ -9,6 +9,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
+
 /*
 * @Author:liuxiang
 * @Date：2019/12/6
@@ -29,13 +30,18 @@ import org.apache.spark.sql.hive.HiveContext
 
    // 接口数据拿到增量,核心库的数据全量写入
     val res = OdsOtherToHive(hiveContext)
-    res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line","years")
+    res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
 
     val frame = HiveDataPerson(hiveContext)
     frame.registerTempTable("PersonBaseInfoData")
     hiveContext.sql("INSERT OVERWRITE table odsdb.ods_all_business_person_base_info_detail_test PARTITION(business_line = 'official',years) select * from PersonBaseInfoData")
 
+
+    //婚礼纪数据增量写入
+    val data = weddingData(hiveContext)
+    data.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
 
 
     sc.stop()
@@ -50,8 +56,9 @@ import org.apache.spark.sql.hive.HiveContext
   def OdsOtherToHive(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("getNow", () => {
-      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
-      val date = df.format(new Date())// new Date()为获取当前系统时间
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
       (date + "")
     })
 
@@ -65,8 +72,8 @@ import org.apache.spark.sql.hive.HiveContext
     //拿到当前时间所在月份的数据
     val data1: DataFrame = hiveContext.read.jdbc(url, "open_other_policy", properties)
       .where("substring(cast(case when month is null then getNow() else month end as string),1,7) = substring(cast(getNow() as string),1,7)")
-      .selectExpr("policy_id","insured_name","insured_cert_no","insured_mobile","policy_no","start_date","end_date","create_time","update_time",
-        "product_code","null as sku_price","'inter' as business_line","substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
+      .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
+        "product_code", "null as sku_price", "'inter' as business_line", "substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
 
     // 读取接口当月数据
 
@@ -79,11 +86,17 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("policy_id", "policy_id_salve", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months")
       .where("policy_id_salve is null")
 
-    val res = data3.selectExpr("insured_name", "insured_cert_no", "insured_mobile","policy_no","policy_id",  "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months as years")
+    val res = data3.selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no", "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months as years")
 
     res
   }
 
+
+  /**
+    * 核心库数据
+    * @param hqlContext
+    * @return
+    */
   def HiveDataPerson(hqlContext: HiveContext): DataFrame = {
     hqlContext.udf.register("clean", (str: String) => clean(str))
     import hqlContext.implicits._
@@ -120,15 +133,65 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_price",
         "'official' as business_line",
         "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
-          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years"
-      )
+          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years")
 
     res
 
   }
 
 
+  /**
+    * 婚礼纪数据
+    *
+    * @param hqlContext
+    */
 
+  def weddingData(hqlContext: HiveContext): DataFrame = {
+    import hqlContext.implicits._
+    //建立链接
+    val url = "jdbc:mysql://172.16.11.106:3306/sourcedb?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=etluser&password=etluser"
+    val properties: Properties = getProPerties()
+
+    //保单表
+    val openPolicy = hqlContext.read.jdbc(url, "open_policy_bznapi", properties)
+      .selectExpr("policy_no", "proposal_no", "start_date", "end_date", "create_time", "update_time", "product_code", "premium")
+
+    //被保人表保人表
+    val openInsured = hqlContext.read.jdbc(url, "open_insured_bznapi", properties)
+      .selectExpr("proposal_no as proposal_no_salve", "name", "cert_no", "tel")
+
+    //保单表关联被保人表
+    val data1 = openPolicy.join(openInsured, 'proposal_no === 'proposal_no_salve, "leftouter")
+      .selectExpr(
+        "policy_no",
+        "proposal_no as policy_id",
+        "start_date",
+        "end_date",
+        "create_time",
+        "update_time",
+        "product_code",
+        "premium",
+        "name as insured_name",
+        "cert_no as insured_cert_no",
+        "tel as insured_mobile",
+        "'wedding' as business_line",
+        "substring(cast(case when create_time is null then now() else create_time end as string),1,7) as years")
+
+
+    // 读取hive的表中的数据
+    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail_test")
+      .where("business_id_salve = 'wedding'")
+
+    //判断增量数据
+    val res = data1.join(data2, 'policy_id === 'policy_id_salve, "leftouter")
+      .where("policy_id_salve is null")
+      .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no",
+        "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "premium as sku_price", "business_line", "years")
+
+    res
+
+
+  }
 
 
 }

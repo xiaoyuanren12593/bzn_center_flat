@@ -25,10 +25,9 @@ import org.apache.spark.sql.hive.HiveContext
     val sc: SparkContext = sparkConf._2
     val sqlContext = sparkConf._3
     val hiveContext: HiveContext = sparkConf._4
-    val res1 = OdsOtherToHive(hiveContext)
-    val res2 = HiveDataPerson(hiveContext)
-
-
+    /*val res1 = OdsOtherToHive(hiveContext)
+    val res2 = HiveDataPerson(hiveContext)*/
+    val res3 = weddingData(hiveContext)
     sc.stop()
   }
 
@@ -77,7 +76,11 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
 
-
+  /**
+    *   核心库数据
+    * @param hqlContext
+    * @return
+    */
   def HiveDataPerson(hqlContext: HiveContext): DataFrame = {
     hqlContext.udf.register("clean", (str: String) => clean(str))
     import hqlContext.implicits._
@@ -120,5 +123,57 @@ import org.apache.spark.sql.hive.HiveContext
     res
 
   }
+
+  /**
+    * 婚礼纪数据
+    * @param hqlContext
+    */
+
+  def  weddingData(hqlContext: HiveContext): Unit ={
+    import hqlContext.implicits._
+    //建立链接
+    val url = "jdbc:mysql://172.16.11.106:3306/sourcedb?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=etluser&password=etluser"
+    val properties: Properties = getProPerties()
+
+    //保单表
+    val openPolicy = hqlContext.read.jdbc(url, "open_policy_bznapi", properties)
+        .selectExpr("policy_no","proposal_no","start_date","end_date","create_time","update_time","product_code","premium")
+
+    //被保人表保人表
+    val openInsured = hqlContext.read.jdbc(url, "open_insured_bznapi", properties)
+      .selectExpr("proposal_no as proposal_no_salve","name","cert_no","tel")
+
+    //保单表关联被保人表
+    val data1 = openPolicy.join(openInsured, 'proposal_no === 'proposal_no_salve, "leftouter")
+      .selectExpr(
+        "policy_no",
+        "proposal_no as policy_id",
+        "start_date",
+        "end_date",
+        "create_time",
+        "update_time",
+        "product_code",
+        "premium",
+        "name as insured_name",
+        "cert_no as insured_cert_no",
+        "tel as insured_mobile",
+        "'wedding' as business_line",
+        "substring(cast(case when create_time is null then now() else create_time end as string),1,7) as years")
+
+
+    // 读取hive的表中的数据
+    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail_test")
+      .where("business_id_salve = 'wedding'")
+
+    //判断增量数据
+    val res = data1.join(data2, 'policy_id === 'policy_id_salve, "leftouter")
+      .where("policy_id_salve is null")
+      .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no",
+        "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "premium as sku_price", "business_line", "years")
+    res.show(100)
+
+
+  }
+
 
   }

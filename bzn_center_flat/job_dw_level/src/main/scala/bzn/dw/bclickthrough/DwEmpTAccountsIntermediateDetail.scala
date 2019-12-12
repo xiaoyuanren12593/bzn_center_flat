@@ -28,8 +28,9 @@ import org.apache.spark.{SparkConf, SparkContext}
     val preRes = TAccountsEmployerAddPreserve(hqlContext,sqlContext)
     val res = AddPolicyRes.unionAll(preRes)
 
-    saveASMysqlTable(res, "t_accounts_employer", SaveMode.Append, "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    saveASMysqlTable(res, "t_accounts_employer", SaveMode.Append, "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
+
 
     saveASMysqlTable(res, "ods_t_accounts_employer", SaveMode.Append, "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
@@ -110,7 +111,7 @@ import org.apache.spark.{SparkConf, SparkContext}
     /**
       * 读取产品表
       */
-    val odsProductDetail = hqlContext.sql("select product_desc,product_code as insure_code,product_name,two_level_pdt_cate from odsdb.ods_product_detail")
+    val odsProductDetail = hqlContext.sql("select product_desc,product_code as insure_code,two_level_pdt_cate as product_name,two_level_pdt_cate from odsdb.ods_product_detail")
 
 
     /**
@@ -155,7 +156,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
       "insure_company_name as underwriting_company",
       "policy_effect_date",
-      "clean('') as policy_start_time",
+      "policy_start_date as policy_start_time",
       "policy_start_date as policy_effective_time",
       "policy_end_date as policy_expire_time",
       "clean('') as cur_policy_status",
@@ -206,8 +207,8 @@ import org.apache.spark.{SparkConf, SparkContext}
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve")
 
     /**
@@ -440,14 +441,14 @@ import org.apache.spark.{SparkConf, SparkContext}
       */
 
     val odsPolicyPreserveDetail = hqlContext.sql("select policy_id,preserve_id,policy_code,add_batch_code," +
-      "del_batch_code,add_premium,del_premium,preserve_start_date,preserve_end_date,effective_date,preserve_type,pay_status,create_time,preserve_status from odsdb.ods_preservation_detail")
+      "del_batch_code,add_premium,del_premium,preserve_start_date,preserve_end_date,effective_date,preserve_type,pay_status,create_time,preserve_status,create_time as order_date from odsdb.ods_preservation_detail")
 
 
     /**
       * 读取保单明细表
       */
 
-    val odsPolicyDetail = hqlContext.sql("select policy_id as policy_id_salve,product_code as insure_code,holder_name,insure_company_name,source_system,invoice_type,insured_subject,policy_status,order_date,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
+    val odsPolicyDetail = hqlContext.sql("select policy_id as policy_id_salve,product_code as insure_code,holder_name,insure_company_name,source_system,invoice_type,insured_subject,policy_status,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
 
 
     /**
@@ -500,7 +501,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       */
 
 
-    val odsPolicyProduct = hqlContext.sql("select product_desc,product_code,product_name,two_level_pdt_cate from odsdb.ods_product_detail")
+    val odsPolicyProduct = hqlContext.sql("select product_desc,product_code,two_level_pdt_cate as product_name,two_level_pdt_cate from odsdb.ods_product_detail")
 
     /**
       * 关联产品表
@@ -548,7 +549,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       "insure_company_name as underwriting_company",
       "effective_date as policy_effect_date",
       "preserve_start_date as policy_start_time",
-      "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date end) end as policy_effective_time",
+      "case when preserve_start_date is null then (case when preserve_end_date is null then effective_date else preserve_end_date end) else preserve_start_date end as policy_effective_time",
       "preserve_end_date as policy_expire_time",
       "clean('') as cur_policy_status",
       "cast(policy_status as string) as policy_status",
@@ -593,8 +594,8 @@ import org.apache.spark.{SparkConf, SparkContext}
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
     /**
       * 关联两个表 拿到批单数据的增量数据
