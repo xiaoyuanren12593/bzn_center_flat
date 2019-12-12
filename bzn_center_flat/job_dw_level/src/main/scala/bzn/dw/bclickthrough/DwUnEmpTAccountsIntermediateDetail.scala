@@ -11,7 +11,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/11/28
 * @Describe:
-*/ object DwUnEmpTAccountsIntermediateDetail extends SparkUtil with Until  with  MysqlUntil{
+*/ object DwUnEmpTAccountsIntermediateDetail extends SparkUtil with Until with MysqlUntil {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -58,7 +58,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取产品表
       */
-    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,product_name,product_desc,business_line from odsdb.ods_product_detail")
+    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,two_level_pdt_cate as product_name,product_desc,business_line from odsdb.ods_product_detail")
 
     /**
       * 读取方案表
@@ -73,7 +73,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取体育销售表
       */
-    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from  odsdb.ods_sports_customers_dimension")
+    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from odsdb.ods_sports_customers_dimension")
     /**
       * 读取销售团队表
       */
@@ -316,7 +316,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
+        "business_region", "business_source", "business_type", "order_date", "policy_source_code", "policy_source_name", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
@@ -325,7 +325,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     val resfin = res.selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
       "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-      "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
+      "business_region", "business_source", "business_type", "order_date", "policy_source_code", "policy_source_name", "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
       "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
       "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
       "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
@@ -335,6 +335,7 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   }
+
 
   /**
     * 体育，员福，场景的批单信息
@@ -352,7 +353,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取保全表
       */
     val odsPreservationDetail = hqlContext.sql("select preserve_id,add_batch_code,add_premium,del_premium,del_batch_code,effective_date,preserve_start_date," +
-      "preserve_end_date,preserve_status,pay_status,policy_code as policy_code_preserve,create_time,preserve_type from odsdb.ods_preservation_detail")
+      "preserve_end_date,preserve_status,pay_status,policy_code as policy_code_preserve,create_time,preserve_type,create_time as order_date from odsdb.ods_preservation_detail")
       .where("preserve_status = 1")
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
@@ -385,7 +386,6 @@ import org.apache.spark.sql.hive.HiveContext
         "tech_service_rate",
         "economic_rate",
         "commission_discount_rate",
-        "order_date",
         "policy_source_code",
         "policy_source_name"
       )
@@ -472,7 +472,7 @@ import org.apache.spark.sql.hive.HiveContext
     val resfin = res
       .selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name",
+        "business_region", "business_source", "business_type", "order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -505,7 +505,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取健康批单数据
       */
     val odsHealthPreserceDetail = hqlContext.sql("select insurance_policy_no as policy_code_preserve,preserve_id,premium_total,holder_name as holder_name_master,insurer_name,channel_name as channel_name_master," +
-      "policy_effective_time,create_time from odsdb.ods_health_installment_plan")
+      "policy_effective_time,create_time,policy_effective_time as order_date from odsdb.ods_health_installment_plan")
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes.join(odsSportProductDetail, policyAndPlanAndTeamRes("product_code") === odsSportProductDetail("product_code_slave"))
       .selectExpr(
@@ -537,7 +537,6 @@ import org.apache.spark.sql.hive.HiveContext
         "tech_service_rate",
         "economic_rate",
         "commission_discount_rate",
-        "order_date",
         "policy_source_code",
         "policy_source_name"
       )
@@ -611,7 +610,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("id", "batch_no", "policy_no",
         "policy_no_salve", "preserve_id", "preserve_id_salve", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name",
+        "business_region", "business_source", "business_type", "order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name_master as holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
@@ -622,7 +621,7 @@ import org.apache.spark.sql.hive.HiveContext
     val resfin = res
       .selectExpr("batch_no", "policy_no", "preserve_id", "preserve_status", "add_batch_code", "del_batch_code",
         "data_source", "project_name", "product_code", "product_name", "product_detail", "channel_name", "business_owner",
-        "business_region", "business_source", "business_type","order_date", "policy_source_code", "policy_source_name",
+        "business_region", "business_source", "business_type", "order_date", "policy_source_code", "policy_source_name",
         "performance_accounting_day", "holder_name", "insurer_name", "underwriting_company",
         "policy_effect_date", "policy_effective_time", "policy_expire_time", "policy_status", "plan_coverage", "premium_total", "premium_pay_status", "behalf_number",
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",

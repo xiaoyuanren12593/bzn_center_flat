@@ -14,7 +14,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/11/6
 * @Describe:
-*/ object DwEmpTAccountsIntermediateDetailTempTest extends SparkUtil with Until with MysqlUntil {
+*/ object DwEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -30,9 +30,9 @@ import org.apache.spark.{SparkConf, SparkContext}
     /*  saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
         "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
 
-    /*val preRes = TAccountsEmployerAddPreserve(hqlContext, sqlContext)
+    val preRes = TAccountsEmployerAddPreserve(hqlContext, sqlContext)
     val res = AddPolicyRes.unionAll(preRes)
-    res.printSchema()*/
+    res.printSchema()
     /* saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
        "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
     // preRes.show(100)
@@ -448,14 +448,14 @@ import org.apache.spark.{SparkConf, SparkContext}
       */
 
     val odsPolicyPreserveDetail = hqlContext.sql("select policy_id,preserve_id,policy_code,add_batch_code," +
-      "del_batch_code,add_premium,del_premium,preserve_start_date,preserve_end_date,effective_date,preserve_type,pay_status,create_time,preserve_status from odsdb.ods_preservation_detail")
+      "del_batch_code,add_premium,del_premium,preserve_start_date,preserve_end_date,effective_date,preserve_type,pay_status,create_time,preserve_status,create_time as order_date from odsdb.ods_preservation_detail")
 
 
     /**
       * 读取保单明细表
       */
 
-    val odsPolicyDetail = hqlContext.sql("select policy_id as policy_id_salve,product_code as insure_code,holder_name,insure_company_name,source_system,invoice_type,insured_subject,policy_status,order_date,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
+    val odsPolicyDetail = hqlContext.sql("select policy_id as policy_id_salve,product_code as insure_code,holder_name,insure_company_name,source_system,invoice_type,insured_subject,policy_status,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
 
 
     /**
