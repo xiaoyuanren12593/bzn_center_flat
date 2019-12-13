@@ -45,7 +45,7 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "payment_status",//支付状态
         "ledger_status",//实收状态
         "big_policy",//是否是大保单
-        "proposal_time",//投保时间
+        "proposal_time_policy",//投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "insured_count",
@@ -106,7 +106,7 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
           "when status = 6 or status = 7 then 6 " +
           "else 8 end as status",
         "big_policy",//是否是大保单
-        "proposal_time",//投保时间
+        "proposal_time_policy",//投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "insured_count",
@@ -134,9 +134,12 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "channel_name",
         "status",
         "big_policy",//是否是大保单
-        "proposal_time",//投保时间
+        "cast('' as timestamp) as proposal_time_preserve",//批单投保时间
+        "proposal_time_policy",//保单投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
+        "cast('' as timestamp) as preserve_start_date",
+        "cast('' as timestamp) as preserve_end_date",
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",
@@ -163,9 +166,12 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
           "when status = 7 then 5 " +
           "else 8 end as status",
         "big_policy",
-        "proposal_time_policy as proposal_time",//批单投保时间
+        "proposal_time_preserve",//批单投保时间
+        "proposal_time_policy",//保单投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
+        "preserve_start_date",
+        "preserve_end_date",
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",
@@ -190,9 +196,12 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "channel_name",
         "status",
         "big_policy",
-        "proposal_time",//投保时间
+        "proposal_time_preserve",//批单投保时间
+        "proposal_time_policy",//保单投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
+        "preserve_start_date",
+        "preserve_end_date",
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",
@@ -226,9 +235,12 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "case when channel_name_slave is not null then channel_name_slave else channel_name end as channel_name",
         "status",
         "big_policy",
-        "proposal_time",//投保时间
+        "proposal_time_preserve",//批单投保时间
+        "proposal_time_policy",//保单投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
+        "preserve_start_date",
+        "preserve_end_date",
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",

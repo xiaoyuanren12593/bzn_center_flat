@@ -38,7 +38,6 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
     val dwPolicyStreamingDetail =
       sqlContext.sql("select * from dwdb.dw_policy_streaming_detail")
       .selectExpr(
-        "id",
         "proposal_no",
         "policy_code",
         "policy_no",
@@ -48,12 +47,16 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
         "channel_name",
         "status",
         "big_policy",
-        "proposal_time",//投保时间
+        "proposal_time_preserve",//批单投保时间
+        "proposal_time_policy",//保单投保时间
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
-        "insured_count",
+        "preserve_start_date",
+        "preserve_end_date",
+        "0 as now_insured_count",
+        "insured_count as next_month_insured_count",
         "insured_company",//被保人企业
-        "insurance_name",
+        "insurance_name as insure_company_name",
         "sku_charge_type",
         "update_data_time",
         "inc_dec_order_no",
@@ -65,10 +68,10 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
       * 读取雇主基础数据
       */
     val dwEmployerBaseinfoDetail =
-      sqlContext.sql("select policy_code,policy_id,holder_name,ent_id,7 as status,ent_id,ent_name,channel_id,channel_name," +
+      sqlContext.sql("select policy_code,policy_no,policy_id,holder_name,7 as status,ent_id,ent_name,channel_id,channel_name," +
         "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
-      "regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
-      " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail")
+        "insured_subject,regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
+        " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail")
 
     /**
       * 读取当前在保人表
@@ -79,11 +82,19 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
     val nowDataRes = dwEmployerBaseinfoDetail.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insued and 'now_day_id === 'day_id,"leftouter")
       .selectExpr(
         "policy_id",
+        "policy_no",
         "policy_code",
         "ent_id",
         "holder_name",
         "channel_id",
         "channel_name",
+        "big_policy",
+        "proposal_time",
+        "policy_start_date",
+        "policy_end_date",
+        "insure_company_name",
+        "sku_charge_type",
+        "insured_subject",
         "status",
         "sale_name",
         "biz_operator",
@@ -94,38 +105,64 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
 
     val nextMonthData = nowDataRes.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insued and 'next_month_day_id === 'day_id,"leftouter")
       .selectExpr(
+        "'' as proposal_no",
         "policy_code",
-        "'' as preserve_id",
+        "policy_no",
         "ent_id",
         "holder_name as ent_name",
         "channel_id",
         "channel_name",
         "status",
+        "big_policy",
+        "cast('' as timestamp) as proposal_time_preserve",//批单投保时间
+        "proposal_time as proposal_time_policy",//保单投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
+        "cast('' as timestamp) as preserve_start_date",
+        "cast('' as timestamp) as preserve_end_date",
         "now_insured_count",
         "insured_count as next_month_insured_count",
-        "sale_name",
-        "biz_operator",
-        "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
-        "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time"
+        "insured_subject as insured_company",//被保人企业
+        "insure_company_name",
+        "sku_charge_type",
+        "now() as update_data_time",
+        "'' as inc_dec_order_no",
+        "sale_name as sales_name",
+        "biz_operator"
       )
 
     val res = dwPolicyStreamingDetail.unionAll(nextMonthData)
       .selectExpr(
         "getUUID() as id",
+        "clean(proposal_no) as proposal_no",
         "policy_code",
-        "clean(preserve_id) as preserve_id",
+        "policy_no",
         "ent_id",
-        "ent_name",
+        "clean(ent_name) as ent_name",
         "channel_id",
         "channel_name",
         "status",
+        "big_policy",
+        "proposal_time_preserve",//批单投保时间
+        "proposal_time_policy",//保单投保时间
+        "policy_start_date",//保单起期
+        "policy_end_date",//投保止期
+        "preserve_start_date",
+        "preserve_end_date",
         "now_insured_count as curr_insured",
         "next_month_insured_count as pre_continue_person_count",
-        "sale_name",
-        "biz_operator",
-        "create_time",
-        "update_time"
+        "clean(insured_company) as insured_company",//被保人企业
+        "clean(insure_company_name) as insure_company_name",
+        "sku_charge_type",
+        "date_format(update_data_time,'yyyy-MM-dd HH:mm:dd') as update_data_time",
+        "clean(inc_dec_order_no) as inc_dec_order_no",
+        "clean(sales_name) as sales_name",
+        "clean(biz_operator) as biz_operator",
+        "date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time",
+        "date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time"
       )
+
+    res.printSchema()
 
 
     val tableName  = "dm_b_clickthrouth_emp_continue_policy_detail"
@@ -141,28 +178,6 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with MysqlUntil{
 //    // saveASMysqlTable(res: DataFrame, tableName, SaveMode.Overwrite,user103,pass103,driver,url103)
 //    saveASMysqlTable(res: DataFrame, tableName, SaveMode.Overwrite,user106,pass106,driver,url106)
 //    res.printSchema()
-
-
-    val resEnd =res.selectExpr(
-      "id",
-      "policy_code",
-      "preserve_id",
-      "ent_id",
-      "ent_name",
-      "channel_id",
-      "channel_name",
-      "status",
-      "curr_insured",
-      "pre_continue_person_count",
-      "sale_name",
-      "biz_operator",
-      "create_time",
-      "update_time",
-      //"substr(cast(now() as string),1,10) as date_time"
-      "cast(now() as string) as date_time"
-    )
-    resEnd.printSchema()
-    resEnd
 
   }
 }

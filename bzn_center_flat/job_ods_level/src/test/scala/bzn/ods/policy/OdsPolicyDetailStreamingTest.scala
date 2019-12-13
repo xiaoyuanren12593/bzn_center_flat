@@ -104,7 +104,7 @@ object OdsPolicyDetailStreamingTest extends SparkUtil with Until with MysqlUntil
         "payment_status",//支付状态
         "ledger_status",//实收状态
         "big_policy",//是否是大保单
-        "proposal_time",//投保时间
+        "proposal_time as proposal_time_policy",//投保时间
         "start_date as policy_start_date",//保单起期
         "end_date as policy_end_date",//投保止期
         "insured_count",
@@ -118,7 +118,7 @@ object OdsPolicyDetailStreamingTest extends SparkUtil with Until with MysqlUntil
         "create_time",
         "update_time"
       )
-    res.show()
+
     res.printSchema()
     res
   }

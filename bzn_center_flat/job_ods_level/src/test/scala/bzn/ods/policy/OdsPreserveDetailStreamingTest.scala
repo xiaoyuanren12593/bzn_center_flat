@@ -147,7 +147,7 @@ object OdsPreserveDetailStreamingTest extends SparkUtil with Until with MysqlUnt
         "policy_start_date",//保单起期
         "policy_end_date",//投保止期
         "preserve_start_date",
-        "preserve_end_datve",
+        "preserve_end_date",
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",
