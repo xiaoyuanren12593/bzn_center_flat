@@ -32,6 +32,8 @@ trait SparkUtil {
     val sqlContest = new SQLContext(sc)
 
     val hiveContext = new HiveContext(sc)
+    hiveContext.setConf("hive.exec.dynamic.partition","true")
+    hiveContext.setConf("hive.exec.dynamic.partition.mode","nonstrict")
 
     (conf,sc,sqlContest,hiveContext)
   }

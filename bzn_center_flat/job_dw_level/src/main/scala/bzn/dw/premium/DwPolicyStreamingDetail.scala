@@ -220,12 +220,23 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
     val data5DBefore = policyStreamingRes.unionAll(odsPreserveStreamingDetailRes)
 
     /**
+      * 保险公司简称
+      */
+    val odsInsuranceCompanyTempDimension = sqlContext.sql("select insurance_company,short_name from odsdb.ods_insurance_company_temp_dimension")
+
+    /**
+      * 关联得到保险公司简称
+      */
+    val data5DBeforeRes = data5DBefore.join(odsInsuranceCompanyTempDimension,data5DBefore("insurance_name")===odsInsuranceCompanyTempDimension("insurance_company"),"leftouter")
+      .drop("insurance_company").withColumnRenamed("short_name","insurance_company_short_name")
+
+    /**
       * 读取雇主销售表
       */
     val odsEntGuzhuSalesmanDetail = sqlContext.sql("select  ent_id,ent_name,salesman as salesman_slave,biz_operator as biz_operator_slave,channel_id as channel_id_slave," +
       "case when channel_name = '直客' then ent_name else channel_name end as channel_name_slave from odsdb.ods_ent_guzhu_salesman_detail")
 
-    val res = data5DBefore.join(odsEntGuzhuSalesmanDetail,odsPolicyStreamingDetail("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
+    val res = data5DBeforeRes.join(odsEntGuzhuSalesmanDetail,data5DBeforeRes("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
       .selectExpr(
         "getUUID() as id",
         "proposal_no",
@@ -246,6 +257,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "insured_count",
         "insured_company",//被保人企业
         "insurance_name",
+        "insurance_company_short_name",
         "sku_charge_type",
         "date_format(update_data_time,'yyyy-MM-dd HH:mm:ss') as update_data_time",
         "clean(inc_dec_order_no) as inc_dec_order_no",
