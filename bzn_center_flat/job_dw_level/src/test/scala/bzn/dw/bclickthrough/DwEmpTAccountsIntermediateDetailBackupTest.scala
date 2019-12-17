@@ -28,6 +28,7 @@ object DwEmpTAccountsIntermediateDetailBackupTest extends SparkUtil with Until {
     val res = readMysqlOtherTable(hqlContext)
     hqlContext.sql("truncate table dwdb.dw_t_accounts_employer_detail_backup")
 
+
      res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_t_accounts_employer_detail_backup")
 
 

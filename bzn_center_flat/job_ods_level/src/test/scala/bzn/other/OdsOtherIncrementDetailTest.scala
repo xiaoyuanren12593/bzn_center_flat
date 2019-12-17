@@ -5,6 +5,7 @@ import java.util.{Date, Properties}
 
 import bzn.job.common.{MysqlUntil, Until}
 import bzn.ods.policy.OdsAllBusinessPersonInfoDetail.clean
+import bzn.other.OdsOtherIncrementDetail.{clean, getProPerties}
 import bzn.other.OdsOtherToHivePolicyDetailTest.{getProPerties, sparkConfInfo}
 import bzn.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
@@ -32,6 +33,7 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
 
+
   /**
     * 上下文
     *
@@ -40,8 +42,9 @@ import org.apache.spark.sql.hive.HiveContext
   def OdsOtherToHive(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("getNow", () => {
-      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
-      val date = df.format(new Date())// new Date()为获取当前系统时间
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
       (date + "")
     })
 
@@ -55,13 +58,13 @@ import org.apache.spark.sql.hive.HiveContext
     //拿到当前时间所在月份的数据
     val data1: DataFrame = hiveContext.read.jdbc(url, "open_other_policy", properties)
       .where("substring(cast(case when month is null then getNow() else month end as string),1,7) = substring(cast(getNow() as string),1,7)")
-      .selectExpr("policy_id","insured_name","insured_cert_no","insured_mobile","policy_no","start_date","end_date","create_time","update_time",
-        "product_code","null as sku_price","'other' as business_line","substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
+      .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
+        "product_code", "null as sku_price", "'inter' as business_line", "substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
 
-  // 读取接口当月数据
+    // 读取接口当月数据
 
-    val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_other_detail_test_temp")
-      .where("substring(cast(getNow() as string),1,7) = years and business_line_salve = 'other'")
+    val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_all_business_person_base_info_detail")
+      .where("substring(cast(getNow() as string),1,7) = years and business_line_salve = 'inter'")
 
     //拿到当月数据的增量
 
@@ -69,15 +72,14 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("policy_id", "policy_id_salve", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months")
       .where("policy_id_salve is null")
 
-    val res = data3.selectExpr("insured_name", "insured_cert_no", "insured_mobile","policy_no","policy_id",  "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months as years")
-  res.printSchema()
-    res
+    val res = data3.selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no", "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months as years")
 
+    res
   }
 
 
   /**
-    *   核心库数据
+    * 核心库数据
     * @param hqlContext
     * @return
     */
@@ -117,19 +119,20 @@ import org.apache.spark.sql.hive.HiveContext
         "sku_price",
         "'official' as business_line",
         "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
-          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years"
-      )
+          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years")
 
     res
 
   }
 
+
   /**
     * 婚礼纪数据
+    *
     * @param hqlContext
     */
 
-  def  weddingData(hqlContext: HiveContext): Unit ={
+  def weddingData(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
     //建立链接
     val url = "jdbc:mysql://172.16.11.106:3306/sourcedb?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=etluser&password=etluser"
@@ -137,11 +140,11 @@ import org.apache.spark.sql.hive.HiveContext
 
     //保单表
     val openPolicy = hqlContext.read.jdbc(url, "open_policy_bznapi", properties)
-        .selectExpr("policy_no","proposal_no","start_date","end_date","create_time","update_time","product_code","premium")
+      .selectExpr("policy_no", "proposal_no", "start_date", "end_date", "create_time", "update_time", "product_code", "premium")
 
     //被保人表保人表
     val openInsured = hqlContext.read.jdbc(url, "open_insured_bznapi", properties)
-      .selectExpr("proposal_no as proposal_no_salve","name","cert_no","tel")
+      .selectExpr("proposal_no as proposal_no_salve", "name", "cert_no", "tel")
 
     //保单表关联被保人表
     val data1 = openPolicy.join(openInsured, 'proposal_no === 'proposal_no_salve, "leftouter")
@@ -162,7 +165,7 @@ import org.apache.spark.sql.hive.HiveContext
 
 
     // 读取hive的表中的数据
-    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail_test")
+    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail")
       .where("business_id_salve = 'wedding'")
 
     //判断增量数据
@@ -170,10 +173,11 @@ import org.apache.spark.sql.hive.HiveContext
       .where("policy_id_salve is null")
       .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no",
         "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "premium as sku_price", "business_line", "years")
-    res.show(100)
+
+    res
 
 
   }
 
 
-  }
+}
