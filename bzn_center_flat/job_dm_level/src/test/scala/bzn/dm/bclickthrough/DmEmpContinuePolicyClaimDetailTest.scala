@@ -12,7 +12,7 @@ import org.apache.spark.sql.hive.HiveContext
   * Time:17:12
   * describe: 续投追踪的保单数据
   **/
-object EmpContinuePolicyClaimDetailTest extends SparkUtil with Until with ClickHouseUntil{
+object DmEmpContinuePolicyClaimDetailTest extends SparkUtil with Until with ClickHouseUntil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName

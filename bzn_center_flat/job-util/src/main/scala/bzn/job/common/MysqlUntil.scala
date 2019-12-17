@@ -1,6 +1,6 @@
 package bzn.job.common
 
-import java.sql.{Connection, DriverManager}
+import java.sql.{Connection, DriverManager, Statement}
 import java.util.Properties
 
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -36,6 +36,41 @@ trait MysqlUntil {
 //      .option("upperBound","200")
       .option("dbtable", tableName)
       .load()
+  }
+
+  def exeSql(sql:String,url:String,user:String,possWord:String) = {
+    val properties = getProPerties()
+    val driver = properties.getProperty("clickhouse.driver")
+    val address = properties.getProperty("clickhouse.url")
+    val user = properties.getProperty("clickhouse.username")
+    val pass = properties.getProperty("clickhouse.password")
+    var connection:Connection = null
+    var statement:Statement = null
+    try {
+      Class.forName(driver)
+      connection = DriverManager.getConnection(address,user,pass)
+      statement = connection.createStatement()
+      connection.createStatement()
+      val begin = System.currentTimeMillis()
+      statement.executeUpdate(sql)
+      val end = System.currentTimeMillis()
+      System.out.println("执行（"+sql+"）耗时："+(end-begin)+"ms")
+    } catch  {
+      case e: Exception =>
+        e.printStackTrace ()
+    }finally {//关闭连接
+      try {
+        if(statement!=null){
+          statement.close()
+        }
+        if(connection!=null){
+          connection.close()
+        }
+      } catch  {
+        case e: Exception =>
+          e.printStackTrace ()
+      }
+    }
   }
 
   /**

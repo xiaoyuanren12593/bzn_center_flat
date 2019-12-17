@@ -10,9 +10,9 @@ import org.apache.spark.{SparkConf, SparkContext}
   * author:xiaoYuanRen
   * Date:2019/12/16
   * Time:17:12
-  * describe: 续投追踪的保单数据
+  * describe: 续投追踪的理赔数据
   **/
-object EmpContinuePolicyClaimDetail extends SparkUtil with Until with ClickHouseUntil{
+object DmEmpContinuePolicyClaimDetail extends SparkUtil with Until with ClickHouseUntil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -68,8 +68,7 @@ object EmpContinuePolicyClaimDetail extends SparkUtil with Until with ClickHouse
       "date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time",
       "date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time"
     )
-    res.printSchema()
-    res.show()
+
     res
   }
 }

@@ -37,7 +37,7 @@ object OdsOfoPolicyDetail extends SparkUtil with Until with MysqlUntil {
     */
   def readMysqlOtherTable(sqlContext: SQLContext): DataFrame = {
 
-    val properties: Properties = getProPerties()
+    val properties: Properties = getProPerties
     val url02: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201802?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
     val url03: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201803?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
     val url04: String = "jdbc:mysql://172.16.11.103:3306/bzn_open_201804?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"

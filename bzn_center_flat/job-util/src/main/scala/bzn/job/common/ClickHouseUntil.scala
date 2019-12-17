@@ -2,8 +2,6 @@ package bzn.job.common
 
 import java.util.Properties
 import java.sql._
-import java.util
-import javax.sql.StatementEvent
 
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 
@@ -17,23 +15,19 @@ import scala.io.Source
 trait ClickHouseUntil {
 
   /**
-    * 删除clickhouse数据
-    * @param sqlContext
-    * @param tableName
-    * @param url
-    * @param user
-    * @param possWord
+    * 执行clickhouse-sql
+    * @param sql
+    * @param urlFormat
+    * @param userFormat
+    * @param possWordFormat
+    * @param driverFormat
     */
-  def deleteClickhouseData(sqlContext:SQLContext,tableName: String,url:String,user:String,possWord:String) = {
-
-  }
-
-  def exeSql(sql:String,url:String,user:String,possWord:String) = {
+  def exeSql(sql:String,urlFormat:String,userFormat:String,possWordFormat:String,driverFormat:String) = {
     val properties = getProPerties
-    val driver = properties.getProperty("clickhouse.driver")
-    val address = properties.getProperty("clickhouse.url")
-    val user = properties.getProperty("clickhouse.username")
-    val pass = properties.getProperty("clickhouse.password")
+    val driver = properties.getProperty(driverFormat)
+    val address = properties.getProperty(urlFormat)
+    val user = properties.getProperty(userFormat)
+    val pass = properties.getProperty(possWordFormat)
     var connection:Connection = null
     var statement:Statement = null
     try {

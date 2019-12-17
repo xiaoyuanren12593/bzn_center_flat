@@ -51,8 +51,7 @@ object OdsPreserveDetailStreamingTest extends SparkUtil with Until with MysqlUnt
         "end_date",//投保止期
         "proposal_time",//申请时间
         "business_belong_user_name",
-        "operation_user_name",
-        "now() as update_data_time"
+        "operation_user_name"
       )
 
     /**
@@ -82,8 +81,7 @@ object OdsPreserveDetailStreamingTest extends SparkUtil with Until with MysqlUnt
           "when business_belong_user_name ='销售默认' then null " +
           "when business_belong_user_name = '运营默认' then null " +
           "else business_belong_user_name end as sales_name",
-        "operation_user_name as biz_operator",
-        "update_data_time"
+        "operation_user_name as biz_operator"
       )
 
     /**
@@ -121,7 +119,7 @@ object OdsPreserveDetailStreamingTest extends SparkUtil with Until with MysqlUnt
       "channel_name",
       "proposal_time_preserve",
       "start_date as preserve_start_date",
-      "end_date as preserve_end_datve",
+      "end_date as preserve_end_date",
       "insurance_name",
       "big_policy",
       "sku_charge_type",
@@ -152,7 +150,6 @@ object OdsPreserveDetailStreamingTest extends SparkUtil with Until with MysqlUnt
         "insured_company",//被保人企业
         "insurance_name",
         "sku_charge_type",
-        "update_data_time",
         "inc_dec_order_no",
         "case when business_belong_user_name is null or business_belong_user_name = '' then sales_name else business_belong_user_name end as sales_name",
         "biz_operator",

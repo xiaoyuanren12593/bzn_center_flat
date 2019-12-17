@@ -43,7 +43,6 @@ import org.apache.spark.sql.hive.HiveContext
     data.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
 
-
     sc.stop()
   }
 
@@ -65,7 +64,6 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 获取mysql中接口的数据
       */
-
     val properties: Properties = getProPerties()
     val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
 
@@ -189,9 +187,5 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "premium as sku_price", "business_line", "years")
 
     res
-
-
   }
-
-
 }

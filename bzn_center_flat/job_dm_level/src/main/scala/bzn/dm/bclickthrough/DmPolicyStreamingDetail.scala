@@ -1,5 +1,8 @@
 package bzn.dm.bclickthrough
 
+import java.text.SimpleDateFormat
+import java.util.Date
+
 import bzn.dm.util.SparkUtil
 import bzn.job.common.{ClickHouseUntil, MysqlUntil, Until}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -58,7 +61,7 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
       /**
         * 执行删除clickhouse当天的分区数据
         */
-      exeSql(sqlClick,urlTest:String,user:String,possWord:String)
+      exeSql(sqlClick,urlTest:String,user:String,possWord:String,driver:String)
       writeClickHouseTable(result:DataFrame,tableName: String,SaveMode.Append,urlTest:String,user:String,possWord:String,driver:String)
 
     }
@@ -69,6 +72,11 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
   def getHolderInfo(sqlContext:HiveContext): DataFrame = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
+    sqlContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
+      val date = df.format(new Date())// new Date()为获取当前系统时间
+      date + ""
+    })
     import sqlContext.implicits._
 
     /**
@@ -98,7 +106,6 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
           "insurance_name as insure_company_name",
           "insurance_company_short_name",
           "sku_charge_type",
-          "update_data_time",
           "inc_dec_order_no",
           "sales_name as sale_name",
           "biz_operator"
@@ -167,7 +174,6 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
         "insure_company_name",
         "insurance_company_short_name",
         "sku_charge_type",
-        "now() as update_data_time",
         "'' as inc_dec_order_no",
         "sale_name",
         "biz_operator"
@@ -197,7 +203,7 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
         "clean(insure_company_name) as insure_company_name",
         "clean(insurance_company_short_name) as insurance_company_short_name",
         "sku_charge_type",
-        "date_format(now(),'yyyy-MM-dd HH:mm:dd') as update_data_time",
+        "date_format(getNow(),'yyyy-MM-dd HH:mm:dd') as update_data_time",
         "clean(inc_dec_order_no) as inc_dec_order_no",
         "clean(sale_name) as sale_name",
         "clean(biz_operator) as biz_operator",

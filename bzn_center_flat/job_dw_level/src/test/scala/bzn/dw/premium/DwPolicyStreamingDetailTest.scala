@@ -51,7 +51,6 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "insured_count",
         "insured_company",//被保人企业
         "sku_charge_type",//方案类别
-        "update_data_time",
         "insurance_name",
         "product_code",
         "sales_name",
@@ -112,7 +111,6 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "insured_count",
         "insured_company",//被保人企业
         "sku_charge_type",//方案类别
-        "update_data_time",
         "insurance_name",
         "'' as inc_dec_order_no",
         "product_code",
@@ -144,7 +142,6 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "insured_company",//被保人企业
         "insurance_name",
         "sku_charge_type",//方案类别
-        "update_data_time",
         "inc_dec_order_no",
         "sales_name",
         "biz_operator"
@@ -176,7 +173,6 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "insured_company",//被保人企业
         "insurance_name",
         "sku_charge_type",
-        "update_data_time",
         "inc_dec_order_no",
         "sales_name",
         "biz_operator"
@@ -206,7 +202,6 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "insured_company",//被保人企业
         "insurance_name",
         "sku_charge_type",
-        "update_data_time",
         "inc_dec_order_no",
         "sales_name",
         "biz_operator"
@@ -257,7 +252,6 @@ object DwPolicyStreamingDetailTest  extends SparkUtil with Until with MysqlUntil
         "insurance_name",
         "insurance_company_short_name",
         "sku_charge_type",
-        "date_format(update_data_time,'yyyy-MM-dd HH:mm:ss') as update_data_time",
         "clean(inc_dec_order_no) as inc_dec_order_no",
         "clean(case when salesman_slave is not null then salesman_slave else sales_name end) as  sales_name",
         "clean(case when biz_operator_slave is not null then biz_operator_slave else biz_operator end) as biz_operator",
