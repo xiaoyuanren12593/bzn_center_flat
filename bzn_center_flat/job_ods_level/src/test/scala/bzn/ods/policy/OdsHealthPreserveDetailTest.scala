@@ -1,132 +1,71 @@
 package bzn.ods.policy
 
-import java.text.SimpleDateFormat
-import java.util.{Date, Properties}
-
-import bzn.job.common.Until
+import bzn.job.common.{MysqlUntil, Until}
 import bzn.ods.util.SparkUtil
-import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.hive.HiveContext
 
-import scala.io.Source
-import scala.math.BigDecimal.RoundingMode
-
-/**
-  * author:xiaoYuanRen
-  * Date:2019/5/21
-  * Time:9:47
-  * describe: 1.0 系统保全表
-  **/
-object OdsHealthPreserveDetailTest extends SparkUtil with Until{
+/*
+* @Author:liuxiang
+* @Date：2019/12/17
+* @Describe:
+*/ object OdsHealthPreserveDetailTest extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
 
     val sc = sparkConf._2
-    val hiveContext = sparkConf._4
 
-    twoOdsPolicyDetail(hiveContext)
+    val hiveContext = sparkConf._4
+    val res = HealthPreserve(hiveContext)
+    hiveContext.sql("truncate table odsdb.ods_health_installment_plan")
+    res.write.mode(SaveMode.Append).saveAsTable("odsdb.ods_health_installment_plan")
     sc.stop()
 
   }
 
-  /**
-    * 2.0系统保单明细表
-    * @param sqlContext 上下文
-    */
-  def twoOdsPolicyDetail(sqlContext:HiveContext) :DataFrame = {
-    import sqlContext.implicits._
-    sqlContext.udf.register("clean", (str: String) => clean(str))
-    sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
-    sqlContext.udf.register("getNow", () => {
-      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
-      val date = df.format(new Date())// new Date()为获取当前系统时间
-      date + ""
-    })
-    sqlContext.udf.register("getNull", (line:String) =>  {
-      if (line == "" || line == null || line == "NULL") 9 else line.toInt
-    })
+
+  def HealthPreserve(hiveContext: HiveContext): DataFrame = {
+    import hiveContext.implicits._
+    hiveContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    //读取保单表
+    val bPolicyBzncen = readMysqlTable(hiveContext, "b_policy_bzncen", "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106")
+      .selectExpr("policy_no as policy_no_salve", "proposal_no", "holder_name", "sell_channel_name")
 
 
-    /**
-      * 读取健康保单表
-      */
-    val healthPolicyBznrobot = readMysqlTable(sqlContext,"health_policy_bznrobot")
-      .selectExpr("policy_no","product_code","premium","create_time")
+    //读取健康续期表
 
+    val bPolicyInstallmentPlanBzncen = readMysqlTable(hiveContext, "b_policy_installment_plan_bzncen",
+      "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql.url.106")
+      .selectExpr("policy_no", "premium", "status", "update_time")
+      .where("status =2")
 
-    /**
-      * 读取健康投保单表
-      */
-    val tProposalBznrobot = readMysqlTable(sqlContext,"t_proposal_bznrobot")
-      .selectExpr("proposal_no","policy_no as policy_no_slave","insurance_policy_no","holder_name","sell_channel_name")
+    val tProposalSubjectPersonMaster = readMysqlTable(hiveContext, "t_proposal_subject_person_master_bznrobot",
+      "mysql.username.106", "mysql.password.106", "mysql.driver", "mysql.url.106")
+      .selectExpr("proposal_no as proposal_no_salve", "name")
 
+    //健康续期数据关联保单表
+    val resTemp = bPolicyInstallmentPlanBzncen.join(bPolicyBzncen, 'policy_no === 'policy_no_salve, "leftouter")
+      .selectExpr("policy_no", "proposal_no", "premium", "holder_name", "sell_channel_name", "update_time")
 
-    /**
-      * 读取
-      */
-    val tProposalSubjectPersonMasterBznrobot = readMysqlTable(sqlContext,"t_proposal_subject_person_master_bznrobot")
-      .selectExpr("proposal_no as proposal_no_slave","name")
-
-    val resTemp = healthPolicyBznrobot.join(tProposalBznrobot,healthPolicyBznrobot("policy_no")===tProposalBznrobot("policy_no_slave"),"leftouter")
-      .selectExpr("policy_no","product_code","premium","create_time","proposal_no","insurance_policy_no","holder_name","sell_channel_name")
-    resTemp.show(100)
-
-    val res = resTemp.join(tProposalSubjectPersonMasterBznrobot,resTemp("proposal_no")===tProposalSubjectPersonMasterBznrobot("proposal_no_slave"),"leftouter")
-      .where("product_code in('P00001619','P00001790','P00001687')  and insurance_policy_no != '' and premium>1")
+    val res = resTemp.join(tProposalSubjectPersonMaster, 'proposal_no === 'proposal_no_salve, "leftouter")
       .selectExpr(
         "getUUID() as id",
-        "insurance_policy_no",
-        "concat(insurance_policy_no,'_',date_format(create_time,'yyyyMMddHHmmss')) as preserve_id",
-        "premium as premium_total","holder_name","name as insurer_name","sell_channel_name as channel_name","create_time as policy_effective_time",
+        "policy_no as insurance_policy_no",
+        "concat(policy_no,'_',date_format(update_time,'yyyyMMddHHmmss')) as preserve_id",
+        "premium as premium_total",
+        "holder_name",
+        "name as insurer_name",
+        "sell_channel_name as channel_name",
+        "update_time as policy_effective_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time")
-    val frame = res.where("insurance_policy_no = '8G2013016201900000000010'")
-    frame.show(100)
-    res.printSchema()
     res
+
   }
 
-  /**
-    * 获取 Mysql 表的数据
-    *
-    * @param sqlContext 上下文
-    * @param tableName 读取Mysql表的名字
-    * @return 返回 Mysql 表的 DataFrame
-    */
-  def readMysqlTable(sqlContext: SQLContext, tableName: String): DataFrame = {
-    val properties: Properties = getProPerties()
-    sqlContext
-      .read
-      .format("jdbc")
-      .option("url", properties.getProperty("mysql.url.106"))
-      .option("driver", properties.getProperty("mysql.driver"))
-      .option("user", properties.getProperty("mysql.username.106"))
-      .option("password", properties.getProperty("mysql.password.106"))
-      .option("numPartitions","10")
-      .option("partitionColumn","id")
-      .option("lowerBound", "0")
-      .option("upperBound","200")
-      .option("dbtable", tableName)
-      .load()
-  }
-
-  /**
-    * 获取配置文件
-    * @return
-    */
-  def getProPerties() : Properties= {
-    val lines_source = Source.fromURL(getClass.getResource("/config_scala.properties")).getLines.toSeq
-    var properties: Properties = new Properties()
-    for (elem <- lines_source) {
-      val split = elem.split("==")
-      val key = split(0)
-      val value = split(1)
-      properties.setProperty(key,value)
-    }
-    properties
-  }
 }
