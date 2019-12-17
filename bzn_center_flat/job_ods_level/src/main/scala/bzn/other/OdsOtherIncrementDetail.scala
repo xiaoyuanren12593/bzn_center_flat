@@ -31,17 +31,17 @@ import org.apache.spark.sql.hive.HiveContext
    // 接口数据拿到增量,核心库的数据全量写入
     val res = OdsOtherToHive(hiveContext)
     res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
-      .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
 
     val frame = HiveDataPerson(hiveContext)
     frame.registerTempTable("PersonBaseInfoData")
-    hiveContext.sql("INSERT OVERWRITE table odsdb.ods_all_business_person_base_info_detail_test PARTITION(business_line = 'official',years) select * from PersonBaseInfoData")
+    hiveContext.sql("INSERT OVERWRITE table odsdb.ods_all_business_person_base_info_detail PARTITION(business_line = 'official',years) select * from PersonBaseInfoData")
 
 
     //婚礼纪数据增量写入
     val data = weddingData(hiveContext)
     data.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
-      .saveAsTable("odsdb.ods_all_business_person_base_info_detail_test")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
 
 
     sc.stop()
@@ -77,7 +77,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 读取接口当月数据
 
-    val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_all_business_person_base_info_detail_test")
+    val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_all_business_person_base_info_detail")
       .where("substring(cast(getNow() as string),1,7) = years and business_line_salve = 'inter'")
 
     //拿到当月数据的增量
@@ -179,7 +179,7 @@ import org.apache.spark.sql.hive.HiveContext
 
 
     // 读取hive的表中的数据
-    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail_test")
+    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail")
       .where("business_id_salve = 'wedding'")
 
     //判断增量数据
@@ -195,3 +195,4 @@ import org.apache.spark.sql.hive.HiveContext
 
 
 }
+

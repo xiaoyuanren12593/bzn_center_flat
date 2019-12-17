@@ -1,7 +1,6 @@
 package bzn.ods.policy
 
 import bzn.job.common.{MysqlUntil, Until}
-
 import bzn.ods.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -11,12 +10,12 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/12/17
 * @Describe:
-*/ object OdsHealthPreserveDetail extends SparkUtil with Until with MysqlUntil {
+*/ object OdsHealthRenewalDetailTest extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
 
     val sc = sparkConf._2
 
@@ -36,6 +35,7 @@ import org.apache.spark.sql.hive.HiveContext
     val bPolicyBzncen = readMysqlTable(hiveContext, "b_policy_bzncen", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106")
       .selectExpr("policy_no as policy_no_salve", "proposal_no", "holder_name", "sell_channel_name")
+
 
     //读取健康续期表
 

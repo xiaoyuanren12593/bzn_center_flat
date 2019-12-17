@@ -1,7 +1,6 @@
 package bzn.ods.policy
 
 import bzn.job.common.{MysqlUntil, Until}
-
 import bzn.ods.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -11,7 +10,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Author:liuxiang
 * @Date：2019/12/17
 * @Describe:
-*/ object OdsHealthPreserveDetail extends SparkUtil with Until with MysqlUntil {
+*/ object OdsHealthRenewalDetail extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -24,6 +23,7 @@ import org.apache.spark.sql.hive.HiveContext
     val res = HealthPreserve(hiveContext)
     hiveContext.sql("truncate table odsdb.ods_health_installment_plan")
     res.write.mode(SaveMode.Append).saveAsTable("odsdb.ods_health_installment_plan")
+
     sc.stop()
 
   }
@@ -36,6 +36,7 @@ import org.apache.spark.sql.hive.HiveContext
     val bPolicyBzncen = readMysqlTable(hiveContext, "b_policy_bzncen", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106")
       .selectExpr("policy_no as policy_no_salve", "proposal_no", "holder_name", "sell_channel_name")
+
 
     //读取健康续期表
 
@@ -65,7 +66,6 @@ import org.apache.spark.sql.hive.HiveContext
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time")
     res
-
   }
 
 }

@@ -32,7 +32,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     val preRes = TAccountsEmployerAddPreserve(hqlContext, sqlContext)
     val res = AddPolicyRes.unionAll(preRes)
-    res.printSchema()
+   // res.printSchema()
     /* saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
        "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
     // preRes.show(100)
@@ -204,7 +204,6 @@ import org.apache.spark.{SparkConf, SparkContext}
       "has_behalf,behalf_status,premium_invoice_type,economy_company,economy_rates,economy_fee,technical_service_rates,technical_service_fee," +
       "consulting_service_rates,consulting_service_fee,service_fee_check_time,service_fee_check_status,has_brokerage,brokerage_ratio,brokerage_fee," +
       "brokerage_pay_status,remake,create_time,update_time,operator from t_accounts_employer_intermediate_temp")
-
 
     /**
       * 读取业务表的数据
@@ -460,7 +459,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     val policyAndPreserveDetailRes = odsPolicyPreserveDetail.join(odsPolicyDetail, 'policy_id === 'policy_id_salve, "leftouter")
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
-        "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject", "policy_status","order_date","policy_source_code","policy_source_name")
+        "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
+        "policy_status","order_date","policy_source_code","policy_source_name")
 
 
     /**
