@@ -46,8 +46,8 @@ trait DataBaseUtil {
             val value = record.get(i - 1)
             val dateType = columnDataTypes(i - 1)
             if (value != null) { //如何值不为空,将类型转换为String
-              println(value)
-              preparedStatement.setString(i, value.toString)
+//              println(value)
+//              preparedStatement.setString(i, value.toString)
               dateType match {
                 case _: ByteType => preparedStatement.setInt(i, record.getAs[Int](i - 1))
                 case _: ShortType => preparedStatement.setInt(i, record.getAs[Int](i - 1))
@@ -71,7 +71,7 @@ trait DataBaseUtil {
             val fieldIndex = record.fieldIndex(updateColumns(i - 1))
             val value = record.get(fieldIndex)
             val dataType = columnDataTypes(fieldIndex)
-            println(s"@@ $fieldIndex,$value,$dataType")
+//            println(s"@@ $fieldIndex,$value,$dataType")
             if (value != null) { //如何值不为空,将类型转换为String
               dataType match {
                 case _: ByteType => preparedStatement.setInt(colNumbers + i, record.getAs[Int](fieldIndex))

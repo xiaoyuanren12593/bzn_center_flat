@@ -31,10 +31,10 @@ import org.apache.spark.{SparkConf, SparkContext}
     val res = SaleEasy(hiveContext)
 
     val tableMysqlName = "dm_batching_monitoring_detail"
-    val updateColumns: Array[String] = Array("status","remark")
-    val urlFormat = "mysql.url.103.dmdb"
-    val userFormat = "mysql.username.103"
-    val possWordFormat = "mysql.password.103"
+    val updateColumns: Array[String] = Array("status","remark","update_time")
+    val urlFormat = "mysql.url.106.dmdb"
+    val userFormat = "mysql.username.106"
+    val possWordFormat = "mysql.password.106"
     val driverFormat = "mysql.driver"
     val nowTime = getNowTime().substring(0,10)
 
@@ -42,14 +42,15 @@ import org.apache.spark.{SparkConf, SparkContext}
 //    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_saleeasy_sports_detail")
 
     val tableName = "dm_saleeasy_sports_detail"
-    val urlTest = "clickhouse.url.odsdb.test"
+    val urlTest = "clickhouse.url"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
 
     writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
 
-    val data = hiveContext.sql("select * from dwdb.dw_saleeasy_sports_detail limit 100").count()
+    val data = readClickHouseTable(hiveContext:SQLContext,tableName: String,urlTest:String,user:String,possWord:String)
+      .limit(100).count()
 
     if(data > 0){
       val dataMonitor =
@@ -63,7 +64,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     sc.stop()
   }
-
 
   /**
     * 读取数据
@@ -140,15 +140,10 @@ import org.apache.spark.{SparkConf, SparkContext}
         .toDF("policy_code", "insure_code", "premium", "holder_name", "insure_company_name", "channel_name", "policy_type",
           "start_date", "end_date", "order_date", "num_pople")
 
-      val res1 = odsPolicyDetail.selectExpr("policy_code")
-        .where("policy_code = 'AHAZK79E4C19PAAA1176'")
-
       //读取产品表
-      val odsProductDetail = hqlContext.sql("select product_code ,one_level_pdt_cate,product_name from odsdb.ods_product_detail")
-
+      val odsProductDetail = hqlContext.sql("select product_code ,one_level_pdt_cate,product_name,business_line from odsdb.ods_product_detail")
 
      //体育渠道表
-
       val odsSportsCustomers = hqlContext.sql("select name,customer_type,sales_name,source,type from odsdb.ods_sports_customers_dimension")
         .where("type = 1")
         .map(x => {
@@ -171,20 +166,19 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
    // 保单表关联产品表
-
       val policyAndproduct = odsPolicyDetail.join(odsProductDetail, odsPolicyDetail("insure_code") === odsProductDetail("product_code"), "leftouter")
         .selectExpr("policy_code", "insure_code", "premium", "holder_name", "insure_company_name", "channel_name", "policy_type",
-          "start_date", "end_date", "order_date", "product_name", "num_pople", "one_level_pdt_cate")
+          "start_date", "end_date", "order_date", "product_name", "num_pople", "business_line")
 
 
       // 将上述结果关联体育渠道表
-
       val res = policyAndproduct.join(odsSportsCustomers, policyAndproduct("channel_name") === odsSportsCustomers("name"), "leftouter")
-        .where("one_level_pdt_cate ='体育'")
-        .selectExpr("getUUID() as id", "policy_code", "cast(premium as decimal(14,4)) as premium", "holder_name", "insure_company_name",
+        .where("business_line ='体育' and policy_code is not null")
+        .distinct()
+        .selectExpr("getUUID() as id", "case when policy_code = '' then null else policy_code end as policy_code", "cast(premium as decimal(14,4)) as premium", "holder_name", "insure_company_name",
           "channel_name", "start_date", "end_date", "order_date", "product_name", "policy_type", "source as type", "customerType as type_detail",
           "sales","num_pople","cast(date_format(getNow(),'yyyy-MM-dd') as date) as date", "cast(getNow() as timestamp) as dw_create_time")
-//      res.show()
+//      res.show()WWWWWW
       res.printSchema()
       res
     }

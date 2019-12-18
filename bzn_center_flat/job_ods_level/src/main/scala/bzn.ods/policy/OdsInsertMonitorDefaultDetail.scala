@@ -28,10 +28,10 @@ object OdsInsertMonitorDefaultDetail extends SparkUtil with DataBaseUtil with  U
     import hiveContext.implicits._
 
     val tableMysqlName = "dm_batching_monitoring_detail"
-    val updateColumns: Array[String] = Array("status","remark")
-    val urlFormat = "mysql.url.103.dmdb"
-    val userFormat = "mysql.username.103"
-    val possWordFormat = "mysql.password.103"
+    val updateColumns: Array[String] = Array("status","remark","update_time")
+    val urlFormat = "mysql.url.106.dmdb"
+    val userFormat = "mysql.username.106"
+    val possWordFormat = "mysql.password.106"
     val driverFormat = "mysql.driver"
     val nowTime = getNowTime().substring(0,10)
 

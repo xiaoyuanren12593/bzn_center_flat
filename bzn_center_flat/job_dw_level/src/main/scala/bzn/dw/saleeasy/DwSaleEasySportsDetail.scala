@@ -30,24 +30,21 @@ object DwSaleEasySportsDetail  extends  SparkUtil with Until with DataBaseUtil{
 
     val tableMysqlName = "dm_batching_monitoring_detail"
     val updateColumns: Array[String] = Array("status","remark","update_time")
-    val urlFormat = "mysql.url.103.dmdb"
-    val userFormat = "mysql.username.103"
-    val possWordFormat = "mysql.password.103"
+    val urlFormat = "mysql.url.106.dmdb"
+    val userFormat = "mysql.username.106"
+    val possWordFormat = "mysql.password.106"
     val driverFormat = "mysql.driver"
     val nowTime = getNowTime().substring(0,10)
 
-    hiveContext.sql("truncate table dwdb.dw_saleeasy_sports_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_saleeasy_sports_detail")
-
     val tableName = "dm_saleeasy_sports_detail"
-    val urlTest = "clickhouse.url.odsdb.test"
+    val urlTest = "clickhouse.url"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
-
     writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
 
-    val data = hiveContext.sql("select * from dwdb.dw_saleeasy_sports_detail limit 100").count()
+    val data = readClickHouseTable(hiveContext:SQLContext,tableName: String,urlTest:String,user:String,possWord:String)
+      .limit(100).count()
 
     if(data > 0){
       val dataMonitor =
@@ -58,6 +55,7 @@ object DwSaleEasySportsDetail  extends  SparkUtil with Until with DataBaseUtil{
       insertOrUpdateDFtoDBUsePoolNew(tableMysqlName: String, dataMonitor: DataFrame, updateColumns: Array[String],
         urlFormat:String,userFormat:String,possWordFormat:String,driverFormat:String)
     }
+
     sc.stop()
   }
 
@@ -137,7 +135,7 @@ object DwSaleEasySportsDetail  extends  SparkUtil with Until with DataBaseUtil{
         "start_date", "end_date", "order_date", "num_pople")
 
     //读取产品表
-    val odsProductDetail = hqlContext.sql("select product_code ,one_level_pdt_cate,product_name from odsdb.ods_product_detail")
+    val odsProductDetail = hqlContext.sql("select product_code ,one_level_pdt_cate,product_name,business_line from odsdb.ods_product_detail")
 
     //体育渠道表
     val odsSportsCustomers = hqlContext.sql("select name,customer_type,sales_name,source,type from odsdb.ods_sports_customers_dimension")
@@ -164,12 +162,14 @@ object DwSaleEasySportsDetail  extends  SparkUtil with Until with DataBaseUtil{
     // 保单表关联产品表
     val policyAndproduct = odsPolicyDetail.join(odsProductDetail, odsPolicyDetail("insure_code") === odsProductDetail("product_code"), "leftouter")
       .selectExpr("policy_code", "insure_code", "premium", "holder_name", "insure_company_name", "channel_name", "policy_type",
-        "start_date", "end_date", "order_date", "product_name", "num_pople", "one_level_pdt_cate")
+        "start_date", "end_date", "order_date", "product_name", "num_pople", "business_line")
+
 
     // 将上述结果关联体育渠道表
     val res = policyAndproduct.join(odsSportsCustomers, policyAndproduct("channel_name") === odsSportsCustomers("name"), "leftouter")
-      .where("one_level_pdt_cate ='体育'")
-      .selectExpr("getUUID() as id", "policy_code", "cast(premium as decimal(14,4)) as premium", "holder_name", "insure_company_name",
+      .where("business_line ='体育' and policy_code is not null")
+      .distinct()
+      .selectExpr("getUUID() as id", "case when policy_code = '' then null else policy_code end as policy_code", "cast(premium as decimal(14,4)) as premium", "holder_name", "insure_company_name",
         "channel_name", "start_date", "end_date", "order_date", "product_name", "policy_type", "source as type", "customerType as type_detail",
         "sales","num_pople","cast(date_format(getNow(),'yyyy-MM-dd') as date) as date", "cast(getNow() as timestamp) as dw_create_time")
 
