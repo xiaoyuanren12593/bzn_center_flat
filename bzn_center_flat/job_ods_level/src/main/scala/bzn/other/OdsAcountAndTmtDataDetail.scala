@@ -167,7 +167,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
       */
     val odsChannelFirstThreeMonthTempDetail = readMysqlTable(sqlContext: SQLContext, tableName7: String,user:String,pass:String,driver:String,url:String)
       .selectExpr("channel_name as channel_name_salve","SUBSTRING(cast(first_start_date as string),1,10) as first_start_date",
-        "SUBSTRING(cast(reffer_date as string),1,10) as three_month","'雇主' as business_line_salve")
+        "SUBSTRING(cast(reffer_date as string),1,10) as three_month","SUBSTRING(cast(six_date as string),1,10) as six_month","'雇主' as business_line_salve")
 
     /**
       * 上述结果数据和销售团队表进行关联
@@ -251,50 +251,19 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
           "num_person","business_line", "short_name","province","source")
 
     /**
-      * 得到雇主的渠道数据，渠道直客的数据
-      */
-    val empData = sqlContext.sql(
-      """
-        |select
-        |   c.channel_name as channel_name_new,a.policy_code as policy_code_slave
-        |   from odsdb.ods_policy_detail a
-        |   left join odsdb.ods_product_detail b
-        |   on a.product_code = b.product_code
-        |   join odsdb.ods_ent_guzhu_salesman_detail c
-        |   on a.holder_name =c.ent_name
-        |   where b.one_level_pdt_cate = '蓝领外包' and a.policy_status in (0,1,-1) and c.channel_name <> '直客'
-      """.stripMargin)
-
-    /**
-      * 上述结果关联后，将关联不上的雇主业务条线的channel_name字段置空（直客填空值）
-      */
-    val result = res.join(empData,res("policy_code")===empData("policy_code_slave"),"leftouter")
-      .selectExpr("policy_code","project_name","product_code","product_name",
-        "case when policy_code_slave is null and business_line = '雇主' then null else channel_name end as channel_name",
-        "biz",
-        "performance_accounting_day","holder_name","premium_total",
-        "economic_rate",
-        "economy_fee",
-        "sale_name","policy_effective_time", "policy_expire_time","underwriting_company",
-        "insurance_company_short_name",
-        "technical_service_rates",
-        "technical_service_fee",
-        "has_brokerage","brokerage_ratio","brokerage_fee",
-        "num_person","business_line", "short_name","province","source")
-
-    /**
       * 制作个临时表，如果channel_name值为空，将holder_name值赋值给channel_name
       */
-    result.selectExpr("policy_code","case when length(channel_name) = 0 or channel_name is null then holder_name else channel_name end as cus","business_line",
+    res.selectExpr("policy_code","case when length(channel_name) = 0 or channel_name is null then holder_name else channel_name end as cus","business_line",
       "case when policy_effective_time is null then performance_accounting_day else policy_effective_time end as policy_effective_time")
       .registerTempTable("result_table")
+
 
     /**
       * 对上述结果的业务条线和客户进行分组，得到最小的开始时间，作为初投，
       */
     val newAndOldDateReffer = sqlContext.sql(
       """
-        |select cus as cus_reffer,business_line as business_line_reffer,substr(cast(min(policy_effective_time) as string),1,7) as date_reffer
+        |select cus as cus_refer,business_line as business_line_refer,substr(cast(min(policy_effective_time) as string),1,7) as date_refer
         |from result_table
         |where length(cus) > 0
         |GROUP BY cus,business_line
@@ -303,7 +272,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
     /***
       * 将开始时间为空的数据，用业绩核算时间替换，作为比较时间
       */
-    val resultTemp = result.selectExpr(
+    val resultTemp = res.selectExpr(
       "policy_code","project_name","product_code","product_name",
       "channel_name","case when length(channel_name) = 0 or channel_name is null then holder_name else channel_name end as cus",
       "biz",
@@ -321,7 +290,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
     /**
       * 上述结果进行关联的，比较时间和参照时间正在同一个月份作为新客，其他作为老客
       */
-    val resultEndTemp =  resultTemp.join(newAndOldDateReffer,'cus === 'cus_reffer and 'business_line==='business_line_reffer,"leftouter")
+    val resultEndTemp =  resultTemp.join(newAndOldDateReffer,'cus === 'cus_refer and 'business_line==='business_line_refer,"leftouter")
       .selectExpr(
         "policy_code","project_name","product_code","product_name",
         "channel_name","cus","substr(cast((case when policy_effective_time is null then performance_accounting_day else policy_effective_time end) as string),1,10) as date",
@@ -334,7 +303,9 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
         "technical_service_rates",
         "technical_service_fee",
         "has_brokerage","brokerage_ratio","brokerage_fee",
-        "num_person","business_line", "short_name","province","case when date = date_reffer then '新客' else '老客' end as new_old_cus","source"
+        "num_person","business_line", "short_name","province",
+        "case when date = date_refer then '新客' " +
+          "when date is not null and date_refer < date then '老客' else null end as new_old_cus","source"
       )
 
     /**
@@ -355,7 +326,10 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
         "has_brokerage","brokerage_ratio","brokerage_fee",
         "num_person","business_line", "short_name","province",
         "new_old_cus","first_start_date",
-        "case when business_line = '雇主' and date >= first_start_date and date <= three_month then '新客' else '老客' end as new_old_cus_new",
+        "case when business_line = '雇主' and date >= first_start_date and date <= three_month then '新客' " +
+          "when business_line = '雇主' and date > three_month then '老客' else null end as new_old_cus_new",
+        "case when business_line = '雇主' and date >= first_start_date and date <= six_month then '新客' " +
+          "when business_line = '雇主' and date > six_month then '老客' else null end as six_month_new_old_cus_new",
         "source"
       )
       .selectExpr(
@@ -373,20 +347,27 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
         "num_person","business_line", "short_name","province",
         "new_old_cus",
         "new_old_cus_new",
-        "case when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-10-01' then '纯老客' " +
+        "six_month_new_old_cus_new",
+        "case " +
+          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-10-01' then '纯老客' " +
           "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2017-10-01' and first_start_date <= '2018-10-01' then '2018新转老' " +
           "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2018-10-01' and first_start_date <= '2019-10-01' then '2019新转老' " +
           "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2019-10-01' then '2020新转老' " +
           "else null end cus_type_new",
+        "case " +
+          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-07-01' then '纯老客' " +
+          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2017-07-01' and first_start_date <= '2018-07-01' then '2018新转老' " +
+          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2018-07-01' and first_start_date <= '2019-07-01' then '2019新转老' " +
+          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2019-07-01' then '2020新转老' " +
+          "else null end six_month_cus_type_new",
         "source"
-      ).repartition(200)
-
+      )
 
     sqlContext.sql("truncate table odsdb.accounts_and_tmt_detail")
     resultEnd.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.accounts_and_tmt_detail")
 
     val tableName = "accounts_and_tmt_detail"
-    saveASMysqlTable(resultEnd: DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
+    saveASMysqlTable(resultEnd.repartition(100): DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
 
     resultEnd
   }

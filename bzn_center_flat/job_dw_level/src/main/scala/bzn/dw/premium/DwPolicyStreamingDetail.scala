@@ -31,6 +31,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
   def getHolderInfo(sqlContext:HiveContext) = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
+    sqlContext.udf.register("md5", (str: String) => MD5(str))
 
     /**
       * 读取近5d新增的保单数据
@@ -237,9 +238,9 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "proposal_no",
         "policy_code",
         "policy_no",
-        "case when channel_id_slave is null then null else ent_id end as ent_id",
-        "case when channel_id_slave is null then holder_name else ent_name end as ent_name",
-        "case when channel_id_slave is not null then channel_id_slave else channel_id end as channel_id",
+        "case when channel_id_slave is null and holder_name is not null then md5(holder_name) else ent_id end as ent_id",
+        "case when channel_id_slave is null and holder_name is not null then holder_name else ent_name end as ent_name",
+        "case when channel_id_slave is null and channel_id is not null then md5(channel_name) else channel_id_slave end as channel_id",
         "case when channel_name_slave is not null then channel_name_slave else channel_name end as channel_name",
         "status",
         "big_policy",
