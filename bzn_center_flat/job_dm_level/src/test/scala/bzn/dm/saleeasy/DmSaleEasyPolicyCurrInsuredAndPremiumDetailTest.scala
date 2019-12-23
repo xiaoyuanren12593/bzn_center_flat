@@ -52,7 +52,9 @@ import org.apache.spark.{SparkConf, SparkContext}
       "sku_coverage,sku_ratio,sku_charge_type,sku_price,sku_append,profession_type,ent_id,ent_name," +
       "salesman,team_name,biz_operator,consumer_category,channel_id,channel_name,customer_type,curr_insured,day_id,date_time," +
       "is_old_customer,policy_create_time,policy_update_time from dwdb.dw_saleeasy_policy_curr_insured_detail")
+      .where("day_id='20191220' and channel_name='临沂德聚仁合人力资源服务有限公司'")
 
+     dayIdInsure.show(100)
     /**
       * 读取每日已赚保费表
       */
@@ -96,6 +98,9 @@ import org.apache.spark.{SparkConf, SparkContext}
         "policy_create_time",
         "policy_update_time",
         "getNow() as dw_create_time")
+      .where("day_id='20191220' and channel_name='临沂德聚仁合人力资源服务有限公司'")
+    resTemp.show(100)
+
 
     /**
       * 读取理赔表
@@ -168,7 +173,9 @@ import org.apache.spark.{SparkConf, SparkContext}
         "policy_create_time",
         "policy_update_time",
         "getNow() as dw_create_time")
+      .where("day_id='20191220' and channel_name='临沂德聚仁合人力资源服务有限公司'")
 
+    res.show(100)
      res
 
 

@@ -92,7 +92,7 @@ import org.apache.spark.sql.hive.HiveContext
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
       .selectExpr("policy_id","policy_no","policy_code", "policy_start_date","policy_end_date","proposal_time","holder_name", "insured_subject", "product_code","product_name", "policy_status","one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name",
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName","insure_company_name","short_name","team_name","biz_operator")
-      .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
+      .where("one_level_pdt_cate = '蓝领外包'")
 
     //读取被保人表
     val odsPolicyInsured = sqlContext.sql("select policy_id as policy_id_salve,insured_name,insured_cert_no,insured_mobile,start_date,end_date,work_type from odsdb.ods_policy_insured_detail")
@@ -102,7 +102,10 @@ import org.apache.spark.sql.hive.HiveContext
       */
     val resProductAndInsuredDetail = resProductDetail.join(odsPolicyInsured,resProductDetail("policy_id")===odsPolicyInsured("policy_id_salve"),"leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject","insured_name", "insured_cert_no",
-        "insured_mobile","start_date","end_date","proposal_time","work_type",
+        "insured_mobile",
+        "case when start_date <= policy_start_date then policy_start_date else start_date end as start_date",
+        "case when end_date >= policy_end_date then policy_end_date else end_date end as end_date",
+        "proposal_time","work_type",
         "product_code","product_name","policy_status",
         "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name",
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "insure_company_name","short_name","team_name","biz_operator")
@@ -114,7 +117,6 @@ import org.apache.spark.sql.hive.HiveContext
       * 读取理赔表
       */
     val res2 = sqlContext.sql("SELECT policy_id as id,risk_cert_no,risk_date ,res_pay ,risk_cert_no,risk_date ,res_pay from dwdb.dw_policy_claim_detail")
-
     //将res1 关联 res2  判断理赔表中的 每个保单的每个人的理赔钱数
 
     val res3 = res1.join(res2, 'policy_id === 'id and 'insured_cert_no === 'risk_cert_no)
@@ -126,17 +128,21 @@ import org.apache.spark.sql.hive.HiveContext
         val start_date = x.getAs[Timestamp]("start_date")
         val end_date = x.getAs[Timestamp]("end_date")
         val riskDate = x.getAs[String]("risk_date")
-        val riskDateRes = if (riskDate != null) {
+        val riskDateResTemp = if (riskDate != null) {
           java.sql.Timestamp.valueOf(getFormatTime(getBeginTime(riskDate.replaceAll("/", "-").concat(" 00:00:00"))))
         } else {
+          null
+        }
+        val riskDateRes =  if (riskDateResTemp != null){
+          riskDateResTemp.toString.substring(0,10)} else {
           null
         }
         val res_pay = x.getAs[java.math.BigDecimal]("res_pay")
         (policy_id, insured_cert_no, start_date, end_date, riskDateRes, res_pay)
       }).toDF("id", "risk_cert_no", "start_date", "end_date", "risk_date", "res_pay")
 
-    val res4 = res3.selectExpr("id", "risk_cert_no", " start_date ", "end_date", "risk_date","res_pay",
-      "case when risk_date is null then 1 when risk_date >= start_date and risk_date <= end_date then 1 else 0 end as tem")
+    val res4 = res3.selectExpr("id", "risk_cert_no", "start_date ", "end_date", "risk_date","res_pay",
+      "case when risk_date is null then 1 when risk_date >= substring(cast(start_date as string),1,10) and risk_date <= substring(cast(end_date as string),1,10) then 1 else 0 end as tem")
       .where("tem = 1")
 
     val res5 = res4.selectExpr("id", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay",

@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import bzn.dw.premium.DwEmployerBaseInfoDetail.clean
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
@@ -28,6 +29,7 @@ import org.apache.spark.sql.hive.HiveContext
     sc.stop()
   }
 
+
   /**
     *
     * @param sqlContext 获取相关的信息
@@ -48,7 +50,7 @@ import org.apache.spark.sql.hive.HiveContext
     //读取保单明细表
     val odsPolicyDetailTemp: DataFrame = sqlContext.sql(
       """
-      select policy_id,policy_code,policy_no,holder_name,insured_subject,product_code , +
+      select policy_id,policy_code,policy_no,big_policy,holder_name,insured_subject,product_code, +
       policy_status,policy_start_date,policy_end_date,order_date as proposal_time,insure_company_name,channel_id as channelId, belongs_regional, +
       concat(substring(belongs_regional,1,4),'00') as belongs_regional_salve,first_premium,sum_premium,num_of_preson_first_policy,+
       channel_name as channelName,sales_name as salesName from odsdb.ods_policy_detail
@@ -61,7 +63,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     //保单明细关联 保险公司表
     val odsPolicyDetailInsureTempSalve = odsPolicyDetailTemp.join(insuranceCompany, odsPolicyDetailTemp("insure_company_name") === insuranceCompany("insurance_company"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no", "policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy", "policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
         "belongs_regional","belongs_regional_salve","sum_premium","num_of_preson_first_policy","product_code","channelId", "channelName", "salesName")
 
     val frame = odsPolicyDetailInsureTempSalve.selectExpr("holder_name", "policy_start_date", "belongs_regional_salve").map(x => {
@@ -87,7 +89,7 @@ import org.apache.spark.sql.hive.HiveContext
     }).toDF("holderName", "belongs_regional_salve_temp", "policy_start_date_temp")
 
     val odsPolicyDetailInsureTemp = odsPolicyDetailInsureTempSalve.join(frame, 'holder_name === 'holderName, "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no","policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
         "belongs_regional", "belongs_regional_salve_temp as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName")
 
     /**
@@ -99,7 +101,7 @@ import org.apache.spark.sql.hive.HiveContext
       * 保单明细表与地域信息关联 如果企业联系人对应多个城市 拿保单开始时间最近的投保城市
       */
     val odsPolicyDetail = odsPolicyDetailInsureTemp.join(odsArea,odsPolicyDetailInsureTemp("belongs_regional_salve")===odsArea("code"),"leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no","policy_status", "policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status", "policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy", "product_code","belongs_regional", "belongs_regional_salve","province as holder_province","holder_city",
         "channelId", "channelName", "salesName")
 
@@ -125,7 +127,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     // 将关联结果与保单明细表关联
     val resDetail = odsPolicyDetail.join(enterperiseAndSaleRes, odsPolicyDetail("holder_name") === enterperiseAndSaleRes("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no","policy_status","policy_start_date","policy_end_date","proposal_time", "insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date","policy_end_date","proposal_time", "insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy","product_code","belongs_regional","belongs_regional_salve", "holder_province","holder_city","ent_id", "ent_name",
         "channel_id","channelId", "channel_name","channelName","salesName","salesman", "team_name","biz_operator","consumer_category","business_source")
 
@@ -134,25 +136,25 @@ import org.apache.spark.sql.hive.HiveContext
 
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no","policy_status","policy_start_date","proposal_time","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date","proposal_time","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
         "sum_premium","num_of_preson_first_policy","product_code","product_name","belongs_regional", "belongs_regional_salve","holder_province","holder_city","one_level_pdt_cate",
         "two_level_pdt_cate","ent_id", "ent_name", "channel_id","channelId", "channel_name","channelName","salesName","salesman", "team_name","biz_operator","consumer_category","business_source")
-      .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
+      .where("one_level_pdt_cate = '蓝领外包'")
 
     /**
       * 读取理赔表
       */
-    val dwPolicyClaimDetail = sqlContext.sql("SELECT policy_id as id, sum(pre_com) as pre_com,sum(final_payment) as final_payment,sum(res_pay) as res_pay from dwdb.dw_policy_claim_detail GROUP BY policy_id")
+    // val dwPolicyClaimDetail = sqlContext.sql("SELECT policy_id as id, sum(pre_com) as pre_com,sum(final_payment) as final_payment,sum(res_pay) as res_pay from dwdb.dw_policy_claim_detail GROUP BY policy_id")
 
     /**
       * 将上述结果与理赔表关联
       */
-    val insuredAndClaimRes = resProductDetail.join(dwPolicyClaimDetail, resProductDetail("policy_id") === dwPolicyClaimDetail("id"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no","policy_status", "policy_start_date","policy_end_date","proposal_time","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
-        "sum_premium","num_of_preson_first_policy","product_code","product_name","belongs_regional","belongs_regional_salve", "holder_province","holder_city","one_level_pdt_cate",
-        "two_level_pdt_cate","ent_id","ent_name", "channel_id","channelId", "channel_name","channelName","salesName","salesman","team_name","biz_operator","consumer_category","business_source","pre_com",
-        "final_payment", "res_pay")
-
+    /* val insuredAndClaimRes = resProductDetail.join(dwPolicyClaimDetail, resProductDetail("policy_id") === dwPolicyClaimDetail("id"), "leftouter")
+       .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status", "policy_start_date","policy_end_date","proposal_time","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+         "sum_premium","num_of_preson_first_policy","product_code","product_name","belongs_regional","belongs_regional_salve", "holder_province","holder_city","one_level_pdt_cate",
+         "two_level_pdt_cate","ent_id","ent_name", "channel_id","channelId", "channel_name","channelName","salesName","salesman","team_name","biz_operator","consumer_category","business_source","pre_com",
+         "final_payment", "res_pay")
+ */
     //读取方案信息表
     val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
       "sku_ratio,sku_price,sku_charge_type,tech_service_rate,economic_rate," +
@@ -160,11 +162,12 @@ import org.apache.spark.sql.hive.HiveContext
 
 
     //将上述结果与方案信息表关联
-    val res = insuredAndClaimRes.join(odsPolicyProductPlanDetail, insuredAndClaimRes("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"), "leftouter")
+    val res = resProductDetail.join(odsPolicyProductPlanDetail, resProductDetail("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"), "leftouter")
       .selectExpr(
         "getUUID() as id",
         "clean(policy_id) as policy_id",
         "clean(policy_no) as policy_no",
+        "big_policy",
         "clean(policy_code) as policy_code",
         "policy_status",
         "policy_start_date",
@@ -203,9 +206,6 @@ import org.apache.spark.sql.hive.HiveContext
         "economic_rate",
         "commission_discount_rate",
         "commission_rate",
-        "cast(pre_com as decimal(14,4)) as pre_com",
-        "cast(final_payment as decimal(14,4)) as final_payment",
-        "cast(res_pay as decimal(14,4)) as res_pay",
         "getNow() as dw_create_time")
     res.printSchema()
     res

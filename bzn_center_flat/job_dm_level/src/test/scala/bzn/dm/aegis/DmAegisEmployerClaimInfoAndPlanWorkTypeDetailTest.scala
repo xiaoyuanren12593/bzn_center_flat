@@ -49,7 +49,8 @@ object DmAegisEmployerClaimInfoAndPlanWorkTypeDetailTest extends SparkUtil with 
       "cast(now() as timestamp) as create_time,cast(now() as timestamp) as update_time from dwdb.dw_policy_claim_detail")
 
     val dwEmployerBaseinfoPersonDetailOne =
-      sqlContext.sql("select  policy_code,insured_cert_no,work_type ,row_number() over (partition by policy_code,insured_cert_no order by policy_start_date desc) as rand1 from dwdb.dw_employer_baseinfo_person_detail")
+      sqlContext.sql("select  policy_code,insured_cert_no,work_type ,row_number() over (partition by policy_code,insured_cert_no order by policy_start_date desc) as rand1,product_code " +
+        "from dwdb.dw_employer_baseinfo_person_detail where product_code not in ('LGB000001','17000001')")
       .where("rand1 = 1")
       .selectExpr("policy_code as policy_code_slave","insured_cert_no as insured_cert_no_slave","work_type")
 
