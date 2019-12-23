@@ -78,7 +78,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
     val dwEmployerBaseinfoDetail =
       sqlContext.sql("select policy_id as policy_id_master,policy_code as policy_code_master,channel_id,channel_name,policy_start_date," +
         "case when policy_end_date is null then policy_start_date else policy_end_date end as policy_end_date,insure_company_name," +
-        "insure_company_short_name,sku_charge_type from dwdb.dw_employer_baseinfo_detail")
+        "insure_company_short_name,sku_charge_type from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
 
     /**
       * 读取时间维度表

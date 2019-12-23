@@ -118,7 +118,7 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
       sqlContext.sql("select policy_code,policy_no,policy_id,holder_name,7 as status,ent_id,ent_name,channel_id,channel_name,insure_company_short_name," +
         "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
         "insured_subject,regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
-        " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail")
+        " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
 
     /**
       * 读取当前在保人表
