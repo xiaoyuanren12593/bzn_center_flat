@@ -80,7 +80,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取销售团队表
       */
-    val odsEntSalesTeamDimension = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
+    val odsEntSalesTeamDimension = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
       * 保单表和产品方案表进行关联
