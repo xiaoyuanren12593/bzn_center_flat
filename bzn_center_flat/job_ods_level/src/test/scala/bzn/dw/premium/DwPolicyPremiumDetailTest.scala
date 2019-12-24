@@ -7,7 +7,7 @@ import java.util.Date
 import bzn.job.common.Until
 import bzn.ods.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.hive.HiveContext
 
 /**
@@ -28,28 +28,19 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("odsdb.ods_preservation_detail")
     sc.stop()
   }
-
   /**
     * 出单保费
-    * @param sqlContext
+    * @param sqlContext 上下文
     */
-  def DwPolicyPremiumDetail(sqlContext:HiveContext) ={
+  def DwPolicyPremiumDetail(sqlContext:HiveContext) :DataFrame={
     import sqlContext.implicits._
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
-      (date + "")
+      date + ""
     })
-    sqlContext.udf.register("getDouble",(d:Double)=>{
-      if(d != null){
-        val decimal = BigDecimal.apply(d)
-        val res = decimal.setScale(4,BigDecimal.RoundingMode.HALF_UP).doubleValue()
-        res
-      }else{
-        d
-      }
-    })
+
     /**
       * 读取保单明细表
       */
@@ -71,7 +62,8 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       * 读取产品表
       */
     val odsProductDetail =
-      sqlContext.sql("select product_code,one_level_pdt_cate from odsdb.ods_product_detail")
+      sqlContext.sql("select product_code as product_code_slave,product_name,one_level_pdt_cate,two_level_pdt_cate,business_line from odsdb.ods_product_detail")
+        .where("product_code_slave is not null")
 
     /**
       * 保单新投保费和续投保费
@@ -81,16 +73,17 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         val policyCode = x.getAs[String]("policy_code")
-        var firstPremium = x.getAs[Double]("first_premium")
-        if(firstPremium ==null){
-          firstPremium = 0.0
+        val productCode = x.getAs[String]("product_code")
+        var firstPremium = x.getAs[java.math.BigDecimal]("first_premium")
+        if(firstPremium == null){
+          firstPremium = java.math.BigDecimal.valueOf(0.0)
         }
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
-        var policyStartDate = x.getAs[Timestamp]("policy_start_date")
-        var insureCompanyName = x.getAs[String]("insure_company_name")
-        var holderName = x.getAs[String]("holder_name")
-        var insuredSubject = x.getAs[String]("insured_subject")
-        var belongsRegional = x.getAs[String]("belongs_regional")
+        val policyStartDate: Timestamp = x.getAs[Timestamp]("policy_start_date")
+        val insureCompanyName = x.getAs[String]("insure_company_name")
+        val holderName = x.getAs[String]("holder_name")
+        val insuredSubject = x.getAs[String]("insured_subject")
+        val belongsRegional = x.getAs[String]("belongs_regional")
         var policyStartDateRes = ""
         if(policyStartDate != null && policyStartDate.toString.length > 10){
           policyStartDateRes = policyStartDate.toString.substring(0,10).replaceAll("-","")
@@ -107,11 +100,13 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
           del_batch_code = null
         }
 
-        (policyId,policyCode,insureCompanyName,add_batch_code,del_batch_code,preservePolicyNo,4,holderName,insuredSubject,belongsRegional,
+        (policyId,policyCode,productCode,insureCompanyName,add_batch_code,del_batch_code,preservePolicyNo,4,holderName,insuredSubject,belongsRegional,
           firstPremium,numOfPresonFirstPolicy,0.0,0,policyStartDateRes)
       })
-      .toDF("policy_id","policy_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
+      .toDF("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
         "insured_subject","belongs_regional","add_premium","add_person_count","del_premium","del_person_count","day_id")
+      .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
+        "insured_subject","belongs_regional","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","cast(del_premium as decimal(14,4)) as del_premium","del_person_count","day_id")
 
     /**
       * 续投
@@ -121,17 +116,18 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         val policyCode = x.getAs[String]("policy_code")
-        var firstPremium = x.getAs[Double]("first_premium")
-        if(firstPremium ==null){
-          firstPremium = 0.0
+        val productCode = x.getAs[String]("product_code")
+        var firstPremium = x.getAs[java.math.BigDecimal]("first_premium")
+        if(firstPremium == null){
+          firstPremium = java.math.BigDecimal.valueOf(0.0)
         }
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
         val numOfPresonFirstPolicy = x.getAs[Int]("num_of_preson_first_policy")
-        var policyStartDate = x.getAs[Timestamp]("policy_start_date")
-        var insureCompanyName = x.getAs[String]("insure_company_name")
-        var holderName = x.getAs[String]("holder_name")
-        var insuredSubject = x.getAs[String]("insured_subject")
-        var belongsRegional = x.getAs[String]("belongs_regional")
+        val policyStartDate = x.getAs[Timestamp]("policy_start_date")
+        val insureCompanyName = x.getAs[String]("insure_company_name")
+        val holderName = x.getAs[String]("holder_name")
+        val insuredSubject = x.getAs[String]("insured_subject")
+        val belongsRegional = x.getAs[String]("belongs_regional")
         var policyStartDateRes = ""
         if(policyStartDate != null && policyStartDate.toString.length > 10){
           policyStartDateRes = policyStartDate.toString.substring(0,10).replaceAll("-","")
@@ -147,11 +143,13 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
           del_batch_code = null
         }
 
-        (policyId,policyCode,insureCompanyName,add_batch_code,del_batch_code,preservePolicyNo,2,holderName,insuredSubject,belongsRegional,firstPremium,
+        (policyId,policyCode,productCode,insureCompanyName,add_batch_code,del_batch_code,preservePolicyNo,2,holderName,insuredSubject,belongsRegional,firstPremium,
           numOfPresonFirstPolicy,0.0,0,policyStartDateRes)
       })
-      .toDF("policy_id","policy_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
+      .toDF("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
         "insured_subject","belongs_regional","add_premium","add_person_count","del_premium","del_person_count","day_id")
+      .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name",
+        "insured_subject","belongs_regional","cast(add_premium as decimal(14,4)) as add_premium","add_person_count","cast(del_premium as decimal(14,4)) as del_premium","del_person_count","day_id")
 
     /**
       * 保单中的退保  不算
@@ -169,11 +167,11 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
         }
         val preservePolicyNo = x.getAs[String]("preserve_policy_no")
         val numOfPresonFirstPolicy = x.getAs[Int]("num_of_preson_first_policy")
-        var policyStartDate = x.getAs[Timestamp]("policy_start_date")
-        var insureCompanyName = x.getAs[String]("insure_company_name")
-        var holderName = x.getAs[String]("holder_name")
-        var insuredSubject = x.getAs[String]("insured_subject")
-        var belongsRegional = x.getAs[String]("belongs_regional")
+        val policyStartDate = x.getAs[Timestamp]("policy_start_date")
+        val insureCompanyName = x.getAs[String]("insure_company_name")
+        val holderName = x.getAs[String]("holder_name")
+        val insuredSubject = x.getAs[String]("insured_subject")
+        val belongsRegional = x.getAs[String]("belongs_regional")
         var policyStartDateRes = ""
         if(policyStartDate != null && policyStartDate.toString.length > 10){
           policyStartDateRes = policyStartDate.toString.substring(0,10).replaceAll("-","")
@@ -200,10 +198,10 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       */
     val preserveReNewPremium = odsPolicyDetail.join(odsPreseveDetail,odsPolicyDetail("policy_id") ===odsPreseveDetail("policy_id_preserve"))
       .where("preserve_status = 1 and preserve_type = 2")
-      .selectExpr("policy_id","policy_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
-        "insured_subject","belongs_regional","case when add_premium is null then 0.0 else add_premium end as add_premium",
+      .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
+        "insured_subject","belongs_regional","cast(case when add_premium is null then 0.0 else add_premium end as decimal(14,4)) as add_premium",
         "case when add_person_count is null then 0 else add_person_count end as add_person_count",
-        "case when del_premium is null then 0.0 else del_premium end as del_premium",
+        "cast(case when del_premium is null then 0.0 else del_premium end as decimal(14,4)) as del_premium",
         "case when del_person_count is null then 0 else del_person_count end as del_person_count","preserve_effect_date as day_id")
 
     /**
@@ -211,49 +209,47 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
       */
     val preserveAddAndDelPremium = odsPolicyDetail.join(odsPreseveDetail,odsPolicyDetail("policy_id") ===odsPreseveDetail("policy_id_preserve"))
       .where("preserve_status = 1 and preserve_type = 1")
-      .selectExpr("policy_id","policy_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
-        "insured_subject","belongs_regional","case when add_premium is null then 0.0 else add_premium end as add_premium",
+      .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
+        "insured_subject","belongs_regional","cast(case when add_premium is null then 0.0 else add_premium end as decimal(14,4)) as add_premium",
         "case when add_person_count is null then 0 else add_person_count end as add_person_count",
-        "case when del_premium is null then 0.0 else del_premium end as del_premium",
+        "cast(case when del_premium is null then 0.0 else del_premium end as decimal(14,4)) as del_premium",
         "case when del_person_count is null then 0 else del_person_count end as del_person_count","preserve_effect_date as day_id")
-
 
     /**
       * 保全类型中的退保
       */
     val preserveCancelPremium = odsPolicyDetail.join(odsPreseveDetail,odsPolicyDetail("policy_id") ===odsPreseveDetail("policy_id_preserve"))
       .where("preserve_type = 3")
-      .selectExpr("policy_id","policy_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
-        "insured_subject","belongs_regional","case when add_premium is null then 0.0 else add_premium end as add_premium",
+      .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","preserve_type as premium_type","holder_name",
+        "insured_subject","belongs_regional","cast(case when add_premium is null then 0.0 else add_premium end as decimal(14,4)) as add_premium",
         "case when add_person_count is null then 0 else add_person_count end as add_person_count",
-        "case when del_premium is null then 0.0 else del_premium end as del_premium",
+        "cast(case when del_premium is null then 0.0 else del_premium end as decimal(14,4)) as del_premium",
         "case when del_person_count is null then 0 else del_person_count end as del_person_count","preserve_effect_date as day_id")
 
     val res = newPolicy.unionAll(renewPolicy)
-//      .unionAll(cancelPolicy)
+      //      .unionAll(cancelPolicy)
       .unionAll(preserveReNewPremium)
       .unionAll(preserveAddAndDelPremium)
       .unionAll(preserveCancelPremium)
-      .selectExpr("policy_id","policy_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type","holder_name","insured_subject",
-        "belongs_regional","add_premium","add_person_count","del_premium","del_person_count",
-        "(add_person_count+del_person_count) as sum_preson","(add_premium+del_premium) as sum_premium","day_id")
+      .selectExpr("policy_id","policy_code","product_code","insure_company_name","add_batch_code","del_batch_code","preserve_id","premium_type",
+        "holder_name","insured_subject","belongs_regional","add_premium","add_person_count","del_premium","del_person_count",
+        "(add_person_count-del_person_count) as sum_preson","(add_premium+del_premium) as sum_premium","day_id")
+
     /**
       * 读取方案表
       */
-    val odsPolicyProductPlan = sqlContext.sql("select policy_code as policy_code_plan,product_code,product_name,one_level_pdt_cate," +
-      "two_level_pdt_cate,business_line,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type,tech_service_rate,economic_rate" +
-      ",commession_rate from odsdb.ods_policy_product_plan")
+    val odsPolicyProductPlan = sqlContext.sql("select policy_code as policy_code_plan,sku_coverage,sku_append,sku_ratio,sku_price," +
+      "sku_charge_type,tech_service_rate,economic_rate,commission_discount_rate,commission_rate from odsdb.ods_policy_product_plan_detail")
 
     val resPlan = res.join(odsPolicyProductPlan,res("policy_code")===odsPolicyProductPlan("policy_code_plan"),"leftouter")
-      .selectExpr("policy_id","policy_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
-        "product_code","product_name","one_level_pdt_cate","two_level_pdt_cate","business_line","add_batch_code","del_batch_code",
-        "preserve_id","premium_type","holder_name","insured_subject","belongs_regional","commession_rate","tech_service_rate","economic_rate",
-        "add_premium","add_person_count","del_premium","del_person_count","sum_preson","sum_premium","day_id")
+      .selectExpr("policy_id","policy_code","product_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
+        "add_batch_code","del_batch_code","preserve_id","premium_type","holder_name","insured_subject","belongs_regional","commission_rate",
+        "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count","sum_preson","sum_premium","day_id")
 
     /**
       * 读取销售数据
       */
-    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
+    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
       * 读取销售渠道表
@@ -261,18 +257,25 @@ object DwPolicyPremiumDetailTest extends SparkUtil with Until{
     val odsEntGuzhuSalesmanDetail = sqlContext.sql("select ent_id,ent_name,channel_name,salesman from odsdb.ods_ent_guzhu_salesman_detail")
     val entAndSale =
       odsEntGuzhuSalesmanDetail.join(odsSalesmanDetail,odsEntGuzhuSalesmanDetail("salesman")===odsSalesmanDetail("sale_name"),"leftouter")
-      .selectExpr("ent_name","case when channel_name = '直客' then ent_name else channel_name end as channel_name","salesman","team_name")
+        .selectExpr("ent_name","case when channel_name = '直客' then ent_name else channel_name end as channel_name","salesman","team_name")
 
     /**
       * 和渠道销售进行关联
       */
     val endRes = resPlan.join(entAndSale,resPlan("holder_name")===entAndSale("ent_name"),"leftouter")
+      .selectExpr("policy_id","policy_code","product_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
+        "add_batch_code","del_batch_code","preserve_id","premium_type","holder_name","insured_subject","salesman as sale_name","team_name",
+        "belongs_regional","commission_rate", "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
+        "sum_preson","sum_premium","day_id")
+      .distinct()
+
+    val result = endRes.join(odsProductDetail,endRes("product_code")===odsProductDetail("product_code_slave"),"leftouter")
       .selectExpr("getUUID() as id","policy_id","policy_code","sku_coverage","sku_ratio","sku_append","sku_charge_type","sku_price","insure_company_name",
         "product_code","product_name","one_level_pdt_cate","two_level_pdt_cate","business_line","add_batch_code","del_batch_code",
-        "preserve_id","premium_type","holder_name","insured_subject","salesman as sale_name","team_name","belongs_regional","commession_rate"
-        ,"tech_service_rate","economic_rate","add_premium","add_person_count","del_premium","del_person_count",
-        "getDouble(sum_preson) as sum_preson","getDouble(sum_premium) as sum_premium","day_id","getNow() as dw_create_time")
-    endRes.printSchema()
-    endRes
+        "preserve_id","premium_type","holder_name","insured_subject","sale_name","team_name","belongs_regional","commission_rate",
+        "tech_service_rate","economic_rate","commission_discount_rate","add_premium","add_person_count","del_premium","del_person_count",
+        "sum_preson","sum_premium","day_id","getNow() as dw_create_time")
+result.printSchema()
+    result
   }
 }

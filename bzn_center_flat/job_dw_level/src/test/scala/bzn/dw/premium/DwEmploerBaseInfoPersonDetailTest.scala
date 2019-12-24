@@ -28,7 +28,6 @@ import org.apache.spark.sql.hive.HiveContext
     val hiveContext = sparkConf._4
     val res = EmployerBaseInfoPersonDetail(hiveContext)
      res.printSchema()
-
     sc.stop()
   }
 
@@ -76,7 +75,7 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("ent_id", "ent_name", "channel_id", "channel_name","salesman","biz_operator")
 
     //读取销售团队表
-    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
+    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
       * 关联两个表，拿字段
