@@ -57,7 +57,7 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
     val res1 = hiveContext.sql("select policy_id,insured_cert_no,policy_start_date,policy_end_date from policyAndInsuredTemp group by policy_id,insured_cert_no,policy_start_date,policy_end_date")
 
     //
-    
+
 
 
 
