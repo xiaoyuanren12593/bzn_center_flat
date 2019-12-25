@@ -167,7 +167,9 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
       */
     val odsChannelFirstThreeMonthTempDetail = readMysqlTable(sqlContext: SQLContext, tableName7: String,user:String,pass:String,driver:String,url:String)
       .selectExpr("channel_name as channel_name_salve","SUBSTRING(cast(first_start_date as string),1,10) as first_start_date",
-        "SUBSTRING(cast(reffer_date as string),1,10) as three_month","SUBSTRING(cast(six_date as string),1,10) as six_month","'雇主' as business_line_salve")
+        "SUBSTRING(cast(reffer_date as string),1,10) as three_month","SUBSTRING(cast(six_date as string),1,10) as six_month",
+        "SUBSTRING(cast(twelve_date as string),1,10) as twelve_month",
+        "'雇主' as business_line_salve")
 
     /**
       * 上述结果数据和销售团队表进行关联
@@ -330,6 +332,8 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
           "when business_line = '雇主' and date > three_month then '老客' else null end as new_old_cus_new",
         "case when business_line = '雇主' and date >= first_start_date and date <= six_month then '新客' " +
           "when business_line = '雇主' and date > six_month then '老客' else null end as six_month_new_old_cus_new",
+        "case when business_line = '雇主' and date >= first_start_date and date <= twelve_month then '新客' " +
+          "when business_line = '雇主' and date > twelve_month then '老客' else null end as twelve_month_new_old_cus_new",
         "source"
       )
       .selectExpr(
@@ -348,18 +352,12 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
         "new_old_cus",
         "new_old_cus_new",
         "six_month_new_old_cus_new",
-        "case " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-10-01' then '纯老客' " +
+        "twelve_month_new_old_cus_new",
+        "case when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-10-01' then '纯老客' " +
           "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2017-10-01' and first_start_date <= '2018-10-01' then '2018新转老' " +
           "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2018-10-01' and first_start_date <= '2019-10-01' then '2019新转老' " +
           "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2019-10-01' then '2020新转老' " +
           "else null end cus_type_new",
-        "case " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-07-01' then '纯老客' " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2017-07-01' and first_start_date <= '2018-07-01' then '2018新转老' " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2018-07-01' and first_start_date <= '2019-07-01' then '2019新转老' " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2019-07-01' then '2020新转老' " +
-          "else null end six_month_cus_type_new",
         "source"
       )
 

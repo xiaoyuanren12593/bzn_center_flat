@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.{ClickHouseUntil, MysqlUntil, Until}
+import bzn.job.common.{ClickHouseUntil, DataBaseUtil, MysqlUntil, Until}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:51
   * describe: 每天新增的数据
   **/
-object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil{
+object DmPolicyStreamingDetail extends SparkUtil with Until with DataBaseUtil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -64,6 +64,30 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with ClickHouseUntil
       exeSql(sqlClick,urlTest:String,user:String,possWord:String,driver:String)
       writeClickHouseTable(result:DataFrame,tableName: String,SaveMode.Append,urlTest:String,user:String,possWord:String,driver:String)
 
+      val toMysql = res.selectExpr(
+          "id",
+          "policy_code",
+          "inc_dec_order_no as preserve_id",
+          "ent_id",
+          "ent_name",
+          "channel_id",
+          "channel_name",
+          "status",
+          "curr_insured",
+          "pre_continue_person_count",
+          "sale_name",
+          "biz_operator",
+          "create_time",
+          "update_time"
+      )
+      val tableName1 = "dm_b_clickthrouth_emp_continue_policy_detail"
+
+      val userMysql106 = "mysql.username.106"
+      val passMysql106 = "mysql.password.106"
+      val driverMysql106 = "mysql.driver"
+      val urlMysql106 = "mysql_url.106.dmdb"
+
+      saveASMysqlTable(toMysql: DataFrame, tableName1: String, SaveMode.Overwrite,userMysql106:String,passMysql106:String,driverMysql106:String,urlMysql106:String)
     }
 
     sc.stop()

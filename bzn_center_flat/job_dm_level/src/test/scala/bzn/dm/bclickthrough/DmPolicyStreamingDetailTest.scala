@@ -52,6 +52,7 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with ClickHouseU
       val date = df.format(new Date())// new Date()为获取当前系统时间
       date + ""
     })
+
     import sqlContext.implicits._
 
     /**
