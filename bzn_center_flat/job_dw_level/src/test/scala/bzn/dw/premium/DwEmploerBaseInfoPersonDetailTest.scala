@@ -149,8 +149,7 @@ import org.apache.spark.sql.hive.HiveContext
       "case when risk_date is null then 1 when risk_date >= substring(cast(start_date as string),1,10) and risk_date <= substring(cast(end_date as string),1,10) then 1 else 0 end as tem")
       .where("tem = 1")
 
-    val res5 = res4.selectExpr("id", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay",
-      "tem")
+    val res5 = res4.selectExpr("id", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay","tem")
 
     res5.registerTempTable("tempTable")
     val tenmpTbles = sqlContext.sql("select sum(res_pay) as res_pay,id,risk_cert_no,start_date_temp from tempTable group by id, risk_cert_no,start_date_temp")
