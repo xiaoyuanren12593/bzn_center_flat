@@ -255,7 +255,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val resEnd =
       bPolicyHolderCompanyProductNew.join(odsProductDetail,bPolicyHolderCompanyProductNew("product_code")===odsProductDetail("product_code_slave"),"leftouter")
         .selectExpr("id","master_policy_no","order_id","order_code","user_id","product_code","product_name","policy_id ","policy_code","policy_type",
-          "case when product_code_slave is not null then sum_premium else first_premium end first_premium","sum_premium",
+          "case when product_code_slave is not null then first_premium else sum_premium end first_premium","sum_premium",
           "holder_name","insured_subject","policy_start_date","policy_end_date","policy_effect_date","order_date","pay_type","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","policy_status",
           "preserve_policy_no","insure_company_name","belongs_regional","belongs_industry","channel_id","channel_name","num_of_preson_first_policy",
           "policy_create_time","policy_update_time","dw_create_time")
@@ -594,7 +594,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "clean(product_name) as product_name",
         "clean(policy_id) as policy_id",
         "clean(policy_code) as policy_code",
-        "case when product_code_slave is not null then sum_premium else first_premium end first_premium",
+        "case when product_code_slave is not null then first_premium else sum_premium  end first_premium",
         "sum_premium",
         "trim(holder_name) as holder_name",
         "case when clean(insured_subject) is null then trim(holder_name) else clean(insured_subject) end as insured_subject",
