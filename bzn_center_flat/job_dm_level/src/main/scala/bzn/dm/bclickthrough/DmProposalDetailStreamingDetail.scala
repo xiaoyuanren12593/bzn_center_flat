@@ -6,9 +6,9 @@ import java.util.Date
 
 import bzn.dm.util.SparkUtil
 import bzn.job.common.{DataBaseUtil, Until}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -16,14 +16,14 @@ import org.apache.spark.sql.hive.HiveContext
   * Time:17:17
   * describe: this is new class
   **/
-object DmProposalDetailStreamingDetailTest extends SparkUtil with Until with DataBaseUtil{
+object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBaseUtil{
   case class DmbBatchingMonitoringDetail(id: String,source:String,project_name:String,warehouse_level:String,house_name:String,table_name:String,
                                          status:Int,remark:String,create_time:Timestamp,update_time:Timestamp)
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
@@ -62,6 +62,7 @@ object DmProposalDetailStreamingDetailTest extends SparkUtil with Until with Dat
         "date_format(now(),'yyyy-MM-dd HH:dd:ss') as create_time",
         "date_format(now(),'yyyy-MM-dd HH:dd:ss') as update_time"
       )
+
 
     /**
       * 得到雇主的每日在保人数和上月同期在保人数

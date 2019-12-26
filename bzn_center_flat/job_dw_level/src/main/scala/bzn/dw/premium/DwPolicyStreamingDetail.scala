@@ -236,7 +236,7 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
       odsEntGuzhuSalesmanDetail.selectExpr("salesman_slave","biz_operator_slave","channel_name_slave")
         .distinct()
 
-    val resTemp = data5DBeforeRes.join(odsEntGuzhuSalesmanDetail,data5DBeforeRes("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
+    val res = data5DBeforeRes.join(odsEntGuzhuSalesmanDetail,data5DBeforeRes("holder_name")===odsEntGuzhuSalesmanDetail("ent_name"),"leftouter")
       .selectExpr(
         "getUUID() as id",
         "proposal_no",
@@ -261,39 +261,9 @@ object DwPolicyStreamingDetail extends SparkUtil with Until with MysqlUntil{
         "sku_charge_type",
         "clean(inc_dec_order_no) as inc_dec_order_no",
         "clean(case when salesman_slave is not null then salesman_slave else sales_name end) as  sales_name",
-        "clean(case when biz_operator_slave is not null then biz_operator_slave else null end) as biz_operator",
+        "clean(case when biz_operator_slave is not null then biz_operator_slave else biz_operator end) as biz_operator",
         "date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time"
-      )
-
-    val res = resTemp.join(odsEntGuzhuSalesmanDetailTemp,resTemp("channel_name")===odsEntGuzhuSalesmanDetailTemp("channel_name_slave"),"leftouter")
-      .selectExpr(
-        "id",
-        "proposal_no",
-        "policy_code",
-        "policy_no",
-        "ent_id",
-        "ent_name",
-        "channel_id",
-        "channel_name",
-        "status",
-        "big_policy",
-        "proposal_time_preserve",//批单投保时间
-        "proposal_time_policy",//保单投保时间
-        "policy_start_date",//保单起期
-        "policy_end_date",//投保止期
-        "preserve_start_date",
-        "preserve_end_date",
-        "insured_count",
-        "insured_company",//被保人企业
-        "insurance_name",
-        "insurance_company_short_name",
-        "sku_charge_type",
-        "inc_dec_order_no",
-        "sales_name",
-        "clean(case when biz_operator_slave is not null then biz_operator_slave else null end) as biz_operator",
-        "create_time",
-        "update_time"
       )
 
     res

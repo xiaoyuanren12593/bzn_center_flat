@@ -28,7 +28,7 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with DataBaseUtil{
     val now = getNowTime().substring(0,10)
 
     val tableName = "emp_continue_policy_all_info_detail"
-    val urlTest = "clickhouse.url.odsdb.test"
+    val urlTest = "clickhouse.url"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
@@ -36,7 +36,7 @@ object DmPolicyStreamingDetail extends SparkUtil with Until with DataBaseUtil{
     /**
       * 先删除clickhouse中当天你的分区数据
       */
-    val sqlClick = "ALTER TABLE odsdb_test.emp_continue_policy_all_info_detail DROP PARTITION '"+now+"'"
+    val sqlClick = "ALTER TABLE odsdb.emp_continue_policy_all_info_detail DROP PARTITION '"+now+"'"
 
     /**
       * 删除hive分区然后在插入，第一个是测试分区，保证删除成功后再记性插入正确的分区数据
