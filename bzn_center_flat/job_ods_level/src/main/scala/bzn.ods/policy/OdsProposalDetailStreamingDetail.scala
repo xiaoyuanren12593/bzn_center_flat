@@ -50,8 +50,8 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
       */
     val tablebTpProposalStreamingbBznbusi = "t_proposal_streaming_bznbusi"
     val tpProposalStreamingbBznbusi = readMysqlTable(sqlContext: SQLContext, tablebTpProposalStreamingbBznbusi: String,user:String,pass:String,driver:String,url:String)
-      .where("business_type = 2 and insurance_insure_time <= cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 18:00:00') as timestamp) and " +
-        "insurance_insure_time >= cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 00:00:00') as timestamp)")
+      .where("business_type = 2 and insurance_insure_time <= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 18:00:00') as timestamp) and " +
+        "insurance_insure_time >= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 00:00:00') as timestamp)")
       .selectExpr(
         "proposal_no",
         "insurance_policy_no as policy_code",
@@ -111,6 +111,8 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "insurance_policy_no",
         "inc_revise_sum as add_person_count",
         "dec_revise_sum as del_person_count",
+        "case when inc_revise_premium is null then 0 else inc_revise_premium end as inc_revise_premium",
+        "case when dec_revise_premium is null then 0 else dec_revise_premium end as dec_revise_premium",
         "insurance_name",
         "effective_date",
         "create_time",
@@ -146,7 +148,7 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "'' as profession_code",
         "'' as profession_type",
         "cast('' as decimal(14,4)) as sku_price",
-        "cast('' as decimal(14,4)) as first_premium",
+        "(inc_revise_premium+dec_revise_premium) as premium",//增减员
         "cast('' as decimal(14,0)) as sku_coverage",
         "cast('' as int) as sku_ratio",
         "cast('' as int) as sku_charge_type",
@@ -166,7 +168,7 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "clean(profession_code) as profession_code",
         "clean(profession_type) as profession_type",
         "sku_price",
-        "first_premium",
+        "premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",

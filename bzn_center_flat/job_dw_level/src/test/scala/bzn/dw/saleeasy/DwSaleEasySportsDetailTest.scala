@@ -16,7 +16,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Describe:
 */
  object  DwSaleEasySportsDetailTest extends  SparkUtil with Until with DataBaseUtil{
-  case class DmbBatchingMonitoringDetail(id: String,project_name:String,warehouse_leve:String,house_name:String,table_name:String,
+  case class DmbBatchingMonitoringDetail(id: String,source:String,project_name:String,warehouse_level:String,house_name:String,table_name:String,
                                          status:Int,remark:String,create_time:Timestamp,update_time:Timestamp)
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -32,14 +32,16 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     val tableMysqlName = "dm_batching_monitoring_detail"
     val updateColumns: Array[String] = Array("status","remark","update_time")
-    val urlFormat = "mysql.url.106.dmdb"
-    val userFormat = "mysql.username.106"
-    val possWordFormat = "mysql.password.106"
+    val urlFormatOfficial = "mysql.url.106.dmdb"
+    val userFormatOfficial = "mysql.username.106"
+    val possWordFormatOfficial = "mysql.password.106"
+
+    val urlFormat = "mysql.url.103.dmdb"
+    val userFormat = "mysql.username.103"
+    val possWordFormat = "mysql.password.103"
+
     val driverFormat = "mysql.driver"
     val nowTime = getNowTime().substring(0,10)
-
-//    hiveContext.sql("truncate table dwdb.dw_saleeasy_sports_detail")
-//    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_saleeasy_sports_detail")
 
     val tableName = "dm_saleeasy_sports_detail"
     val urlTest = "clickhouse.url"
@@ -55,11 +57,14 @@ import org.apache.spark.{SparkConf, SparkContext}
     if(data > 0){
       val dataMonitor =
         Seq(
-          DmbBatchingMonitoringDetail(nowTime+"dm_batching_monitoring_detail","销售易体育数据清洗","dm","dmdb","dm_batching_monitoring_detail",1,"销售易体育数据清洗-成功",new Timestamp(System.currentTimeMillis()),new Timestamp(System.currentTimeMillis()))
+          DmbBatchingMonitoringDetail(nowTime+"`dm_saleeasy_sports_detail`"+"clickhouse","clickhouse","销售易体育数据清洗","dw","odsdb","dm_saleeasy_sports_detail",0,"销售易体育数据清洗-失败",new Timestamp(System.currentTimeMillis()),new Timestamp(System.currentTimeMillis()))
         ).toDF()
 
       insertOrUpdateDFtoDBUsePoolNew(tableMysqlName: String, dataMonitor: DataFrame, updateColumns: Array[String],
         urlFormat:String,userFormat:String,possWordFormat:String,driverFormat:String)
+
+      insertOrUpdateDFtoDBUsePoolNew(tableMysqlName: String, dataMonitor: DataFrame, updateColumns: Array[String],
+        urlFormatOfficial:String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String)
     }
 
     sc.stop()

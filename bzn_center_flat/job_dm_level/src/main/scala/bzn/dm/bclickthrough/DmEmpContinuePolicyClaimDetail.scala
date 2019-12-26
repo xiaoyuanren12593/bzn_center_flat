@@ -23,14 +23,13 @@ object DmEmpContinuePolicyClaimDetail extends SparkUtil with Until with ClickHou
 
     val tableName1 = "emp_risk_monitor_kri_detail"
     val tableName2 = "emp_continue_policy_claim_detail"
-    val urlTest = "clickhouse.url.odsdb.test"
     val urlOfficial = "clickhouse.url"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
 
     val ckData = getCKRiskMonitorData(hiveContext:HiveContext,tableName1: String,urlOfficial:String,user:String,possWord:String)
-    writeClickHouseTable(ckData:DataFrame,tableName2: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
+    writeClickHouseTable(ckData:DataFrame,tableName2: String,SaveMode.Overwrite,urlOfficial:String,user:String,possWord:String,driver:String)
 
     sc.stop()
   }
