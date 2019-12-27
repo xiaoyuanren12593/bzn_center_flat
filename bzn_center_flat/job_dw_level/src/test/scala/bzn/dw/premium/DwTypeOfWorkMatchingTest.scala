@@ -56,8 +56,8 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
     //保单明细关联 保险公司表
     val odsPolicyDetail = odsPolicyDetailTemp.join(insuranceCompany, odsPolicyDetailTemp("insure_company_name") === insuranceCompany("insurance_company"), "leftouter")
       .selectExpr("policy_id", "policy_code",
-       "sum_premium",
-        "holder_name", "insured_subject","product_code", "insure_company_name", "short_name")
+        "sum_premium",
+        "holder_name", "insured_subject", "product_code", "insure_company_name", "short_name")
 
 
     //读取产品表
@@ -65,15 +65,15 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
 
     //将明细表与产品表关联
     val ProductAndPolicy: DataFrame = odsPolicyDetail.join(odsProductDetail, odsPolicyDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "product_code_temp as product_code", "policy_code", "product_name", "holder_name", "insured_subject","sum_premium","insure_company_name", "short_name","one_level_pdt_cate")
+      .selectExpr("policy_id", "product_code_temp as product_code", "policy_code", "product_name", "holder_name", "insured_subject", "sum_premium", "insure_company_name", "short_name", "one_level_pdt_cate")
 
     //读取被保人明细表
     val odsPolicyInsuredDetail: DataFrame = sqlContext.sql(" select policy_id as id,insured_name,insured_cert_no,start_date,end_date,work_type,job_company,gender,age from odsdb.ods_policy_insured_detail")
 
     // 将上述结果与被保人表关联
     val policyInsure: DataFrame = ProductAndPolicy.join(odsPolicyInsuredDetail, ProductAndPolicy("policy_id") === odsPolicyInsuredDetail("id"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject","sum_premium","insure_company_name", "short_name","insured_name",
-        "insured_cert_no", "start_date","end_date","work_type", "job_company",
+      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject", "sum_premium", "insure_company_name", "short_name", "insured_name",
+        "insured_cert_no", "start_date", "end_date", "work_type", "job_company",
         "gender", "age", "one_level_pdt_cate")
 
     //读取企业联系人
@@ -81,10 +81,10 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
 
     //将上述结果与企业联系人关联
     val enterprise = policyInsure.join(odsEnterpriseDetail, policyInsure("holder_name") === odsEnterpriseDetail("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject","sum_premium",
+      .selectExpr("policy_id", "policy_code", "product_code", "product_name", "holder_name", "insured_subject", "sum_premium",
         "insure_company_name", "short_name",
         "ent_name", "ent_id", "insured_name",
-        "insured_cert_no","start_date","end_date", "work_type", "job_company","gender", "age", "one_level_pdt_cate")
+        "insured_cert_no", "start_date", "end_date", "work_type", "job_company", "gender", "age", "one_level_pdt_cate")
 
     //读取客户归属销售表 拿到渠道id和名称
     val odsEntGuzhuDetail: DataFrame =
@@ -93,8 +93,8 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
     //将上述结果与客户归属销售表做关联
     val entAndGuzhuDetil = enterprise.join(odsEntGuzhuDetail, enterprise("ent_id") === odsEntGuzhuDetail("entid"), "leftouter")
       .selectExpr("policy_id", "policy_code", "product_code", "holder_name", "product_name",
-        "channel_id", "channel_name", "insured_subject","sum_premium","insure_company_name", "short_name",
-        "insured_name", "insured_cert_no","start_date","end_date",
+        "channel_id", "channel_name", "insured_subject", "sum_premium", "insure_company_name", "short_name",
+        "insured_name", "insured_cert_no", "start_date", "end_date",
         "work_type", "job_company", "gender", "age", "one_level_pdt_cate")
 
     //读取方案类别表
@@ -102,29 +102,29 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
       .map(x => {
         val policyCodTemp = x.getAs[String]("policy_code_temp")
         val professionType = x.getAs[String]("profession_type")
-        val result = if(professionType != null && professionType.length >0 ){
-          val res = professionType.replaceAll("类","")
-          if(res == "5"){
-            (1,5)
-          }else{
+        val result = if (professionType != null && professionType.length > 0) {
+          val res = professionType.replaceAll("类", "")
+          if (res == "5") {
+            (1, 5)
+          } else {
             val sp1 = res.split("-")(0).toInt
             val sp2 = res.split("-")(1).toInt
-            (sp1,sp2)
+            (sp1, sp2)
           }
-        }else{
-          (-1,-1)
+        } else {
+          (-1, -1)
         }
-        (policyCodTemp,professionType,result._1,result._2)
+        (policyCodTemp, professionType, result._1, result._2)
       })
-      .toDF("policy_code_temp","profession_type","profession_type_slow","profession_type_high")
+      .toDF("policy_code_temp", "profession_type", "profession_type_slow", "profession_type_high")
 
     //将上述结果与方案类别表关联
     val WorkGardeAndEnt = entAndGuzhuDetil.join(odsWorkGradeDimension, entAndGuzhuDetil("policy_code") === odsWorkGradeDimension("policy_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code","holder_name",
+      .selectExpr("policy_id", "policy_code", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject","sum_premium", "insure_company_name", "short_name","insured_name", "insured_cert_no",
-        "start_date","end_date","work_type", "job_company",
-        "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high")
+        "insured_subject", "sum_premium", "insure_company_name", "short_name", "insured_name", "insured_cert_no",
+        "start_date", "end_date", "work_type", "job_company",
+        "gender", "age", "one_level_pdt_cate", "profession_type_slow", "profession_type_high")
 
     //读取bzn工种表
     val odsWorkMatching: DataFrame = sqlContext.sql("select primitive_work,work_name_check,work_name  from odsdb.ods_work_matching_dimension")
@@ -133,23 +133,23 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
     val resAndOdsWorkMatch = WorkGardeAndEnt.join(odsWorkMatching, WorkGardeAndEnt("work_type") === odsWorkMatching("primitive_work"), "leftouter")
       .selectExpr("policy_id", "policy_code", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject","sum_premium", "insure_company_name", "short_name",
-        "insured_name", "insured_cert_no","start_date","end_date", "work_type", "job_company",
-        "primitive_work", "work_name_check","work_name",
-        "gender", "age", "one_level_pdt_cate","profession_type_slow","profession_type_high")
+        "insured_subject", "sum_premium", "insure_company_name", "short_name",
+        "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "job_company",
+        "primitive_work", "work_name_check", "work_name",
+        "gender", "age", "one_level_pdt_cate", "profession_type_slow", "profession_type_high")
       .where("one_level_pdt_cate = '蓝领外包' and product_code not in ('LGB000001','17000001')")
     // and product_code not in ('LGB000001','17000001')
 
     //读取方案信息表
     val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type from odsdb.ods_policy_product_plan_detail")
 
-     // 将上述结果与方案信息表关联
+    // 将上述结果与方案信息表关联
     val WorkAndPlan = resAndOdsWorkMatch.join(odsPolicyProductPlanDetail, resAndOdsWorkMatch("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"))
       .selectExpr("policy_id", "policy_code", "holder_name",
         "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-        "insured_subject","sum_premium","insure_company_name", "short_name", "insured_name", "insured_cert_no","start_date",
-        "end_date", "work_type", "job_company", "primitive_work", "work_name_check","work_name",
-        "gender", "age", "one_level_pdt_cate","profession_type_slow",
+        "insured_subject", "sum_premium", "insure_company_name", "short_name", "insured_name", "insured_cert_no", "start_date",
+        "end_date", "work_type", "job_company", "primitive_work", "work_name_check", "work_name",
+        "gender", "age", "one_level_pdt_cate", "profession_type_slow",
         "profession_type_high", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type")
 
     //读取标准工种表 如果bzn_work_name 重复 拿最小的bzn_work_risk,取gs_work_risk的第一个,如果字段为空串,替换成-1
@@ -161,18 +161,18 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
         val bznWorkRisk = x.getAs[String]("bzn_work_risk")
         val gsWrokRisk = x.getAs[String]("gs_work_risk")
         val res = if (gsWrokRisk == "" || gsWrokRisk == null) -1 else if
-        (gsWrokRisk != null && gsWrokRisk.split("|")(0) =="S") 0
-        else{
+        (gsWrokRisk != null && gsWrokRisk.split("|")(0) == "S") 0
+        else {
           val restemp = gsWrokRisk.split("|")(0).toInt
           restemp
         }
 
-        (bznWorkName, bznWorkRisk,res)
+        (bznWorkName, bznWorkRisk, res)
 
-      }).toDF("bzn_work_name", "bzn_work_risk","gs_work_risk")
+      }).toDF("bzn_work_name", "bzn_work_risk", "gs_work_risk")
 
 
-     resTemp.registerTempTable("ods_work_risk_dimension_Temp")
+    resTemp.registerTempTable("ods_work_risk_dimension_Temp")
 
     val odsWorkRiskDimension = sqlContext.sql("select bzn_work_name as name, min(bzn_work_risk) as risk," +
       "min(gs_work_risk) as gs_work_risk from ods_work_risk_dimension_Temp group by bzn_work_name")
@@ -198,7 +198,7 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
         "clean(insure_company_name) as insure_company_name ", "clean(short_name) as short_name",
         "clean(insured_name) as insured_name",
         "clean(insured_cert_no) as insured_cert_no",
-        "start_date","end_date",
+        "start_date", "end_date",
         "clean(job_company) as job_company", //实际用工单位
         "gender",
         "age",
@@ -215,17 +215,17 @@ object DwTypeOfWorkMatchingTest extends SparkUtil with Until {
           "when work_type is not null and work_name_check='未知' then 0 " +
           "when work_type is not null and work_name_check is null then 0  " +
           "when work_type is null then 2 end as whether_recognition",
-        "case when profession_type is null then '未知' when cast(risk as int) >= profession_type_slow and  cast(risk as int) <= profession_type_high then '已知' else '未知' end as plan_recognition" ,//方案级别已匹配未匹配
+        "case when profession_type is null then '未知' when cast(risk as int) >= profession_type_slow and  cast(risk as int) <= profession_type_high then '已知' else '未知' end as plan_recognition", //方案级别已匹配未匹配
         "case when profession_type is null then '未知' when  gs_work_risk >=profession_type_slow and gs_work_risk <= profession_type_high then '已知' else '未知' end as gs_plan_recognition"
 
       )
 
-    val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "sku_coverage","sku_append","sku_ratio","sku_price","sku_charge_type",
+    val res = odsWorkMatch.selectExpr("id", "policy_id", "policy_code", "sku_coverage", "sku_append", "sku_ratio", "sku_price", "sku_charge_type",
       "holder_name",
       "product_code", "product_name", "profession_type", "channel_id", "channel_name",
-      "insured_subject","sum_premium", "insure_company_name", "short_name as insure_company_short_name",
-      "insured_name", "insured_cert_no", "start_date","end_date","work_type","primitive_work","job_company", "gender", "age",
-      "bzn_work_name","work_name","work_name_check","bzn_work_risk","cast(gs_work_risk as string) as gs_work_risk","recognition", "whether_recognition","plan_recognition","gs_plan_recognition","getNow() as dw_create_time")
+      "insured_subject", "sum_premium", "insure_company_name", "short_name as insure_company_short_name",
+      "insured_name", "insured_cert_no", "start_date", "end_date", "work_type", "primitive_work", "job_company", "gender", "age",
+      "bzn_work_name", "work_name", "work_name_check", "bzn_work_risk", "cast(gs_work_risk as string) as gs_work_risk", "recognition", "whether_recognition", "plan_recognition", "gs_plan_recognition", "getNow() as dw_create_time")
     res
 
   }
