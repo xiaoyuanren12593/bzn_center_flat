@@ -2,9 +2,9 @@ package bzn.ods.policy
 
 import bzn.job.common.{MysqlUntil, Until}
 import bzn.ods.util.SparkUtil
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /*
 * @Author:liuxiang
@@ -21,8 +21,9 @@ import org.apache.spark.sql.hive.HiveContext
 
     val hiveContext = sparkConf._4
     val res = HealthPreserve(hiveContext)
-    hiveContext.sql("truncate table odsdb.ods_health_installment_plan")
-    res.write.mode(SaveMode.Append).saveAsTable("odsdb.ods_health_installment_plan")
+   /* hiveContext.sql("truncate table odsdb.ods_health_installment_plan")
+    res.write.mode(SaveMode.Append).saveAsTable("odsdb.ods_health_installment_plan")*/
+    res.printSchema()
     sc.stop()
 
   }

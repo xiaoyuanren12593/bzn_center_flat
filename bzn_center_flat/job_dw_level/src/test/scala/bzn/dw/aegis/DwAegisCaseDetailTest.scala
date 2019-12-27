@@ -19,10 +19,10 @@ import org.apache.spark.sql.hive.HiveContext
 object DwAegisCaseDetailTest extends SparkUtil with Until {
 
   /**
-    * 获取配置信息
-    *
-    * @param args
-    */
+   * 获取配置信息
+   *
+   * @param args
+   */
   def main(args: Array[String]): Unit = {
 
     System.setProperty("HADOOP_USER_NAME", "hdfs")
@@ -32,16 +32,16 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = CaseDetail(hiveContext)
-   hiveContext.sql("truncate table dwdb.dw_guzhu_claim_case_detail")
-    res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_guzhu_claim_case_detail")
+    /* hiveContext.sql("truncate table dwdb.dw_guzhu_claim_case_detail")
+      res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_guzhu_claim_case_detail")*/
     sc.stop()
   }
 
   /**
-    *
-    * @param hiveContext
-    * @return
-    */
+   *
+   * @param hiveContext
+   * @return
+   */
 
   def CaseDetail(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
@@ -66,15 +66,11 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "policy_end_date", "insured_cert_no", "start_date", "end_date", "work_type", "job_company", "gender", "business_line")
     policyAndInsured.registerTempTable("policyAndInsuredTemp")
 
-
     //读取理赔表的数据,判断出险日期在他所在保单的承包日期中
     val res1 = hiveContext.sql("select id,case_no,policy_id,policy_code,risk_date,report_date,product_code,risk_name,risk_cert_no,case_status,disable_level," +
       "case_type,hos_benefits,medical_coverage,pre_com,disable_death_payment,delay_payment,case_close_date,final_payment from dwdb.dw_policy_claim_detail")
 
-    //println(res1.count())
-
     val res2 = hiveContext.sql("select policy_id as id_temp,insured_cert_no,start_date,big_policy,end_date,work_type,job_company,gender,business_line from policyAndInsuredTemp")
-
 
     val res3 = res2.join(res1, 'policy_id === 'id_temp and 'risk_cert_no === 'insured_cert_no)
       .where("start_date is not null")
@@ -99,20 +95,21 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         } else {
           null
         }
-        (id, riskDateRes, startDate, endDate, workType, jobCompany, gender,bigPolicy,businessLine)
-      }).toDF("id", "risk_date", "start_date", "end_date", "work_type", "job_company", "gender","big_policy","business_line")
+        (id, riskDateRes, startDate, endDate, workType, jobCompany, gender, bigPolicy, businessLine)
+      }).toDF("id", "risk_date", "start_date", "end_date", "work_type", "job_company", "gender", "big_policy", "business_line")
 
-    val res4 = res3.selectExpr("id", "risk_date as risk_date_salve", "start_date", "end_date", "work_type", "job_company", "gender","big_policy", "business_line",
+    val res4 = res3.selectExpr("id", "risk_date", "start_date", "end_date", "work_type", "job_company", "gender", "big_policy", "business_line",
       "case when risk_date is null then 1 when risk_date >= substring(cast(start_date as string),1,10) and risk_date <= substring(cast(end_date as string),1,10) then 1 else 0 end as tem")
       .where("tem = 1")
+    res4.select("risk_date").show(100)
 
-    val res5 = res4.selectExpr("id as id_salve", "start_date", "end_date", "work_type", "job_company", "gender","big_policy","business_line")
+    val res5 = res4.selectExpr("id as id_salve", "start_date", "end_date", "work_type", "job_company", "gender", "big_policy", "business_line")
 
     //拿到所有的案件号，不管出险日期在不在保单的状态中
     val dwPolicyClaimDetailTemp = res1.join(res5, 'id === 'id_salve, "leftouter")
-      .selectExpr("policy_code","case_no", "policy_id", "risk_date", "report_date", "product_code", "risk_name", "risk_cert_no", "case_status", "disable_level",
+      .selectExpr("policy_code", "case_no", "policy_id", "risk_date", "report_date", "product_code", "risk_name", "risk_cert_no", "case_status", "disable_level",
         "case_type", "hos_benefits", "medical_coverage", "pre_com", "case_close_date", "disable_death_payment", "delay_payment", "final_payment",
-        "start_date", "end_date", "work_type", "job_company", "gender","big_policy", "business_line").distinct()
+        "start_date", "end_date", "work_type", "job_company", "gender", "big_policy", "business_line").distinct()
 
     //读取bzn工种表
     val odsWorkMatchingTemp: DataFrame = hiveContext.sql("select primitive_work,work_name_check,work_name from odsdb.ods_work_matching_dimension")
@@ -144,47 +141,44 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
       .selectExpr("primitive_work", "work_name_check", "work_name", "name", "risk")
 
     val dwWorkTypeMatchingDetailTemp = dwPolicyClaimDetailTemp.join(odsWorkMatching, 'work_type === 'primitive_work, "leftouter")
-      .selectExpr("policy_code","case_no", "policy_id", "risk_date", "report_date", "product_code", "risk_name", "risk_cert_no",
+      .selectExpr("policy_code", "case_no", "policy_id", "risk_date", "report_date", "product_code", "risk_name", "risk_cert_no",
         "case_status", "disable_level", "case_type", "hos_benefits", "medical_coverage", "pre_com", "case_close_date",
         "delay_payment", "disable_death_payment", "final_payment", "work_type", "job_company", "gender", "start_date",
-        "primitive_work", "work_name_check", "work_name", "name", "risk","big_policy", "business_line")
+        "primitive_work", "work_name_check", "work_name", "name", "risk", "big_policy", "business_line")
 
     //读取方案类别表
     val odsWorkGradeDimension: DataFrame = hiveContext.sql("select policy_code as policy_code_temp,profession_type from odsdb.ods_work_grade_dimension")
       .map(x => {
         val policyCodTemp = x.getAs[String]("policy_code_temp")
         val professionType = x.getAs[String]("profession_type")
-        val result = if(professionType != null && professionType.length >0 ){
-          val res = professionType.replaceAll("类","")
-          if(res == "5"){
-            (1,5)
-          }else{
+        val result = if (professionType != null && professionType.length > 0) {
+          val res = professionType.replaceAll("类", "")
+          if (res == "5") {
+            (1, 5)
+          } else {
             val sp1 = res.split("-")(0).toInt
             val sp2 = res.split("-")(1).toInt
-            (sp1,sp2)
+            (sp1, sp2)
           }
-        }else{
-          (-1,-1)
+        } else {
+          (-1, -1)
         }
-        (policyCodTemp,professionType,result._1,result._2)
+        (policyCodTemp, professionType, result._1, result._2)
       })
-      .toDF("policy_code_temp","profession_type","profession_type_slow","profession_type_high")
+      .toDF("policy_code_temp", "profession_type", "profession_type_slow", "profession_type_high")
     val dwWorkTypeMatchingDetail = dwWorkTypeMatchingDetailTemp.join(odsWorkGradeDimension, 'policy_code === 'policy_code_temp, "leftouter")
       .selectExpr("case_no", "policy_id", "risk_date", "report_date", "product_code", "risk_name", "risk_cert_no",
         "case_status", "disable_level", "case_type", "hos_benefits", "medical_coverage", "pre_com", "case_close_date",
         "delay_payment", "disable_death_payment", "final_payment", "work_type", "job_company", "gender", "start_date",
         "primitive_work", "work_name_check", "work_name", "name", "risk", "big_policy", "profession_type", "business_line")
 
-
     //读取雇主基础信息表
     val dwEmployerBaseInfoDetail = hiveContext.sql("select policy_id as policy_id_salve,product_name,holder_name," +
       "insured_subject,channel_name,insure_company_name,insure_company_short_name,sale_name," +
       "team_name,biz_operator,sku_coverage,sku_append,sku_ratio,sku_price,sku_charge_type from dwdb.dw_employer_baseinfo_detail")
 
-    //匹配表 关联 雇主基础信息表
-
     //上层结果关联工种表
-    val resTempSalve = dwWorkTypeMatchingDetail.join(dwEmployerBaseInfoDetail, 'policy_id === 'policy_id_salve , "leftouter")
+    val resTempSalve = dwWorkTypeMatchingDetail.join(dwEmployerBaseInfoDetail, 'policy_id === 'policy_id_salve, "leftouter")
       .selectExpr(
         "case_no",
         "policy_id",
@@ -192,7 +186,7 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "case when report_date is null then '' else report_date end as report_date",
         "case when risk_name is null then '' else risk_name end as risk_name",
         "case when risk_cert_no is null then '' else risk_cert_no end as risk_cert_no",
-        "case when SUBSTRING(risk_cert_no,17,1) in('1','3','5','7','9') then '男'  else '女' end as gender",
+        "case when SUBSTRING(risk_cert_no,17,1) in('1','3','5','7','9') then '男'  when SUBSTRING(risk_cert_no,17,1) in('0','2','4','6','8') then '女' else '未知' end as gender",
         "case when cast(SUBSTRING(risk_date,1,4) as int) - cast(SUBSTRING(risk_cert_no,7,4) as int ) is null " +
           "then '' else cast(SUBSTRING(risk_date,1,4) as int) - cast(SUBSTRING(risk_cert_no,7,4) as int ) end as age",
         "case when concat(SUBSTRING(risk_cert_no,9,1),'0后') is null then '' else concat(SUBSTRING(risk_cert_no,9,1),'0后') end as age_time",
