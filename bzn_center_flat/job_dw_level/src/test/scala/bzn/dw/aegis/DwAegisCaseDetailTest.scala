@@ -16,7 +16,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Describe:
 */
 
-object DwAegisCaseDetailTest extends SparkUtil with Until {
+object DwAegisCaseDetailTest extends SparkUtil with Until with MysqlUntil {
 
   /**
    * 获取配置信息
@@ -32,8 +32,14 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = CaseDetail(hiveContext)
+    val res1 = res.select("risk_cert_no")
     /* hiveContext.sql("truncate table dwdb.dw_guzhu_claim_case_detail")
       res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_guzhu_claim_case_detail")*/
+
+    saveASMysqlTable(res,"ods_guzhu_claim_case_detail",
+      SaveMode.Overwrite,"mysql.username","mysql.password","mysql.driver","mysql.url")
+
+
     sc.stop()
   }
 
@@ -45,7 +51,8 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
 
   def CaseDetail(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
-
+     hiveContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+     hiveContext.udf.register("clean", (str: String) => clean(str))
     //读取保单明细表
     val odsPolicyDetailTempSalve: DataFrame = hiveContext.sql("select policy_id,holder_name,insured_subject,big_policy,policy_status,policy_start_date,policy_end_date,product_code from odsdb.ods_policy_detail")
       .where("policy_status in (1,0,-1)")
@@ -101,8 +108,7 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
     val res4 = res3.selectExpr("id", "risk_date", "start_date", "end_date", "work_type", "job_company", "gender", "big_policy", "business_line",
       "case when risk_date is null then 1 when risk_date >= substring(cast(start_date as string),1,10) and risk_date <= substring(cast(end_date as string),1,10) then 1 else 0 end as tem")
       .where("tem = 1")
-    res4.select("risk_date").show(100)
-
+ 
     val res5 = res4.selectExpr("id as id_salve", "start_date", "end_date", "work_type", "job_company", "gender", "big_policy", "business_line")
 
     //拿到所有的案件号，不管出险日期在不在保单的状态中
@@ -194,8 +200,8 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "case SUBSTRING(risk_cert_no,1,2) when '11' then '北京市' when '12' then '天津市' when '13' then '河北省' when '14' then '山西省' when '15' then '内蒙古自治区' when '21' then '辽宁省' when '22' then '吉林省' when '23' then '黑龙江省' when '31' then '上海市' when '32' then '江苏省' when '33' then '浙江省' when '34' then '安徽省' when '35' then '福建省' when '36' then '江西省' when '37' then '山东省' when '41' then '河南省' when '42' then '湖北省' when '43' then '湖南省' when '44' then '广东省' when '45' then '广西壮族自治区' " +
           "when '46' then '海南省' when '50' then '重庆市' when '51' then '四川省' when '52' then '贵州省' when '53' then '云南省' when '54' then '西藏自治区' when '61' then '陕西省' when '62' then '甘肃省' " +
           "when '63' then '青海省' when '64' then '宁夏回族自治区' when '65' then '新疆维吾尔自治区' when '71' then '台湾省' when '81' then '香港特别行政区' when '82' then '澳门特别行政区'  else '未知' end  as province ",
-        "null as city",
-        "null as county",
+        "clean('') as city",
+        "clean('') as county",
         "case when work_type is null then '' else work_type end as work_type",
         "case when risk is null then '' else risk end as risk",
         "case when profession_type is null then '' else profession_type end as insure_work_risk",
@@ -215,8 +221,8 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "case when sku_ratio is null then '' else sku_ratio end as sku_ratio",
         "case when sku_price is null then 0 else sku_price end as sku_price",
         "case when sku_charge_type is null then '' else sku_charge_type end as sku_charge_type",
-        "null as extend_time",
-        "null as extend_hospital",
+        "clean('') as extend_time",
+        "clean('') as extend_hospital",
         "case when case_status is null then '' else case_status end as case_status",
         "case when pre_com is null then '' else pre_com end as pre_com",
         "case when disable_level is null then '' else disable_level end as disable_level",
@@ -228,28 +234,30 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "case when disable_death_payment is null then 0 else disable_death_payment end as disable_death_payment",
         "case when final_payment is null then 0 else final_payment end as final_payment",
         "case when final_payment is null then pre_com else final_payment end as res_pay",
-        "null as hospital")
+        "clean('') as hospital").distinct()
 
     val res = resTempSalve.
-      selectExpr("case_no",
+      selectExpr(
+        "getUUID() as id",
+        "case_no",
         "policy_id",
         "risk_date",
         "report_date",
         "risk_name",
         "risk_cert_no",
-        "case when gender is null then '' else gender end as gender",
+        "case when gender is null then '' else gender end as sex",
         "age",
         "age_time",
         "constellation",
         "province",
-        "null as city",
-        "null as county",
-        "work_type",
+        "city",
+        "county",
+        "work_type as work_name",
         "risk",
         "insure_work_risk",
         "job_company",
         "holder_name",
-        "insured_subject",
+        "insured_subject as insure_subject",
         "channel_name",
         "sale_name",
         "biz_operator",
@@ -263,8 +271,8 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "sku_ratio",
         "sku_price",
         "sku_charge_type",
-        "null as extend_time",
-        "null as extend_hospital",
+        "extend_time",
+        "extend_hospital",
         "case_status",
         "pre_com",
         "disable_level",
@@ -278,7 +286,7 @@ object DwAegisCaseDetailTest extends SparkUtil with Until {
         "res_pay",
         "hospital",
         "case when res_pay <15000 then '一类' when res_pay>=15000 and res_pay<50000 then '二类' when res_pay >= 50000 and res_pay <300000 then '三类' " +
-          "when res_pay >=300000 and res_pay <800000 then '四类' when res_pay >=800000 then '五类' end as case_level").distinct()
+          "when res_pay >=300000 and res_pay <800000 then '四类' when res_pay >=800000 then '五类' end as case_level")
     //res.printSchema()
     res
 

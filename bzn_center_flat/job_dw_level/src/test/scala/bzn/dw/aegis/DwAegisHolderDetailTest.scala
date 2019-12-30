@@ -2,7 +2,7 @@ package bzn.dw.aegis
 
 import bzn.dw.aegis.DwAegisCaseDetailTest.{CaseDetail, sparkConfInfo}
 import bzn.dw.util.SparkUtil
-import bzn.job.common.Until
+import bzn.job.common.{MysqlUntil, Until}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
@@ -13,7 +13,7 @@ import org.apache.spark.sql.hive.HiveContext
 * @Describe:
 */
 
-   object DwAegisHolderDetailTest extends SparkUtil with Until {
+   object DwAegisHolderDetailTest extends SparkUtil with Until with  MysqlUntil{
 
      /**
        * 获取配置信息
@@ -29,16 +29,18 @@ import org.apache.spark.sql.hive.HiveContext
        val sc = sparkConf._2
        val hiveContext = sparkConf._4
        val res = HolderDetail(hiveContext)
-       hiveContext.sql("truncate table dwdb.dw_guzhu_policy_holder_detail")
-       res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_guzhu_policy_holder_detail")
-
+       /*hiveContext.sql("truncate table dwdb.dw_guzhu_policy_holder_detail")
+       res.write.mode(SaveMode.Append).saveAsTable("dwdb.dw_guzhu_policy_holder_detail")*/
+       saveASMysqlTable(res,"ods_guzhu_policy_holder_detail",
+         SaveMode.Overwrite,"mysql.username","mysql.password","mysql.driver","mysql.url")
        sc.stop()
      }
 
 
      def HolderDetail(hiveContext: HiveContext): DataFrame = {
        import hiveContext.implicits._
-
+       hiveContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+       hiveContext.udf.register("clean", (str: String) => clean(str))
        //读取雇主基础信息表
        val dwCustomerHolder = hiveContext.sql("select holder_name,channel_name,sale_name as salesman,min(policy_start_date) as policy_start_date," +
          "biz_operator,consumer_category,business_source,holder_province as province,holder_city as city " +
@@ -77,27 +79,27 @@ import org.apache.spark.sql.hive.HiveContext
 
        val resTemp1 = dwCustomerHolder.join(insuredIntraday,'holder_name==='holder_name_salve, "leftouter")
          .selectExpr(
+           "getUUID() as id",
            "case when holder_name is null then '' else holder_name end as holder_name",
            "case when channel_name is null then '' else channel_name end as channel_name",
            "case when province is null then '' else province end as province",
            "case when city is null then '' else city end as city",
-           "null as county",
-           "null as registration_time",
-           "null as registered_capital",
-           "null as industry_involved",
+           "clean('') as county",
+           "clean('') as registration_time",
+           "clean('') as registered_capital",
+           "clean('') as industry_involved",
            "case when policy_start_date is null then '' else policy_start_date end as policy_start_date",
            "case when curr_insured_count is null then 0 else curr_insured_count end as curr_insured_count",
            "case when salesman is null then '' else salesman end as salesman",
            "case when biz_operator is null then '' else biz_operator end as biz_operator",
            "case when consumer_category is null then  '' else consumer_category end as consumer_category",
            "case when business_source is null then  '' else business_source end as business_source",
-           "null as business_model",
-           "null as customer_size",
-           "null as customer_status",
-           "null as old_new_status",
-           "null as change_maJia")
+           "clean('') as business_model",
+           "clean('') as customer_size",
+           "clean('') as customer_status",
+           "clean('') as old_new_status",
+           "clean('') as change_maJia")
 
-       resTemp1.printSchema()
        resTemp1
      }
    }

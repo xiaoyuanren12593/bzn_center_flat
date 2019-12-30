@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/bzn-CRM.iml" filepath="$PROJECT_DIR$/.idea/bzn-CRM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/bzn-crm.iml" filepath="$PROJECT_DIR$/.idea/modules/bzn-crm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/bzn-crm-build.iml" filepath="$PROJECT_DIR$/.idea/modules/bzn-crm-build.iml" />
     </modules>
   </component>
 </project>
