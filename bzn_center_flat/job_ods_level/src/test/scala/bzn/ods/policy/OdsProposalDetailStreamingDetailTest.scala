@@ -59,10 +59,11 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 00:00:00') as timestamp) as da1",
         "premium_price",//保费单价
         "first_insure_premium",//初投保费
-        "4 as preserve_type",//初投保费
+        "4 as preserve_type",//业务类型
         "case when first_insure_master_num is null then 0 else first_insure_master_num end as insured_count",
         "insurance_name"
       )
+    tpProposalStreamingbBznbusi.show()
 
     /**
       * 读取投保方案信息表
@@ -99,6 +100,8 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "getNow() as dw_create_time"
       )
 
+    resProposal.show()
+
     /**
       * 读取保全表
       */
@@ -117,6 +120,7 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "status",
         "preservation_type as preserve_type"
       )
+
 
     /**
       * 众安的数据
