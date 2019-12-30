@@ -56,7 +56,7 @@ object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBas
         "case when sku_charge_type = 2 then sku_price/12 else sku_price end as sku_price",
         "premium",
         "sku_coverage",
-        "sku_ratio",
+        "case when sku_ratio = 1 then '5%' when sku_ratio = 2 then '10%' else null end as sku_ratio",
         "case when sku_charge_type = 1 then '月单' when sku_charge_type = 2 then '年单' else null end as sku_charge_type",
         "day_id",
         "date_format(now(),'yyyy-MM-dd HH:dd:ss') as create_time",
