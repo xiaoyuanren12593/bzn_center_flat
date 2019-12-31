@@ -42,7 +42,6 @@ import org.apache.spark.sql.hive.HiveContext
     val data = weddingData(hiveContext)
     data.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
-
     sc.stop()
   }
 
@@ -64,11 +63,11 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 获取mysql中接口的数据
       */
-    val properties: Properties = getProPerties()
-    val url = "jdbc:mysql://172.16.11.103:3306/bzn_open_all?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=root&password=123456"
+
 
     //拿到当前时间所在月份的数据
-    val data1: DataFrame = hiveContext.read.jdbc(url, "open_other_policy", properties)
+    val data1 = readMysqlTable(hiveContext,"open_other_policy","mysql.username.103",
+      "mysql.password.103","mysql.driver","mysql.url.103.bzn_open_all")
       .where("substring(cast(case when month is null then getNow() else month end as string),1,7) = substring(cast(getNow() as string),1,7)")
       .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
         "product_code", "null as sku_price", "'inter' as business_line", "substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
@@ -146,16 +145,15 @@ import org.apache.spark.sql.hive.HiveContext
 
   def weddingData(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
-    //建立链接
-    val url = "jdbc:mysql://172.16.11.106:3306/sourcedb?tinyInt1isBit=false&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&user=etluser&password=etluser"
-    val properties: Properties = getProPerties()
 
     //保单表
-    val openPolicy = hqlContext.read.jdbc(url, "open_policy_bznapi", properties)
+    val openPolicy = readMysqlTable(hqlContext,"open_policy_bznapi","mysql.username.106",
+      "mysql.password.106","mysql.driver","mysql.url.106")
       .selectExpr("policy_no", "proposal_no", "start_date", "end_date", "create_time", "update_time", "product_code", "premium")
 
     //被保人表保人表
-    val openInsured = hqlContext.read.jdbc(url, "open_insured_bznapi", properties)
+    val openInsured = readMysqlTable(hqlContext,"open_insured_bznapi","mysql.username.106",
+      "mysql.password.106","mysql.driver","mysql.url.106")
       .selectExpr("proposal_no as proposal_no_salve", "name", "cert_no", "tel")
 
     //保单表关联被保人表
@@ -185,7 +183,6 @@ import org.apache.spark.sql.hive.HiveContext
       .where("policy_id_salve is null")
       .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no",
         "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "premium as sku_price", "business_line", "years")
-
     res
   }
 }

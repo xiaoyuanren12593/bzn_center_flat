@@ -22,9 +22,9 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   **/
 object test extends Until{
   def main(args: Array[String]): Unit = {
-    println (getWeekOfDate ("2019-11-15"))
 
-    println(hashMD5("15011386758"))
+    println(hashMD5("''"))
+
   }
 
 

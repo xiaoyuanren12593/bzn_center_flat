@@ -50,7 +50,9 @@ trait Until {
         e.printStackTrace
       }
     }
-    val byteArray: Array[Byte] = input.trim.getBytes
+    if(input!=null)
+    {
+      val byteArray: Array[Byte] = input.trim.getBytes
     val md5Bytes: Array[Byte] = md5.digest(byteArray)
     var hexValue: String = ""
     var i: Integer = 0
@@ -61,7 +63,8 @@ trait Until {
       }
       hexValue = hexValue + (Integer.toHexString(str))
     }
-    return hexValue.toString
+    return hexValue.toString}
+    else  null
   }
 
   //将日期+8小时(24小时制)
