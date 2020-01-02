@@ -23,7 +23,7 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
 object test extends Until{
   def main(args: Array[String]): Unit = {
 
-    println(hashMD5("''"))
+    println(MD5(null))
 
   }
 
