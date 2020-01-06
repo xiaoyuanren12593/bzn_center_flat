@@ -28,7 +28,7 @@ import org.apache.spark.sql.hive.HiveContext
     hiveContext.setConf("hive.exec.dynamic.partition", "true")
     hiveContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
 
-   // 接口数据拿到增量,核心库的数据全量写入
+    // 接口数据拿到增量,核心库的数据全量写入
     val res = OdsOtherToHive(hiveContext)
     res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
@@ -47,10 +47,10 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   /**
-    * 上下文
-    *
-    *
-    */
+   * 上下文
+   *
+   *
+   */
   def OdsOtherToHive(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("getNow", () => {
@@ -61,13 +61,13 @@ import org.apache.spark.sql.hive.HiveContext
     })
 
     /**
-      * 获取mysql中接口的数据
-      */
+     * 获取mysql中接口的数据
+     */
 
 
     //拿到当前时间所在月份的数据
-    val data1 = readMysqlTable(hiveContext,"open_other_policy","mysql.username.103",
-      "mysql.password.103","mysql.driver","mysql.url.103.bzn_open_all")
+    val data1 = readMysqlTable(hiveContext, "open_other_policy", "mysql.username.103",
+      "mysql.password.103", "mysql.driver", "mysql.url.103.bzn_open_all")
       .where("substring(cast(case when month is null then getNow() else month end as string),1,7) = substring(cast(getNow() as string),1,7)")
       .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
         "product_code", "null as sku_price", "'inter' as business_line", "substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
@@ -90,10 +90,11 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   /**
-    * 核心库数据
-    * @param hqlContext
-    * @return
-    */
+   * 核心库数据
+   *
+   * @param hqlContext
+   * @return
+   */
   def HiveDataPerson(hqlContext: HiveContext): DataFrame = {
     hqlContext.udf.register("clean", (str: String) => clean(str))
     import hqlContext.implicits._
@@ -138,22 +139,22 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   /**
-    * 婚礼纪数据
-    *
-    * @param hqlContext
-    */
+   * 婚礼纪数据
+   *
+   * @param hqlContext
+   */
 
   def weddingData(hqlContext: HiveContext): DataFrame = {
     import hqlContext.implicits._
 
     //保单表
-    val openPolicy = readMysqlTable(hqlContext,"open_policy_bznapi","mysql.username.106",
-      "mysql.password.106","mysql.driver","mysql.url.106")
+    val openPolicy = readMysqlTable(hqlContext, "open_policy_bznapi", "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106")
       .selectExpr("policy_no", "proposal_no", "start_date", "end_date", "create_time", "update_time", "product_code", "premium")
 
     //被保人表保人表
-    val openInsured = readMysqlTable(hqlContext,"open_insured_bznapi","mysql.username.106",
-      "mysql.password.106","mysql.driver","mysql.url.106")
+    val openInsured = readMysqlTable(hqlContext, "open_insured_bznapi", "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106")
       .selectExpr("proposal_no as proposal_no_salve", "name", "cert_no", "tel")
 
     //保单表关联被保人表

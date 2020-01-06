@@ -33,7 +33,8 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
 
   /**
-   *官网
+   * 官网
+   *
    * @param hiveContext
    * @return
    */
@@ -62,7 +63,6 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
       "insured_mobile_md5 as insured_mobile_md5_salve,business_line as business_line_salve," +
       "years as years_salve from odsdb.ods_md5_message_detail where business_line='official'")
 
-
     //过滤出官网无效信息
     val official = officialTemp.select("id", "insured_cert_no", "insured_cert_no_md5", "insured_mobile", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no is not null or insured_mobile is not null")
@@ -79,7 +79,7 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
     //手机号和证件号不为空的增量
     val officialRes1 = official1.join(officialres1,
       'insured_cert_no === 'insured_cert_no_salve and 'insured_mobile === 'insured_mobile_salve, "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no_salve is null and insured_mobile_salve is null")
 
@@ -94,8 +94,8 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
     //增量数据
     val officialRes2 = official2.join(officialres2,
-      'insured_cert_no === 'insured_cert_no_salve , "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      'insured_cert_no === 'insured_cert_no_salve, "leftouter")
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no_salve is null")
 
@@ -110,15 +110,15 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
     //增量数据
     val officialRes3 = official3.join(officialres3,
-      'insured_mobile === 'insured_mobile_salve , "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      'insured_mobile === 'insured_mobile_salve, "leftouter")
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_mobile_salve is null")
 
     //所有官网的数据
     val incrementOfficial = officialRes1.unionAll(officialRes2).unionAll(officialRes3)
       .select("insured_cert_no", "insured_cert_no_md5",
-        "insured_mobile",  "insured_mobile_md5", "business_line", "years")
+        "insured_mobile", "insured_mobile_md5", "business_line", "years")
     incrementOfficial.registerTempTable("OfficialTable")
 
     val res = hiveContext.sql("select insured_cert_no,insured_cert_no_md5,insured_mobile,insured_mobile_md5,business_line,max(years) as years from OfficialTable group by insured_cert_no,insured_cert_no_md5,insured_mobile,insured_mobile_md5,business_line")
@@ -130,6 +130,7 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
   /**
    * 接口增量数据
+   *
    * @param hiveContext
    * @return
    */
@@ -175,7 +176,7 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
     //手机号和证件号不为空的增量
     val interRes1 = inter1.join(officialres1,
       'insured_cert_no === 'insured_cert_no_salve and 'insured_mobile === 'insured_mobile_salve, "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no_salve is null and insured_mobile_salve is null")
 
@@ -190,8 +191,8 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
     //增量数据
     val interRes2 = inter2.join(interres2,
-      'insured_cert_no === 'insured_cert_no_salve , "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      'insured_cert_no === 'insured_cert_no_salve, "leftouter")
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no_salve is null")
 
@@ -206,15 +207,15 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
     //增量数据
     val interRes3 = inter3.join(interres3,
-      'insured_mobile === 'insured_mobile_salve , "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      'insured_mobile === 'insured_mobile_salve, "leftouter")
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_mobile_salve is null")
 
     //所有接口的数据
     val incrementInter = interRes1.unionAll(interRes2).unionAll(interRes3)
       .select("insured_cert_no", "insured_cert_no_md5",
-        "insured_mobile",  "insured_mobile_md5", "business_line", "years")
+        "insured_mobile", "insured_mobile_md5", "business_line", "years")
     incrementInter.registerTempTable("InterTable")
 
     val res = hiveContext.sql("select insured_cert_no,insured_cert_no_md5,insured_mobile,insured_mobile_md5,business_line,max(years) as years from InterTable group by insured_cert_no,insured_cert_no_md5,insured_mobile,insured_mobile_md5,business_line")
@@ -225,6 +226,7 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
   /**
    * 婚礼纪增量数据
+   *
    * @param hiveContext
    * @return
    */
@@ -270,7 +272,7 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
     //手机号和证件号不为空的增量
     val weddingRes1 = wedding1.join(weddingres1,
       'insured_cert_no === 'insured_cert_no_salve and 'insured_mobile === 'insured_mobile_salve, "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no_salve is null and insured_mobile_salve is null")
 
@@ -285,8 +287,8 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
     //增量数据
     val weddingRes2 = wedding2.join(weddingres2,
-      'insured_cert_no === 'insured_cert_no_salve , "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      'insured_cert_no === 'insured_cert_no_salve, "leftouter")
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_cert_no_salve is null")
 
@@ -301,15 +303,15 @@ object OdsPrivacyProtectionDetail extends SparkUtil with Until {
 
     //增量数据
     val weddingRes3 = wedding3.join(weddingres3,
-      'insured_mobile === 'insured_mobile_salve , "leftouter")
-      .select("id",  "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
+      'insured_mobile === 'insured_mobile_salve, "leftouter")
+      .select("id", "insured_cert_no", "insured_cert_no_salve", "insured_cert_no_md5",
         "insured_mobile", "insured_mobile_salve", "insured_mobile_md5", "business_line", "years")
       .where("insured_mobile_salve is null")
 
     //所有接口的数据
     val incrementWedding = weddingRes1.unionAll(weddingRes2).unionAll(weddingRes3)
       .select("insured_cert_no", "insured_cert_no_md5",
-        "insured_mobile",  "insured_mobile_md5", "business_line", "years")
+        "insured_mobile", "insured_mobile_md5", "business_line", "years")
     incrementWedding.registerTempTable("WeddingTable")
     val res = hiveContext.sql("select insured_cert_no,insured_cert_no_md5,insured_mobile,insured_mobile_md5,business_line,max(years) as years from WeddingTable group by insured_cert_no,insured_cert_no_md5,insured_mobile,insured_mobile_md5,business_line")
 
