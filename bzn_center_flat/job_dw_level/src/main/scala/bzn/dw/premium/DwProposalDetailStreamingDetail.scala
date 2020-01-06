@@ -75,14 +75,9 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
       .drop("insurance_company").withColumnRenamed("short_name","insurance_company_short_name")
 
     /**
-      * 拿出批单明细数据
-      */
-    val preserveData = allData.where("preserve_type = 1")
-
-    /**
       * 拿出保单明细数据
       */
-    val policyData = allData.where("preserve_type = 4")
+    val policyData = allData
       .selectExpr(
         "id",
         "policy_code",
@@ -126,7 +121,7 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
     /**
       * 得到方案类别数据
       */
-    val preserveProfessionData = preserveData.join(odsWorkGradeDimension,'policy_code==='policy_code_temp,"leftouter")
+    val preserveProfessionData = policyData.join(odsWorkGradeDimension,'policy_code==='policy_code_temp,"leftouter")
       .selectExpr(
         "id",
         "policy_code",
@@ -136,7 +131,7 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
         "effective_date",
         "status",
         "preserve_type",
-        "profession_type_salve as profession_type",
+        "case when profession_type_salve is not null then profession_type_salve else profession_type end as profession_type",
         "sku_price",
         "premium",
         "sku_coverage",
@@ -145,7 +140,7 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
         "dw_create_time"
       )
 
-    val preserveProfessionPlanData = preserveProfessionData.join(odsPolicyProductPlanDetail,'policy_code==='policy_code_slave,"leftouter")
+    val res = preserveProfessionData.join(odsPolicyProductPlanDetail,'policy_code==='policy_code_slave,"leftouter")
       .selectExpr(
         "id",
         "policy_code",
@@ -163,8 +158,6 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
         "case when policy_code_slave is not null then sku_charge_type_slave else sku_charge_type end as sku_charge_type",
         "dw_create_time"
       )
-
-    val res = policyData.unionAll(preserveProfessionPlanData)
 
     res
   }
