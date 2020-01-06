@@ -47,10 +47,10 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
       */
     val tablebTpProposalStreamingbBznbusi = "t_proposal_streaming_bznbusi"
     val tpProposalStreamingbBznbusi = readMysqlTable(sqlContext: SQLContext, tablebTpProposalStreamingbBznbusi: String,user:String,pass:String,driver:String,url:String)
-      .where("business_type = 2 and insurance_insure_time <= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 18:00:00') as timestamp) and " +
-        "insurance_insure_time >= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 00:00:00') as timestamp)")
+      .where("business_type = 2")
       .selectExpr(
         "proposal_no",
+        "insurance_insure_time",
         "insurance_policy_no as policy_code",
         "status",
         "profession_code",//中华
@@ -63,7 +63,6 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "case when first_insure_master_num is null then 0 else first_insure_master_num end as insured_count",
         "insurance_name"
       )
-    tpProposalStreamingbBznbusi.show()
 
     /**
       * 读取投保方案信息表
@@ -80,10 +79,12 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
     /**
       * 上述结果和被保人方案表进行关联
       */
-    val resProposal = tpProposalStreamingbBznbusi.join(tpProposalProductPlanStreamingBznbusi,'proposal_no==='proposal_no_plan,"leftouter")
+    val resProposal = tpProposalStreamingbBznbusi
+      .join(tpProposalProductPlanStreamingBznbusi,'proposal_no==='proposal_no_plan,"leftouter")
       .selectExpr(
         "getUUID() as id",
         "policy_code",
+        "insurance_insure_time",
         "insured_count as add_person_count",
         "cast('' as int) as del_person_count",
         "insurance_name",
@@ -92,7 +93,7 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "4 as preserve_type",
         "profession_code",//中华
         "profession_type",//国寿（JOB_CD_0009）， 泰康（1-3类）
-        "cast(premium_price as decimal(14,4)) as premium_price",//保费单价
+        "cast(premium_price as decimal(14,4)) as sku_price",//保费单价
         "cast(first_insure_premium as decimal(14,4)) as premium",//初投
         "cast(sku_coverage as decimal(14,0)) as sku_coverage",
         "sku_ratio",
@@ -100,7 +101,11 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "getNow() as dw_create_time"
       )
 
-    resProposal.show()
+    val resProposalTAdd1 = resProposal.where("insurance_insure_time <= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 18:00:00') as timestamp) and " +
+        "insurance_insure_time >= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 00:00:00') as timestamp)")
+      .drop("insurance_insure_time")
+
+    resProposalTAdd1.show()
 
     /**
       * 读取保全表
@@ -120,7 +125,6 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "status",
         "preservation_type as preserve_type"
       )
-
 
     /**
       * 众安的数据
@@ -145,20 +149,47 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "insurance_name",
         "effective_date",
         "status",
-        "preserve_type",
-        "'' as profession_code",
-        "'' as profession_type",
-        "cast('' as decimal(14,4)) as sku_price",
+        "1 as preserve_type",
         "(inc_revise_premium+dec_revise_premium) as premium",//增减员
-        "cast('' as decimal(14,0)) as sku_coverage",
-        "cast('' as int) as sku_ratio",
-        "cast('' as int) as sku_charge_type",
         "getNow() as dw_create_time"
+      )
+
+    /**
+      * 为批单中的新增保单获取方案信息
+      */
+    val resProposalPreserve = resProposal.selectExpr(
+      "policy_code as policy_code_slave",
+      "profession_code",//中华
+      "profession_type",//国寿（JOB_CD_0009）， 泰康（1-3类）
+      "sku_price",//保费单价
+      "sku_coverage",
+      "sku_ratio",
+      "sku_charge_type"
+    )
+
+    val insureDataRes = insureData.join(resProposalPreserve,insureData("policy_code")===resProposalPreserve("policy_code_slave"),"leftouter")
+      .selectExpr(
+        "id",
+        "policy_code",
+        "add_person_count",
+        "del_person_count",
+        "insurance_name",
+        "effective_date",
+        "status",
+        "preserve_type",
+        "profession_code",
+        "profession_type",
+        "sku_price",
+        "premium",//增减员
+        "sku_coverage",
+        "sku_ratio",
+        "sku_charge_type",
+        "dw_create_time"
       )
 
     resProposal.printSchema()
     insureData.printSchema()
-    val res = insureData.unionAll(resProposal)
+    val res = insureDataRes.unionAll(resProposalTAdd1)
       .selectExpr(
         "id",
         "policy_code",

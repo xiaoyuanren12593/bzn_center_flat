@@ -124,16 +124,25 @@ object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBas
     val tableNameOneRes = "dm_saleeasy_operation_daily_policy_detail"
     val tableNameTwoRes = "dm_saleeasy_operation_daily_pro_and_pre_detail"
 
+    val now = getNowTime().substring(0,10).replaceAll("-","")
+
+    /**
+      * 如果有当天的数据，先删除mysql当天的数据
+      */
+    val sqlClick = "delete from "+tableNameTwoRes+" where day_id = '"+now+"'"
+
+    exeSql(sqlClick:String,urlFormatOfficial:String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String)
+
     /**
       * 运营日报-在保人详情页 每天18点更新
       */
-    saveASMysqlTable(empCurrInsuredAndLastMonthData: DataFrame, tableNameOneRes: String, SaveMode.Overwrite,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String)
-//    saveASMysqlTable(empCurrInsuredAndLastMonthData: DataFrame, tableNameOneRes: String, SaveMode.Overwrite,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String)
+//    saveASMysqlTable(empCurrInsuredAndLastMonthData: DataFrame, tableNameOneRes: String, SaveMode.Overwrite,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String)
+    saveASMysqlTable(empCurrInsuredAndLastMonthData: DataFrame, tableNameOneRes: String, SaveMode.Overwrite,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String)
 
-    val oneDataTest = readMysqlTable(sqlContext: SQLContext, tableNameOneRes: String,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String).count()
-//    val oneDataOfficial = readMysqlTable(sqlContext: SQLContext, tableNameOneRes: String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String).count()
+//    val oneDataTest = readMysqlTable(sqlContext: SQLContext, tableNameOneRes: String,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String).count()
+    val oneDataOfficial = readMysqlTable(sqlContext: SQLContext, tableNameOneRes: String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String).count()
 
-    if(oneDataTest > 0){
+    if(oneDataOfficial > 0){
       val dataMonitor =
         Seq(
           DmbBatchingMonitoringDetail(nowTime+"`dm_saleeasy_operation_daily_policy_detail`"+"mysql","mysql","运营日报-在保人详情页","dm","dmdb","dm_saleeasy_operation_daily_policy_detail",1,"运营日报-在保人详情页-成功",new Timestamp(System.currentTimeMillis()),new Timestamp(System.currentTimeMillis()))
@@ -149,13 +158,13 @@ object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBas
     /**
       * 运营日报-新投保单和批单详情数据 每天18点更新
       */
-    saveASMysqlTable(dwProposalOperatorDailyDetail: DataFrame, tableNameTwoRes: String, SaveMode.Overwrite,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String)
-//    saveASMysqlTable(empCurrInsuredAndLastMonthData: DataFrame, tableNameTwoRes: String, SaveMode.Overwrite,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String)
+//    saveASMysqlTable(dwProposalOperatorDailyDetail: DataFrame, tableNameTwoRes: String, SaveMode.Overwrite,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String)
+    saveASMysqlTable(dwProposalOperatorDailyDetail: DataFrame, tableNameTwoRes: String, SaveMode.Append,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String)
 
-    val twoDataTest = readMysqlTable(sqlContext: SQLContext, tableNameTwoRes: String,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String).count()
-//    val twoDataOfficial = readMysqlTable(sqlContext: SQLContext, tableNameTwoRes: String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String).count()
+//    val twoDataTest = readMysqlTable(sqlContext: SQLContext, tableNameTwoRes: String,userFormat:String,possWordFormat:String,driverFormat:String,urlFormat:String).count()
+    val twoDataOfficial = readMysqlTable(sqlContext: SQLContext, tableNameTwoRes: String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String).count()
 
-    if(twoDataTest > 0){
+    if(twoDataOfficial > 0){
       val dataMonitor =
         Seq(
           DmbBatchingMonitoringDetail(nowTime+"`dm_saleeasy_operation_daily_pro_and_pre_detail`"+"mysql","mysql","运营日报-新投保单和批单详情数据","dm","dmdb","dm_saleeasy_operation_daily_pro_and_pre_detail",1,"运营日报-新投保单和批单详情数据-成功",new Timestamp(System.currentTimeMillis()),new Timestamp(System.currentTimeMillis()))
@@ -167,6 +176,5 @@ object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBas
       insertOrUpdateDFtoDBUsePoolNew(tableMysqlName: String, dataMonitor: DataFrame, updateColumns: Array[String],
         urlFormatOfficial:String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String)
     }
-
   }
 }
