@@ -1,8 +1,10 @@
 package bzn.other
 
 import java.text.SimpleDateFormat
-import java.util.{Date}
+import java.util.Date
+
 import bzn.job.common.{MysqlUntil, Until}
+import bzn.other.OdsOtherIncrementDetail.{clean, readMysqlTable}
 import bzn.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext}
@@ -31,6 +33,7 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
 
+
   /**
    * 上下文
    *
@@ -51,9 +54,10 @@ import org.apache.spark.sql.hive.HiveContext
     //拿到当前时间所月份的数据
     val data1 = readMysqlTable(hiveContext, "open_other_policy", "mysql.username.103",
       "mysql.password.103", "mysql.driver", "mysql.url.103.bzn_open_all")
-      .where("substring(cast(case when month is null then getNow() else month end as string),1,7) = substring(cast(getNow() as string),1,7)")
+      .where("substring(cast(if(create_time is null,getNow(),create_time) as string),1,7) = substring(cast(getNow() as string),1,7)")
       .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
-        "product_code", "null as sku_price", "'inter' as business_line", "substring(cast(case when month is null then getNow() else month end as string),1,7) as months")
+        "product_code", "null as sku_price", "'inter' as business_line",
+        "substring(cast(if(create_time is null,getNow(),create_time) as string),1,7) as months")
 
     // 读取接口当月数据
     val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_all_business_person_base_info_detail")
@@ -163,11 +167,8 @@ import org.apache.spark.sql.hive.HiveContext
       .where("policy_id_salve is null")
       .selectExpr("insured_name", "insured_cert_no", "insured_mobile", "policy_no",
         "policy_id", "start_date", "end_date", "create_time", "update_time", "product_code", "premium as sku_price", "business_line", "years")
-
     res
 
-
   }
-
 
 }
