@@ -57,6 +57,8 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
         "clean(profession_type) as profession_type",
         "sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",
@@ -101,6 +103,8 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
           "else null end as profession_type",
         "sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",
@@ -134,13 +138,15 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
         "case when profession_type_salve is not null then profession_type_salve else profession_type end as profession_type",
         "sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",
         "dw_create_time"
       )
 
-    val res = preserveProfessionData.join(odsPolicyProductPlanDetail,'policy_code==='policy_code_slave,"leftouter")
+    val preserveProfessionPlanData = preserveProfessionData.join(odsPolicyProductPlanDetail,'policy_code==='policy_code_slave,"leftouter")
       .selectExpr(
         "id",
         "policy_code",
@@ -153,12 +159,15 @@ object DwProposalDetailStreamingDetail extends SparkUtil with Until {
         "profession_type",
         "case when policy_code_slave is not null then sku_price_slave else sku_price end as sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "case when policy_code_slave is not null then sku_coverage_slave else sku_coverage end sku_coverage",
         "case when policy_code_slave is not null then sku_ratio_slave else sku_ratio end as sku_ratio",
         "case when policy_code_slave is not null then sku_charge_type_slave else sku_charge_type end as sku_charge_type",
         "dw_create_time"
       )
 
+    val res = preserveProfessionPlanData
     res
   }
 }

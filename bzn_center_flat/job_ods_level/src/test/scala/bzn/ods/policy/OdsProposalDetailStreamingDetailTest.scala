@@ -95,6 +95,8 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "profession_type",//国寿（JOB_CD_0009）， 泰康（1-3类）
         "cast(premium_price as decimal(14,4)) as sku_price",//保费单价
         "cast(first_insure_premium as decimal(14,4)) as premium",//初投
+        "cast(first_insure_premium as decimal(14,4)) as add_premium",
+        "cast('' as decimal(14,4)) as del_premium",
         "cast(sku_coverage as decimal(14,0)) as sku_coverage",
         "sku_ratio",
         "sku_charge_type",
@@ -117,7 +119,7 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "inc_revise_sum as add_person_count",
         "dec_revise_sum as del_person_count",
         "case when inc_revise_premium is null then 0 else inc_revise_premium end as inc_revise_premium",
-        "case when dec_revise_premium is null then 0 else dec_revise_premium end as dec_revise_premium",
+        "case when dec_revise_premium is null then 0 else 0-dec_revise_premium end as dec_revise_premium",
         "insurance_name",
         "effective_date",
         "create_time",
@@ -130,15 +132,17 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
       * 众安的数据
       */
     val zaInsureData = bPolicyPreservationStreamingOperatorBznbusi
-      .where("effective_date >= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 00:00:00') as timestamp) and insurance_name like '%众安%' and " +
+      .where("effective_date >= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 00:00:00') as timestamp) " +
+        "and effective_date <= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 18:00:00') as timestamp) and insurance_name like '%众安%' and " +
         "create_time <= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 18:00:00') as timestamp) and business_type = 2 and preserve_type = 1 and `status` = 7")
 
     /**
       * 非众安的数据 为了数据暂时先拿当天的数据  正常是 +1天
       */
     val notZaInsureData = bPolicyPreservationStreamingOperatorBznbusi
-      .where("effective_date >= cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 00:00:00') as timestamp) and insurance_name not like '%众安%' and " +
-        "create_time <= cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 18:00:00') as timestamp) and business_type = 2 and preserve_type = 1 and `status` = 7")
+      .where("effective_date >= cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 00:00:00') as timestamp) " +
+        "and effective_date <= cast(date_format(DATE_ADD(now(),1),'yyyy-MM-dd 18:00:00') as timestamp) and insurance_name not like '%众安%' and " +
+        "create_time <= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 18:00:00') as timestamp) and business_type = 2 and preserve_type = 1 and `status` = 7")
 
     val insureData = zaInsureData.unionAll(notZaInsureData)
       .selectExpr(
@@ -151,6 +155,8 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "status",
         "1 as preserve_type",
         "(inc_revise_premium+dec_revise_premium) as premium",//增减员
+        "inc_revise_premium as add_premium",
+        "dec_revise_premium as del_premium",
         "getNow() as dw_create_time"
       )
 
@@ -181,6 +187,8 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "profession_type",
         "sku_price",
         "premium",//增减员
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",
@@ -203,6 +211,8 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "clean(profession_type) as profession_type",
         "sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",

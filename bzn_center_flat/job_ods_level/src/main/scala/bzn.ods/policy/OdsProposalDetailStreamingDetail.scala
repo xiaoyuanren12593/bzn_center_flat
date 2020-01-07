@@ -98,6 +98,8 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "profession_type",//国寿（JOB_CD_0009）， 泰康（1-3类）
         "cast(premium_price as decimal(14,4)) as sku_price",//保费单价
         "cast(first_insure_premium as decimal(14,4)) as premium",//初投
+        "cast(first_insure_premium as decimal(14,4)) as add_premium",
+        "cast('' as decimal(14,4)) as del_premium",
         "cast(sku_coverage as decimal(14,0)) as sku_coverage",
         "sku_ratio",
         "sku_charge_type",
@@ -118,7 +120,7 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "inc_revise_sum as add_person_count",
         "dec_revise_sum as del_person_count",
         "case when inc_revise_premium is null then 0 else inc_revise_premium end as inc_revise_premium",
-        "case when dec_revise_premium is null then 0 else dec_revise_premium end as dec_revise_premium",
+        "case when dec_revise_premium is null then 0 else 0-dec_revise_premium end as dec_revise_premium",
         "insurance_name",
         "effective_date",
         "create_time",
@@ -154,6 +156,8 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "status",
         "1 as preserve_type",
         "(inc_revise_premium+dec_revise_premium) as premium",//增减员
+        "inc_revise_premium as add_premium",
+        "dec_revise_premium as del_premium",
         "getNow() as dw_create_time"
       )
 
@@ -184,12 +188,13 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "profession_type",
         "sku_price",
         "premium",//增减员
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",
         "dw_create_time"
       )
-
 
     val res = insureDataRes.unionAll(resProposalTAdd1)
       .selectExpr(
@@ -205,6 +210,8 @@ object OdsProposalDetailStreamingDetail extends SparkUtil with Until with MysqlU
         "clean(profession_type) as profession_type",
         "sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "sku_ratio",
         "sku_charge_type",
