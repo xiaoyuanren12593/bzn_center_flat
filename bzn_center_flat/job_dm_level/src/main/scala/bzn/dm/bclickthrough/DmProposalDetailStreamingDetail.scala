@@ -55,6 +55,8 @@ object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBas
         "profession_type",
         "case when sku_charge_type = 2 then sku_price/12 else sku_price end as sku_price",
         "premium",
+        "add_premium",
+        "del_premium",
         "sku_coverage",
         "case when sku_ratio = 1 then '5%' when sku_ratio = 2 then '10%' else null end as sku_ratio",
         "case when sku_charge_type = 1 then '月单' when sku_charge_type = 2 then '年单' else null end as sku_charge_type",
@@ -62,7 +64,6 @@ object DmProposalDetailStreamingDetail extends SparkUtil with Until with DataBas
         "date_format(now(),'yyyy-MM-dd HH:dd:ss') as create_time",
         "date_format(now(),'yyyy-MM-dd HH:dd:ss') as update_time"
       )
-
 
     /**
       * 得到雇主的每日在保人数和上月同期在保人数
