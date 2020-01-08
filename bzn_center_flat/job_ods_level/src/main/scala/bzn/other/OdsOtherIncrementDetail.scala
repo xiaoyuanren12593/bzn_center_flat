@@ -27,7 +27,7 @@ import org.apache.spark.sql.hive.HiveContext
 
     hiveContext.setConf("hive.exec.dynamic.partition", "true")
     hiveContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
-
+/*
     // 接口数据拿到增量,核心库的数据全量写入
     val res = OdsOtherToHive(hiveContext)
     res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
@@ -41,10 +41,94 @@ import org.apache.spark.sql.hive.HiveContext
     //婚礼纪数据增量写入
     val data = weddingData(hiveContext)
     data.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
+      .saveAsTable("odsdb.ods_all_business_person_base_info_detail")*/
+
+    val resTemp = OdsOtherToHive(hiveContext)
+
+    weddingData(hiveContext)
+    resTemp.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
+
     sc.stop()
   }
 
+
+
+  /**
+   * 上下文
+   *
+   * 接口15天内数据数据
+   */
+  def OdsOtherToHive(hiveContext: HiveContext): DataFrame = {
+    import hiveContext.implicits._
+    hiveContext.udf.register("dateDelect", (data_time: String) => dateDelect(data_time))
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
+      (date + "")
+    })
+
+    /**
+     * 获取mysql中接口的数据
+     */
+
+    //拿到当前时间15天内的数据
+    val data1 = readMysqlTable(hiveContext, "open_other_policy", "mysql.username.103",
+      "mysql.password.103", "mysql.driver", "mysql.url.103.bzn_open_all")
+      .where("cast(date_add(now(),-15) as string) <= cast(if(create_time is null,now(),create_time) as string)")
+      .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
+        "product_code", "null as sku_price", "'inter' as business_line", "substring(cast(month as string),1,7) as months")
+
+    // 读取接口当月数据
+    val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_all_business_person_base_info_detail where business_line = 'inter' and cast(date_add(now(),-15) as string) <= cast(if(create_time is null,now(),create_time) as string)")
+
+    //拿到当月数据的增量
+    val data3 = data1.join(data2, 'policy_id === 'policy_id_salve, "leftouter")
+      .selectExpr("policy_id", "policy_id_salve", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months as years")
+      .where("policy_id_salve is null")
+    val res = data3.selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "years")
+    res
+
+  }
+
+
+
+  /*/**
+   * 接口上个月数据
+   */
+  def InterAMonthAgo(hiveContext: HiveContext): DataFrame ={
+    import hiveContext.implicits._
+    hiveContext.udf.register("dateDelectOneMonth",(data_time:String) =>dateDelectOneMonth(data_time))
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+      //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
+      (date + "")
+    })
+
+    //拿到上个月接口Mysql的数据(时间原因导致的数据遗漏)
+    val data1 = readMysqlTable(hiveContext, "open_other_policy", "mysql.username.103",
+      "mysql.password.103", "mysql.driver", "mysql.url.103.bzn_open_all")
+      .where("substring(cast(month as string),1,7) = substring(cast(dateDelectOneMonth(getNow()) as string),1,7)")
+      .selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time",
+        "product_code", "null as sku_price", "'inter' as business_line",
+        "substring(cast(month as string),1,7) as months")
+
+
+    // 读取hive上个月数据
+    val data2 = hiveContext.sql("select policy_id as policy_id_salve,years,business_line as business_line_salve from odsdb.ods_all_business_person_base_info_detail where business_line = 'inter' and substring(cast(dateDelectOneMonth(getNow()) as string),1,7) = years")
+
+    //拿到上个月数据的增量
+    val data3 = data1.join(data2, 'policy_id === 'policy_id_salve, "leftouter")
+      .selectExpr("policy_id", "policy_id_salve", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "months as years")
+      .where("policy_id_salve is null")
+
+    val res = data3.selectExpr("policy_id", "insured_name", "insured_cert_no", "insured_mobile", "policy_no", "start_date", "end_date", "create_time", "update_time", "product_code", "sku_price", "business_line", "years")
+
+    res
+
+  }
 
   /**
    * 上下文
@@ -85,7 +169,7 @@ import org.apache.spark.sql.hive.HiveContext
     res
   }
 
-
+*/
   /**
    * 核心库数据
    *
@@ -135,7 +219,7 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   /**
-   * 婚礼纪数据
+   * 婚礼纪15天内数据
    *
    * @param hqlContext
    */
@@ -169,11 +253,11 @@ import org.apache.spark.sql.hive.HiveContext
         "tel as insured_mobile",
         "'wedding' as business_line",
         "substring(cast(case when create_time is null then now() else create_time end as string),1,7) as years")
-
+       .where("cast(date_add(now(),-15) as string) <= cast(if(create_time is null,now(),create_time) as string)")
+    println(data1.count())
     // 读取hive的表中的数据
-    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail")
-      .where("business_id_salve = 'wedding'")
-
+    val data2 = hqlContext.sql("select policy_id as policy_id_salve,business_line as business_id_salve from odsdb.ods_all_business_person_base_info_detail where business_id = 'wedding' and cast(date_add(now(),-15) as string) <= cast(if(create_time is null,now(),create_time) as string)")
+    println(data2.count())
     //判断增量数据
     val res = data1.join(data2, 'policy_id === 'policy_id_salve, "leftouter")
       .where("policy_id_salve is null")

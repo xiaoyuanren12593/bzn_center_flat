@@ -20,10 +20,11 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   * Time:14:57
   * describe: this is new class
   **/
-object test extends Until{
+object test extends Until {
   def main(args: Array[String]): Unit = {
 
-    println(MD5(null))
+
+    println(dateDelect("2019-01-01 12:25:65"))
 
   }
 
@@ -32,7 +33,9 @@ object test extends Until{
     val md5 = MessageDigest.getInstance("MD5")
     val encoded = md5.digest((content).getBytes)
     encoded.map("%02x".format(_)).mkString
+
+
   }
 
-}
 
+}
