@@ -53,8 +53,6 @@ object DwProposalDetailStreamingDetailTest extends SparkUtil with Until {
         "effective_date",
         "status",
         "preserve_type",
-        "clean(profession_code) as profession_code",
-        "clean(profession_type) as profession_type",
         "sku_price",
         "premium",
         "add_premium",
@@ -77,9 +75,11 @@ object DwProposalDetailStreamingDetailTest extends SparkUtil with Until {
       .drop("insurance_company").withColumnRenamed("short_name","insurance_company_short_name")
 
     /**
-      * 拿出保单明细数据
+      * 读取工种方案表
       */
-    val policyData = allData
+    val odsWorkGradeDetail = sqlContext.sql("select policy_code as policy_code_slave,profession_type from odsdb.ods_work_grade_detail")
+
+    val policyData = allData.join(odsWorkGradeDetail,allData("policy_code")===odsWorkGradeDetail("policy_code_slave"),"leftouter")
       .selectExpr(
         "id",
         "policy_code",
@@ -89,18 +89,7 @@ object DwProposalDetailStreamingDetailTest extends SparkUtil with Until {
         "effective_date",
         "status",
         "preserve_type",
-        "case when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0009' then '1类' " +
-          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0010' then '1-2类' " +
-          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0011' then '1-3类' " +
-          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0012' then '1-4类' " +
-          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0013' then '5类' " +
-          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0014' then '6类' " +
-          "when insurance_company_short_name = '中华联合' and profession_code = 'k1' then '1-2类' " +
-          "when insurance_company_short_name = '中华联合' and profession_code = 'k2' then '1-3类' " +
-          "when insurance_company_short_name = '中华联合' and profession_code = 'k3' then '1-4类' " +
-          "when insurance_company_short_name = '中华联合' and profession_code = 'k4' then '5类' " +
-          "when insurance_company_short_name = '泰康在线' and profession_type is not null then profession_type " +
-          "else null end as profession_type",
+        "profession_type",
         "sku_price",
         "premium",
         "add_premium",
@@ -110,6 +99,41 @@ object DwProposalDetailStreamingDetailTest extends SparkUtil with Until {
         "sku_charge_type",
         "dw_create_time"
       )
+
+//    /**
+//      * 拿出保单明细数据
+//      */
+//    val policyData = allData
+//      .selectExpr(
+//        "id",
+//        "policy_code",
+//        "add_person_count",
+//        "del_person_count",
+//        "insurance_company_short_name",
+//        "effective_date",
+//        "status",
+//        "preserve_type",
+////        "case when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0009' then '1类' " +
+////          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0010' then '1-2类' " +
+////          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0011' then '1-3类' " +
+////          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0012' then '1-4类' " +
+////          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0013' then '5类' " +
+////          "when insurance_company_short_name = '国寿财' and profession_type = 'JOB_CD_0014' then '6类' " +
+////          "when insurance_company_short_name = '中华联合' and profession_code = 'k1' then '1-2类' " +
+////          "when insurance_company_short_name = '中华联合' and profession_code = 'k2' then '1-3类' " +
+////          "when insurance_company_short_name = '中华联合' and profession_code = 'k3' then '1-4类' " +
+////          "when insurance_company_short_name = '中华联合' and profession_code = 'k4' then '5类' " +
+////          "when insurance_company_short_name = '泰康在线' and profession_type is not null then profession_type " +
+////          "else null end as profession_type",
+//        "sku_price",
+//        "premium",
+//        "add_premium",
+//        "del_premium",
+//        "sku_coverage",
+//        "sku_ratio",
+//        "sku_charge_type",
+//        "dw_create_time"
+//      )
 
     /**
       * 读取方案类别表
@@ -168,8 +192,8 @@ object DwProposalDetailStreamingDetailTest extends SparkUtil with Until {
       )
 
     val res = preserveProfessionPlanData
-    res.show(10000)
     res.printSchema()
+    res.show(10000)
     res
   }
 }

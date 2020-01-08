@@ -107,8 +107,6 @@ object OdsProposalDetailStreamingDetailTest extends SparkUtil with Until with My
         "insurance_insure_time >= cast(date_format(DATE_ADD(now(),0),'yyyy-MM-dd 00:00:00') as timestamp)")
       .drop("insurance_insure_time")
 
-    resProposalTAdd1.show()
-
     /**
       * 读取保全表
       */
