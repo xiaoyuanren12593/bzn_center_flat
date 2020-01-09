@@ -9,7 +9,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
-object OdsOfficialMd5Detail  extends SparkUtil with Until with MysqlUntil {
+object OdsOfficialMd5Detail extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")

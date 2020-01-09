@@ -24,7 +24,7 @@ object test extends Until {
   def main(args: Array[String]): Unit = {
 
 
-    println(dateDelect("2019-01-01 12:25:65"))
+    println(MD5("println(MD5(\"\"\"\"))"))
 
   }
 
