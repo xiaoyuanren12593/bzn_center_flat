@@ -22,14 +22,15 @@ object OdsOfficialDetail extends SparkUtil with Until with MysqlUntil {
     hiveContext.setConf("hive.exec.dynamic.partition", "true")
     hiveContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
 
-    // 官网数据增量写入(7)
-    val res = OfficialDataToHive(hiveContext)
-    res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years_id")
-      .saveAsTable("odsdb.ods_all_business_insured_base_info_detail")
+    //核心数据全量写入
+    val officialData = OfficialDataToHive(hiveContext)
+    officialData.registerTempTable("PersonBaseInfoData")
+    hiveContext.sql("INSERT OVERWRITE table odsdb.ods_all_business_person_base_info_detail PARTITION(business_line = 'official',years) select * from PersonBaseInfoData")
 
 
     sc.stop()
   }
+
 
   /**
    * 核心库数据
@@ -38,14 +39,14 @@ object OdsOfficialDetail extends SparkUtil with Until with MysqlUntil {
    * @return
    */
   def OfficialDataToHive(hqlContext: HiveContext): DataFrame = {
-    hqlContext.udf.register("clean", (str: String) => clean(str))
+
     import hqlContext.implicits._
 
     //读取保单明细表
     val odsPolicyDetail = hqlContext.sql("select policy_code,policy_id,policy_status from odsdb.ods_policy_detail")
 
     //读取被保人表
-    val odsPolicyInsuredDetail = hqlContext.sql("select id as id_salve,insured_name,insured_cert_no,insured_mobile,policy_code as policy_code_salve,start_date," +
+    val odsPolicyInsuredDetail = hqlContext.sql("select insured_name,insured_cert_no,insured_mobile,policy_code as policy_code_salve,start_date," +
       "end_date,create_time,update_time from odsdb.ods_policy_insured_detail")
 
     //读取产品方案表
@@ -53,52 +54,29 @@ object OdsOfficialDetail extends SparkUtil with Until with MysqlUntil {
 
     //拿到保单在保退保终止的保单
     val odsPolicyAndInsured = odsPolicyInsuredDetail.join(odsPolicyDetail, 'policy_code_salve === 'policy_code, "leftouter")
-      .selectExpr("id_salve","insured_name", "policy_id", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "policy_status", "create_time", "update_time")
+      .selectExpr("insured_name", "policy_id", "insured_cert_no", "insured_mobile", "policy_code_salve", "start_date", "end_date", "policy_status", "create_time", "update_time")
       .where("policy_status in (0,1,-1)")
 
     //拿到产品
-    val resTemp = odsPolicyAndInsured.join(odsProductPlanDetail, 'policy_code_salve === 'policy_code, "leftouter")
+    val res = odsPolicyAndInsured.join(odsProductPlanDetail, 'policy_code_salve === 'policy_code, "leftouter")
       .selectExpr(
-        "id_salve",
-        "insured_name as insured_name_salve",
-        "insured_cert_no as insured_cert_no_salve",
-        "insured_mobile as insured_mobile_salve",
+        "insured_name",
+        "insured_cert_no",
+        "insured_mobile",
         "policy_code_salve",
-        "policy_id as policy_id_salve",
-        "start_date as start_date_salve",
-        "end_date as end_date_salve",
-        "create_time as create_time_salve",
-        "update_time as update_time_salve",
-        "product_code as product_code_salve",
-        "sku_price as sku_price_salve",
-        "'official' as business_line_salve",
+        "policy_id",
+        "start_date",
+        "end_date",
+        "create_time",
+        "update_time",
+        "product_code",
+        "sku_price",
+        "'official' as business_line",
         "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null," +
-          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years_id_salve")
+          "if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years")
 
-
-    //读取客户池数据
-    val insuredBaseInfo = hqlContext.sql("select id,insured_name,insured_cert_no,insured_mobile," +
-      "policy_code,policy_id,start_date,end_date,create_time," +
-      "update_time,product_code,sku_price,business_line,years_id from odsdb.ods_all_business_insured_base_info_detail")
-
-    val res = resTemp.join(insuredBaseInfo, 'policy_id_salve === 'policy_id and 'id_salve === 'id, "leftouter")
-      .where("policy_id is null and id is null")
-      .selectExpr("id_salve",
-        "insured_name_salve",
-        "insured_cert_no_salve",
-        "insured_mobile_salve",
-        "policy_code_salve",
-        "policy_id_salve",
-        "start_date_salve",
-        "end_date_salve",
-        "create_time_salve",
-        "update_time_salve",
-        "product_code_salve",
-        "sku_price_salve",
-        "business_line_salve as business_line",
-        "years_id_salve as years_id")
     res
 
-
   }
+
 }

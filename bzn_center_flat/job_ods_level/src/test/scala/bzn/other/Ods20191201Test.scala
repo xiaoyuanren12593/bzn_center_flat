@@ -23,8 +23,7 @@ object Ods20191201Test extends SparkUtil with Until with MysqlUntil {
     hiveContext.setConf("hive.exec.dynamic.partition", "true")
     hiveContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
 
-
-    val res = OdsOtherToHive(hiveContext)
+    val res = wubaData(hiveContext)
 
     res.write.mode(SaveMode.Append).format("PARQUET").partitionBy("business_line", "years")
       .saveAsTable("odsdb.ods_all_business_person_base_info_detail")
@@ -66,6 +65,18 @@ object Ods20191201Test extends SparkUtil with Until with MysqlUntil {
       "business_line",
       "years")
     res
+
+  }
+
+
+  def wubaData(hiveContext: HiveContext): DataFrame ={
+
+    //读取数据
+    val frame = hiveContext.sql("select insured_name,insured_cert_no,insured_mobile,null as policy_code,null as policy_id, start_date, end_date,create_time,update_time,product_code,sku_price,business_line,years from odsdb.ods_all_business_person_base_info_detail_temp")
+
+    frame
+
+
 
   }
 
