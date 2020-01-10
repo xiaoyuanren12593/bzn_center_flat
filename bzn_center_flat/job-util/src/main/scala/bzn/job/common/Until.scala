@@ -19,6 +19,47 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
   * Created by a2589 on 2018/4/2.
   */
 trait Until {
+
+
+
+  /**
+   * 当前日期减去15天
+   * @param date_time
+   * @return
+   */
+  def dateDelect(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, -15)
+    val newDate = c.getTime
+    sim.format(newDate)
+
+  }
+
+
+  /**
+   * 当前日期减去31天
+   * @param date_time
+   * @return
+   */
+  def dateDelectOneMonth(date_time: String): String = {
+    //    val date_time = "2017-06-06 03:39:09.0"
+    val sim = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = sim.parse(date_time)
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.add(Calendar.DATE, -31)
+    val newDate = c.getTime
+    sim.format(newDate)
+
+  }
+
+
+
+
   /**
     *日期时间格式标准化
     * @param str
@@ -126,6 +167,9 @@ trait Until {
     val newDate = c.getTime
     sim.format(newDate)
   }
+
+
+
 
   //当前日期前n天和后n天
   def currTimeFuction(date_time: String,d:Int): String = {
