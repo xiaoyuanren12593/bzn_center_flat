@@ -59,37 +59,37 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
 
     //过滤出无效数据
     val odrPolicyInsuredBznprdSalve = odrPolicyInsuredBznprd
-      .select("cert_no", "mobile", "years")
+      .selectExpr("cert_no", "mobile", "years")
       .where("cert_no is not null or mobile is not null")
 
     //身份证号和手机号都不为空的数据
     val odrPolicyInsuredBznprdTemp1 = odrPolicyInsuredBznprdSalve
-      .select("cert_no", "mobile", "years")
+      .selectExpr("cert_no", "mobile", "years")
       .where("cert_no is not null and mobile is not null")
 
     //增量数据
     val odrPolicyInsuredBznprdRes1 = odrPolicyInsuredBznprdTemp1.join(odsMd5MessageDetail, 'cert_no === 'insured_cert_no_salve and 'mobile === 'insured_mobile_salve, "leftouter")
-      .select("cert_no", "mobile", "years", "insured_cert_no_salve", "insured_mobile_salve")
+      .selectExpr("cert_no", "mobile", "years", "insured_cert_no_salve", "insured_mobile_salve")
       .where("insured_cert_no_salve is null and insured_mobile_salve is null")
 
     //身份证号不为空,手机号为空的数据
     val odrPolicyInsuredBznprdTemp2 = odrPolicyInsuredBznprdSalve
-      .select("cert_no", "mobile", "years")
+      .selectExpr("cert_no", "mobile", "years")
       .where("cert_no is not null and mobile is null")
 
     //增量数据
     val odrPolicyInsuredBznprdRes2 = odrPolicyInsuredBznprdTemp2.join(odsMd5MessageDetail, 'cert_no === 'insured_cert_no_salve, "leftouter")
-      .select("cert_no", "mobile", "years", "insured_cert_no_salve", "insured_mobile_salve")
+      .selectExpr("cert_no", "mobile", "years", "insured_cert_no_salve", "insured_mobile_salve")
       .where("insured_cert_no_salve is null")
 
     //身份证号为空,手机号不为空的数据
     val odrPolicyInsuredBznprdTemp3 = odrPolicyInsuredBznprdSalve
-      .select("cert_no", "mobile", "years")
+      .selectExpr("cert_no", "mobile", "years")
       .where("cert_no is null and mobile is not null")
 
     //增量数据
     val odrPolicyInsuredBznprdRes3 = odrPolicyInsuredBznprdTemp3.join(odsMd5MessageDetail, 'mobile === 'insured_mobile_salve, "leftouter")
-      .select("cert_no", "mobile", "years", "insured_cert_no_salve", "insured_mobile_salve")
+      .selectExpr("cert_no", "mobile", "years", "insured_cert_no_salve", "insured_mobile_salve")
       .where("insured_mobile_salve is null")
 
     //1.0所有增量数据
@@ -108,7 +108,7 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
 
     //身份证号和手机号都不为空的数据
     val bPolicySubjectPersonMasterBzncenTemp1 = bPolicySubjectPersonMasterBzncenSalve
-      .select("cert_no", "tel", "years")
+      .selectExpr("cert_no", "tel", "years")
       .where("cert_no is not null and tel is not null")
 
     //增量数据
@@ -118,7 +118,7 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
 
     //身份证号不为空,手机号为空的数据
     val bPolicySubjectPersonMasterBzncenTemp2 = bPolicySubjectPersonMasterBzncenSalve
-      .select("cert_no", "tel", "years")
+      .selectExpr("cert_no", "tel", "years")
       .where("cert_no is not null and tel is null")
 
     //增量数据
@@ -128,7 +128,7 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
 
     //身份证号为空,手机号不为空的数据
     val bPolicySubjectPersonMasterBzncenTemp3 = bPolicySubjectPersonMasterBzncenSalve
-      .select("cert_no", "tel", "years")
+      .selectExpr("cert_no", "tel", "years")
       .where("cert_no is null and tel is not null")
 
     //增量数据

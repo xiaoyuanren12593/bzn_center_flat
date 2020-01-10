@@ -249,7 +249,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     /**
       * 读取产品明细表,将蓝领外包以外的数据进行处理，用总保费替换初投保费
       */
-    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,one_level_pdt_cate from odsdb.ods_product_detail")
+   /* val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,one_level_pdt_cate from odsdb.ods_product_detail")
       .where("one_level_pdt_cate <> '蓝领外包'")
 
     val resEnd =
@@ -258,7 +258,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
           "case when product_code_slave is not null then first_premium else sum_premium end first_premium","sum_premium",
           "holder_name","insured_subject","policy_start_date","policy_end_date","policy_effect_date","order_date","pay_type","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","policy_status",
           "preserve_policy_no","insure_company_name","belongs_regional","belongs_industry","channel_id","channel_name","num_of_preson_first_policy",
-          "policy_create_time","policy_update_time","dw_create_time")
+          "policy_create_time","policy_update_time","dw_create_time")*/
 
     /**
       * 读取初投保费表
@@ -271,7 +271,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val bsChannelBznmana = readMysqlTable(sqlContext,"bs_channel_bznmana")
       .selectExpr("channel_id as channelId","sale_responsible_person_name as sales_name")
 
-    val restemp = resEnd.join(policyFirstPremiumBznprd,resEnd("policy_id") === policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
+    val restemp = bPolicyHolderCompanyProductNew.join(policyFirstPremiumBznprd,bPolicyHolderCompanyProductNew("policy_id") === policyFirstPremiumBznprd("policy_id_premium"),"leftouter")
       .selectExpr("clean(id) as id",
         "clean(master_policy_no) as master_policy_no",
         "clean(order_id) as order_id",
@@ -282,7 +282,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "clean(cast(policy_id as String)) as policy_id",
         "clean(policy_code) as policy_code",
         "policy_type",
-        "case when policy_id_premium is not null then cast(pay_amount as decimal(14,4)) else cast(first_premium as decimal(14,4)) end as first_premium",
+        "cast((case when (case when policy_id_premium is not null then cast(pay_amount as decimal(14,4)) else cast(first_premium as decimal(14,4)) end) is null then sum_premium else first_premium end) as decimal(14,4)) as first_premium",
         "cast(sum_premium as decimal(14,4)) as sum_premium",
         "clean(holder_name) as holder_name",
         "clean(insured_subject) as insured_subject",
@@ -577,13 +577,12 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
 
     val res = orderPolicyProductHolderInsurantItemOrderone.unionAll(orderPolicyProductHolderInsurantItemOrderTwo)
       .where("policy_code != '21010000889180002031' and policy_code != '21010000889180002022' and policy_code != '21010000889180002030'")
-    /**
+   /* /**
       * 读取产品明细表,将蓝领外包以外的数据进行处理，用总保费替换初投保费
       */
     val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,one_level_pdt_cate from odsdb.ods_product_detail")
-      .where("one_level_pdt_cate <> '蓝领外包'")
-    val resEnd = res.join(odsProductDetail,res("product_code")===odsProductDetail("product_code_slave"),"leftouter")
-      .selectExpr(
+      .where("one_level_pdt_cate <> '蓝领外包'")*/
+    val resEnd = res.selectExpr(
         "clean(id) as id",
         "clean(policy_no) as policy_no",
         "clean(order_id) as order_id",
@@ -594,7 +593,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "clean(product_name) as product_name",
         "clean(policy_id) as policy_id",
         "clean(policy_code) as policy_code",
-        "case when product_code_slave is not null then first_premium else sum_premium  end first_premium",
+        "case when first_premium is null then sum_premium else first_premium end as first_premium",
         "sum_premium",
         "trim(holder_name) as holder_name",
         "case when clean(insured_subject) is null then trim(holder_name) else clean(insured_subject) end as insured_subject",
