@@ -1,11 +1,6 @@
 package bzn.safedata
 
-import java.text.SimpleDateFormat
-import java.util.Date
-
 import bzn.job.common.{MysqlUntil, Until}
-import bzn.other.OdsOtherIncrementDetail.OfficialDataToHive
-import bzn.other.OdsOtherIncrementDetailTest.{clean, dateDelect, readMysqlTable, sparkConfInfo}
 import bzn.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext}
