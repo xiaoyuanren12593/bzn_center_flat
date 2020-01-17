@@ -1,7 +1,6 @@
 package bzn.ods.policy
 
 import bzn.job.common.{MysqlUntil, Until}
-
 import bzn.ods.util.SparkUtil
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -29,6 +28,7 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
 
+
   def HealthPreserve(hiveContext: HiveContext): DataFrame = {
     import hiveContext.implicits._
     hiveContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -36,6 +36,7 @@ import org.apache.spark.sql.hive.HiveContext
     val bPolicyBzncen = readMysqlTable(hiveContext, "b_policy_bzncen", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106")
       .selectExpr("policy_no as policy_no_salve", "proposal_no", "holder_name", "sell_channel_name")
+
 
     //读取健康续期表
 
@@ -49,14 +50,24 @@ import org.apache.spark.sql.hive.HiveContext
       .selectExpr("proposal_no as proposal_no_salve", "name")
 
     //健康续期数据关联保单表
-    val resTemp = bPolicyInstallmentPlanBzncen.join(bPolicyBzncen, 'policy_no === 'policy_no_salve, "leftouter")
+    val resTempSalve = bPolicyInstallmentPlanBzncen.join(bPolicyBzncen, 'policy_no === 'policy_no_salve, "leftouter")
       .selectExpr("policy_no", "proposal_no", "premium", "holder_name", "sell_channel_name", "update_time")
+
+    //读取保单数据拿到保单号
+    val odsPolicyDetail = hiveContext.sql("select policy_no as policy_no_salve,policy_code from odsdb.ods_policy_detail")
+
+    //将上述结果关联保单表
+    val resTemp = resTempSalve.join(odsPolicyDetail, 'policy_no === 'policy_no_salve, "leftouter")
+      .selectExpr("policy_no","policy_code", "proposal_no", "premium", "holder_name", "sell_channel_name", "update_time")
+
+
 
     val res = resTemp.join(tProposalSubjectPersonMaster, 'proposal_no === 'proposal_no_salve, "leftouter")
       .selectExpr(
         "getUUID() as id",
         "policy_no as insurance_policy_no",
-        "concat(policy_no,'_',date_format(update_time,'yyyyMMddHHmmss')) as preserve_id",
+        "policy_code",
+        "concat(policy_code,'_',date_format(update_time,'yyyyMMddHHmmss')) as preserve_id",
         "premium as premium_total",
         "holder_name",
         "name as insurer_name",
@@ -64,6 +75,7 @@ import org.apache.spark.sql.hive.HiveContext
         "update_time as policy_effective_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(), 'yyyy-MM-dd HH:mm:ss') as update_time")
+
     res
 
   }

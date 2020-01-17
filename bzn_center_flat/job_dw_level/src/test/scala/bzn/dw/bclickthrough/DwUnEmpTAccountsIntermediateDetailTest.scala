@@ -24,14 +24,14 @@ import org.apache.spark.sql.hive.HiveContext
 
 
     val res = getAllBusinessPolicyDetail(hiveContext)
-    val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
-    val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
+  /*  val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
+    val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)*/
     val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
 
-
+  /*
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
 
-    finRes.printSchema()
+    finRes.printSchema()*/
     // res.printSchema()
     // val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
     // val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
@@ -506,7 +506,7 @@ import org.apache.spark.sql.hive.HiveContext
     /**
       * 读取健康批单数据
       */
-    val odsHealthPreserceDetail = hqlContext.sql("select insurance_policy_no as policy_code_preserve,preserve_id,premium_total,holder_name as holder_name_master,insurer_name,channel_name as channel_name_master," +
+    val odsHealthPreserceDetail = hqlContext.sql("select policy_code as policy_code_preserve,preserve_id,premium_total,holder_name as holder_name_master,insurer_name,channel_name as channel_name_master," +
       "policy_effective_time,create_time,policy_effective_time as order_date from odsdb.ods_health_installment_plan")
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes.join(odsSportProductDetail, policyAndPlanAndTeamRes("product_code") === odsSportProductDetail("product_code_slave"))
@@ -629,7 +629,6 @@ import org.apache.spark.sql.hive.HiveContext
         "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
         "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
         "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
-
     resfin
   }
 
