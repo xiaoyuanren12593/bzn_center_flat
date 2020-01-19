@@ -80,6 +80,8 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
 
         val riskDate = x.getAs[String]("risk_date")
 
+        println(id)
+
         /**
           * 将出险时间改为正常的时间格式
           */
@@ -95,6 +97,8 @@ object DwPolicyClaimDetailTest extends SparkUtil with Until{
         (id,preCom,finalPayment,finalPaymentRes,riskDateRes)
       })
       .toDF("id_slave","pre_com_new","final_payment_new","res_pay","risk_date_res")
+
+    odsClaimDetailTwo.foreach(println)
 
     val odsClaimDetail = odsClaimDetailOne.join(odsClaimDetailTwo,odsClaimDetailOne("id") === odsClaimDetailTwo("id_slave"))
       .selectExpr(

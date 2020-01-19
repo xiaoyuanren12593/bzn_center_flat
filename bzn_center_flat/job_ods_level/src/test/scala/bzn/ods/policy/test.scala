@@ -24,6 +24,9 @@ object test extends Until {
   def main(args: Array[String]): Unit = {
 
 
+    println(MD5("北京诠道科技有限公司"))
+//    5efa43fccd26383273bd8ad97451a30a
+//    5efa43fccd26383273bd8ad97451a30a
     println(MD5("println(MD5(\"\"\"\"))"))
 
   }

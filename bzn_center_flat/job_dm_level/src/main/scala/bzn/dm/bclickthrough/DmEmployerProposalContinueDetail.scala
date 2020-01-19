@@ -94,9 +94,9 @@ object DmEmployerProposalContinueDetail extends SparkUtil with Until with MysqlU
     val driver = "mysql.driver"
     val user106 = "mysql.username.106"
     val pass106 = "mysql.password.106"
-    val url106 = "mysql_url.106.dmdb"
+    val url106 = "mysql.url.106.dmdb"
 
-    saveASMysqlTable(mysqlRes: DataFrame, tableName, SaveMode.Overwrite,user103,pass103,driver,url103)
+//    saveASMysqlTable(mysqlRes: DataFrame, tableName, SaveMode.Overwrite,user103,pass103,driver,url103)
     saveASMysqlTable(mysqlRes: DataFrame, tableName, SaveMode.Overwrite,user106,pass106,driver,url106)
     sc.stop ()
   }
