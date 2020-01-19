@@ -1,3 +1,12 @@
+###业管库数据  "官网渠道"、"保准牛官网"对应的渠道为“直客”，销售默认为“公司”
+SELECT DISTINCT a.holder_name,a.sell_channel_name,a.business_belong_user_name,b.channel_user_type,a.`status`,
+start_date
+from t_proposal_bznbusi a
+LEFT JOIN bs_channel_bznmana b on b.channel_id = a.sell_channel_code and b.business_type='2'
+WHERE a.business_type='2'
+and a.`status` = 5
+;
+
 -- gsc
 SELECT c.insurance_policy_no,c.policy_no,c.holder_name,a.plan_name,
 case d.profession_type when '1' then '1-3类'
