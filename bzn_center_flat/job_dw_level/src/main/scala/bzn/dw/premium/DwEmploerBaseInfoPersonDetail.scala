@@ -160,9 +160,27 @@ import org.apache.spark.sql.hive.HiveContext
         "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName","insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay")
 
     //读取方案信息表
-    val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
+    val odsPolicyProductPlanDetailTemp: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
       "sku_ratio,sku_price,sku_charge_type,tech_service_rate,economic_rate," +
       "commission_discount_rate,commission_rate from odsdb.ods_policy_product_plan_detail")
+
+    //读取工种类别表
+    val odsWorkGradeDetail = sqlContext.sql("select policy_code,profession_type from odsdb.ods_work_grade_detail")
+
+    //关联工种类别表拿到类别字段
+    val odsPolicyProductPlanDetail = odsPolicyProductPlanDetailTemp.join(odsWorkGradeDetail, 'policy_code_temp === 'policy_code, "leftouter")
+      .selectExpr("policy_code_temp",
+        "product_code_temp",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "sku_price",
+        "sku_charge_type",
+        "tech_service_rate",
+        "economic_rate",
+        "commission_discount_rate",
+        "commission_rate",
+        "profession_type")
 
     //将上述结果与方案信息表关联
     val res = insuredAndClaimRes.join(odsPolicyProductPlanDetail, insuredAndClaimRes("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"), "leftouter")
@@ -182,6 +200,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(product_name) as product_name",
         "clean(one_level_pdt_cate) as one_level_pdt_cate",
         "clean(two_level_pdt_cate) as two_level_pdt_cate",
+        "clean(profession_type) as profession_type",
         "clean(ent_id) as ent_id ", "clean(ent_name) as ent_name",
         "clean(case when channel_id is null or channel_id='' then channelId else channel_id end) as channel_id ",
         "clean(case when channel_name is null or channel_name ='' then channelName else channel_name end) as channel_name",
@@ -195,7 +214,6 @@ import org.apache.spark.sql.hive.HiveContext
         "tech_service_rate", "economic_rate", "commission_discount_rate", "commission_rate", "res_pay",
         "getNow() as dw_create_time")
     res
-
   }
 
 }

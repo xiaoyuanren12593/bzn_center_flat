@@ -156,10 +156,27 @@ import org.apache.spark.sql.hive.HiveContext
          "final_payment", "res_pay")
  */
     //读取方案信息表
-    val odsPolicyProductPlanDetail: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
+    val odsPolicyProductPlanDetailTemp: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
       "sku_ratio,sku_price,sku_charge_type,tech_service_rate,economic_rate," +
       "commission_discount_rate,commission_rate from odsdb.ods_policy_product_plan_detail")
 
+    //读取工种类别表
+    val odsWorkGradeDetail = sqlContext.sql("select policy_code,profession_type from odsdb.ods_work_grade_detail")
+
+    //关联工种类别表拿到类别字段
+    val odsPolicyProductPlanDetail = odsPolicyProductPlanDetailTemp.join(odsWorkGradeDetail, 'policy_code_temp === 'policy_code, "leftouter")
+      .selectExpr("policy_code_temp",
+        "product_code_temp",
+        "sku_coverage",
+        "sku_append",
+        "sku_ratio",
+        "sku_price",
+        "sku_charge_type",
+        "tech_service_rate",
+        "economic_rate",
+        "commission_discount_rate",
+        "commission_rate",
+        "profession_type")
 
     //将上述结果与方案信息表关联
     val res = resProductDetail.join(odsPolicyProductPlanDetail, resProductDetail("policy_code") === odsPolicyProductPlanDetail("policy_code_temp"), "leftouter")
@@ -185,6 +202,7 @@ import org.apache.spark.sql.hive.HiveContext
         "holder_city",
         "one_level_pdt_cate",
         "two_level_pdt_cate",
+        "profession_type",
         "first_premium",
         "sum_premium",
         "num_of_preson_first_policy",
