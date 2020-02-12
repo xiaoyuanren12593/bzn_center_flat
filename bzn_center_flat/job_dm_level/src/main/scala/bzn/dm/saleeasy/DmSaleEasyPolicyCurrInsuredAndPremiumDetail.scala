@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.{ClickHouseUntil, Until}
+import bzn.job.common.{ClickHouseUntil, DataBaseUtil, Until}
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -13,7 +13,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/9/29
 * @Describe:
-*/ object DmSaleEasyPolicyCurrInsuredAndPremiumDetail extends SparkUtil with Until with ClickHouseUntil{
+*/
+object DmSaleEasyPolicyCurrInsuredAndPremiumDetail extends SparkUtil with Until with DataBaseUtil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -22,12 +23,19 @@ import org.apache.spark.{SparkConf, SparkContext}
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res: DataFrame = DmSaleEasyPolicyCurrInsuredAndPremium(hiveContext)
-    hiveContext.sql("truncate table dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
-    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetail")
+//    hiveContext.sql("truncate table dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
+//    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_saleeasy_policy_curr_insured_premium_detail")
+//    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dm_data/saleeasyPolicyCurrInsuredPremiumDetail")
+    val tableName = "dm_saleeasy_policy_curr_insured_premium_detail"
+    val url = "clickhouse.url"
+    val urlTest = "clickhouse.url.odsdb.test"
+    val user = "clickhouse.username"
+    val possWord = "clickhouse.password"
+    val driver = "clickhouse.driver"
+    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+//    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
+
     sc.stop()
-
-
   }
 
   /**

@@ -42,14 +42,16 @@ object DwSaleEasySportsDetail  extends  SparkUtil with Until with DataBaseUtil{
     val nowTime = getNowTime().substring(0,10)
 
     val tableName = "dm_saleeasy_sports_detail"
-    val urlTest = "clickhouse.url"
+//    val urlTest = "clickhouse.url.odsdb.test"
+    val url = "clickhouse.url"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
 
-    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
+    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+//    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
 
-    val data = readClickHouseTable(hiveContext:SQLContext,tableName: String,urlTest:String,user:String,possWord:String)
+    val data = readClickHouseTable(hiveContext:SQLContext,tableName: String,url:String,user:String,possWord:String)
       .limit(100).count()
 
     if(data > 0){

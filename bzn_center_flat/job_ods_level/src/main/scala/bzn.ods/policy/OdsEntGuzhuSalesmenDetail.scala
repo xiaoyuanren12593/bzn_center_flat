@@ -2,9 +2,9 @@ package bzn.ods.policy
 
 import bzn.job.common.{DataBaseUtil, Until}
 import bzn.ods.util.SparkUtil
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -12,21 +12,21 @@ import org.apache.spark.sql.hive.HiveContext
   * Time:16:12
   * describe: 雇主销售渠道数据
   **/
-object OdsEntGuzhuSalesmenDetailTest extends SparkUtil with Until with DataBaseUtil{
+object OdsEntGuzhuSalesmenDetail extends SparkUtil with Until with DataBaseUtil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
 
-    val res = getEntEmpSalemensData(hiveContext)
+    val res: DataFrame = getEntEmpSalemensData(hiveContext)
 
-
-//    hiveContext.sql("truncate table odsdb.ods_ent_guzhu_salesman_detail")
-
-//    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_ent_guzhu_salesman_detail")
+    if(res.count() > 0 ){
+      hiveContext.sql("truncate table odsdb_test.ods_ent_guzhu_salesman_detail")
+      res.write.mode(SaveMode.Append).saveAsTable("odsdb_test.ods_ent_guzhu_salesman_detail")
+    }
 
     sc.stop()
   }
@@ -43,7 +43,6 @@ object OdsEntGuzhuSalesmenDetailTest extends SparkUtil with Until with DataBaseU
     val empName = "ods_ent_guzhu_salesman_detail"
     val officialUrl = "mysql.url.106"
     val officialUrlOdsdb = "mysql.url.106.odsdb"
-    val officialUrlDmdb = "mysql.url.106.dmdb"
     val officialUser = "mysql.username.106"
     val officialPass = "mysql.password.106"
     val driver = "mysql.driver"
@@ -51,12 +50,6 @@ object OdsEntGuzhuSalesmenDetailTest extends SparkUtil with Until with DataBaseU
     val user103 = "mysql.username.103"
     val pass103 = "mysql.password.103"
     val url103 = "mysql_url.103.odsdb"
-
-//    val empData = readMysqlTable(sqlContext: SQLContext, empName: String,officialUser:String,officialPass:String,driver:String,officialOdsdbUrl:String)
-//      .selectExpr("ent_id as ent_id_salve","getMD5(ent_name) as ent_id_new","ent_name","channel_id",
-//        "getMD5(case when channel_name = '直客' then ent_name else channel_name end) as channel_id_new",
-//        "case when channel_name = '直客' then ent_name else channel_name end as channel_name")
-//      .where("channel_id_new <> channel_id or ent_id_new <> ent_id")
 
     val empData = readMysqlTable(sqlContext: SQLContext, empName: String,officialUser:String,officialPass:String,driver:String,officialUrlOdsdb:String)
 
@@ -126,14 +119,11 @@ object OdsEntGuzhuSalesmenDetailTest extends SparkUtil with Until with DataBaseU
         "date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time",
         "date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time")
 
-    res.show(1000)
+    saveASMysqlTable(res: DataFrame, empName: String, SaveMode.Append,user103:String,pass103:String,driver:String,url103:String)
+    saveASMysqlTable(res: DataFrame, empName: String, SaveMode.Append,officialUser:String,officialPass:String,driver:String,officialUrlOdsdb:String)
 
-    res.printSchema()
+    val resultToHive = readMysqlTable(sqlContext: SQLContext, empName: String,officialUser:String,officialPass:String,driver:String,officialUrlOdsdb:String)
 
-//    saveASMysqlTable(res: DataFrame, empName: String, SaveMode.Append,officialUser:String,officialPass:String,driver:String,officialUrlDmdb:String)
-
-//    val resultToHive = readMysqlTable(sqlContext: SQLContext, empName: String,officialUser:String,officialPass:String,driver:String,officialUrlDmdb:String)
-//    resultToHive.printSchema()
-//    resultToHive
+    resultToHive
   }
 }

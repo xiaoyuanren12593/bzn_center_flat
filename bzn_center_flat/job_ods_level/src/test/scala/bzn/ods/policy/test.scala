@@ -22,7 +22,11 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   **/
 object test extends Until {
   def main(args: Array[String]): Unit = {
-
+    if(null == null){
+      println("q3")
+    }else{
+      println("123")
+    }
 
     println(MD5("北京诠道科技有限公司"))
 //    5efa43fccd26383273bd8ad97451a30a
@@ -36,7 +40,6 @@ object test extends Until {
     val md5 = MessageDigest.getInstance("MD5")
     val encoded = md5.digest((content).getBytes)
     encoded.map("%02x".format(_)).mkString
-
 
   }
 
