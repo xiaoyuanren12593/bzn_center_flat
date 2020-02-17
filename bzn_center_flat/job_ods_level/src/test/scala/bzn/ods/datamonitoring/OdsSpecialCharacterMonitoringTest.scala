@@ -1,9 +1,9 @@
-package bzn.datamonitoring
+package bzn.ods.datamonitoring
 
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import bzn.datamonitoring.OdsRateRuleMonitoringTest.saveASMysqlTable
+import bzn.ods.datamonitoring.OdsRateRuleMonitoringTest.saveASMysqlTable
 import bzn.job.common.{MysqlUntil, Until}
 import bzn.other.OdsSpecialCharacterMonitoringTest.{LinefeedMatching, SpaceMatching, readMysqlTable, sparkConfInfo}
 import bzn.util.SparkUtil
@@ -361,9 +361,7 @@ object OdsSpecialCharacterMonitoringTest extends SparkUtil with Until with Mysql
         "mysql.driver", "mysql.url.106")
 
 
-
-
-    val res = bPolicyOne.unionAll(openEmployerPolicyBznopen1).unionAll(openEmployerPolicyBznopen2)
+    val resTemp1 = bPolicyOne.unionAll(openEmployerPolicyBznopen1).unionAll(openEmployerPolicyBznopen2)
       .unionAll(openEmployerPolicyBznopen3)
       .unionAll(openEmployerPolicyBznope4).unionAll(openEmployerPolicyBznope5)
       .unionAll(odrPolicyBznprd1).unionAll(odrPolicyHolderBznprd1).unionAll(odrPolicyHolderBznprd3)
@@ -391,11 +389,6 @@ object OdsSpecialCharacterMonitoringTest extends SparkUtil with Until with Mysql
     //
 
 
-    saveASMysqlTable(res, "dm_special_character_monitoring_detail", SaveMode.Overwrite,
-      "mysql.username.103",
-      "mysql.password.103",
-      "mysql.driver",
-      "mysql.url.103.dmdb")
 
 
 
@@ -529,49 +522,6 @@ object OdsSpecialCharacterMonitoringTest extends SparkUtil with Until with Mysql
     val res = SQLContext.sql("select * from SpecialCharacterMonitoring where monitoring_level=1 or monitoring_level=2")
     res
   }
-
-
-  /*
-    //hive匹配特殊字符串
-    def HivePecialCharacter(hiveContext: HiveContext, tableName: String, fieldType: String): DataFrame = {
-      import hiveContext.implicits._
-      hiveContext.udf.register("getNow", () => {
-        val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") //设置日期格式
-        val date = df.format(new Date()) // new Date()为获取当前系统时间
-        date + ""
-      })
-      var table = tableName
-      var field = fieldType
-      val resTemp: DataFrame = hiveContext.sql(s"select cast($field as string) as field from $table group by $field")
-        .map(x => {
-          val fieldInfo = x.getAs[String]("field")
-          //匹配空格
-          val Space: Boolean = SpaceMatching(fieldInfo)
-          //匹配换行
-          val Linefeed = LinefeedMatching(fieldInfo)
-          val str = if (Space == true) {
-            fieldInfo + "\u0001" + table + "\u0001" + "有空格" + "\u0001" + "字段信息有空格" + "\u0001" + 1 + "\u0001" + 2
-          } else if (Linefeed == true) {
-            fieldInfo + "\u0001" + table + "\u0001" + "有换行" + "\u0001" + "字段信息有换行" + "\u0001" + 1 + "\u0001" + 1
-          } else {
-            fieldInfo + "\u0001" + table + "\u0001" + "无空格,无换行" + "\u0001" + "字段信息正确" + "\u0001" + 1 + "\u0001" + 0
-          }
-          val strings = str.split("\u0001")
-          (strings(0), strings(1), strings(2), strings(3), strings(4), strings(5))
-        }).toDF("rule_type", "rule_table", "rule_name", "rule_desc", "rule_status", "rule_level")
-      val res = resTemp.
-        selectExpr(
-          "rule_type",
-          "rule_table",
-          "rule_name",
-          "rule_desc",
-          "rule_status",
-          "rule_level",
-          "getNow() as create_time",
-          "getNow() as update_time")
-      res
-    }*/
-
 
   //匹配空格
   def SpaceMatching(Temp: String): Boolean = {
