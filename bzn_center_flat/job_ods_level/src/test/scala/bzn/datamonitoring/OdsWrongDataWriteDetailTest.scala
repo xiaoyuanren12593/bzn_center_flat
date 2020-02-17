@@ -540,9 +540,9 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
     var urls = url
     val PolicyStatusList = List(-1, 0, 1, 4)
     val resTemp: DataFrame = readMysqlTable(SQLContext, table, username, password, drivers, urls)
-      .selectExpr(s"cast($field as string) as field")
+      .selectExpr(s"cast($field as Int) as field")
       .map(x => {
-        val value = x.getAs[String]("field")
+        val value = x.getAs[Int]("field")
         val payStatusRes = if (PolicyStatusList.contains(value)) {
 
           house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + value + "\u0001" + "正确" + "\u0001" + 0
@@ -641,9 +641,9 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
     var urls = url
     val payStatusList = List(1, 0, -1)
     val resTemp: DataFrame = readMysqlTable(SQLContext, table, username, password, drivers, urls)
-      .selectExpr(s"cast($field as string) as field")
+      .selectExpr(s"cast($field as Int) as field")
       .map(x => {
-        val value = x.getAs[String]("field")
+        val value = x.getAs[Int]("field")
         val payStatusRes = if (payStatusList.contains(value)) {
 
           house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + value + "\u0001" + "正确" + "\u0001" + 0
@@ -790,9 +790,9 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
     var urls = url
     val PolicyStatusList = List(0, 1, 4)
     val resTemp: DataFrame = readMysqlTable(SQLContext, table, username, password, drivers, urls)
-      .selectExpr(s"cast($field as string) as field")
+      .selectExpr(s"cast($field as Int) as field")
       .map(x => {
-        val value = x.getAs[String]("field")
+        val value = x.getAs[Int]("field")
         val payStatusRes = if (PolicyStatusList.contains(value)) {
 
           house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + value + "\u0001" + "正确" + "\u0001" + 0
