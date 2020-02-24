@@ -6,7 +6,7 @@ package bzn.ods.policy
   * Time:10:27
   * describe: this is new class
   **/
-trait OdsMonitorToolTest {
+trait OdsMonitorTool {
 
   /**
     * 字段范围：新增

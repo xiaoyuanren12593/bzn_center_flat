@@ -77,11 +77,12 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取投保人企业
       */
     val bPolicyHolderCompanyBzncen: DataFrame = readMysqlTable(sqlContext,"b_policy_holder_company_bzncen")
-      .selectExpr("policy_no","name","industry_code","province_code","city_code","county_code")
+      .selectExpr("policy_no","name","industry_code","industry_name","province_code","city_code","county_code")
       .map(x => {
         val policyNo = x.getAs[String]("policy_no")
         val name = x.getAs[String]("name")
         val industryCode = x.getAs[String]("industry_code")
+        val industryName = x.getAs[String]("industry_name")
         val provinceCode = x.getAs[String]("province_code")
         val cityCode = x.getAs[String]("city_code")
         val countyCode = x.getAs[String]("county_code")
@@ -93,18 +94,19 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         if(belongArea == ""){
           belongArea = null
         }
-        (policyNo,name,industryCode,belongArea)
-      }).toDF("policy_no","name","industry_code","belongArea")
+        (policyNo,name,industryCode,industryName,belongArea)
+      }).toDF("policy_no","name","industry_code","industry_name","belongArea")
 
     /**
       * 读取投保人个人
       */
     val bPolicyHolderPersonBzncen: DataFrame = readMysqlTable(sqlContext,"b_policy_holder_person_bzncen")
-      .selectExpr("policy_no","name","industry_code","province_code","city_code","county_code")
+      .selectExpr("policy_no","name","industry_code","industry_name","province_code","city_code","county_code")
       .map(x => {
         val policyNo = x.getAs[String]("policy_no")
         val name = x.getAs[String]("name")
         val industryCode = x.getAs[String]("industry_code")
+        val industryName = x.getAs[String]("industry_name")
         val provinceCode = x.getAs[String]("province_code")
         val cityCode = x.getAs[String]("city_code")
         val countyCode = x.getAs[String]("county_code")
@@ -116,8 +118,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         if(belongArea == ""){
           belongArea = null
         }
-        (policyNo,name,industryCode,belongArea)
-      }).toDF("policy_no","name","industry_code","belongArea")
+        (policyNo,name,industryCode,industryName,belongArea)
+      }).toDF("policy_no","name","industry_code","industry_name","belongArea")
 
     val bPolicyHolderCompanyUnion = bPolicyHolderCompanyBzncen.unionAll(bPolicyHolderPersonBzncen)
 
@@ -198,7 +200,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val bPolicyHolderCompany = bPolicyBzncenTemp2.join(bPolicyHolderCompanyUnion,bPolicyBzncenTemp2("master_policy_no") ===bPolicyHolderCompanyUnion("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","name as holder_company_person_name","master_policy_no","policy_code","policy_type","order_id","product_code","order_code","user_id","first_premium","premium",
         "status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_type","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type",
-        "continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num","create_time","update_time")
+        "continued_policy_no","insurance_name","industry_code","industry_name","belongArea","premium_price","first_insure_master_num","create_time","update_time")
 
     /**
       * 上结果与产品表进行关联
@@ -206,7 +208,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val bPolicyHolderCompanyProductTemp = bPolicyHolderCompany.join(bsProductBzncen,bPolicyHolderCompany("product_code")===bsProductBzncen("product_code_2"),"leftouter")
       .selectExpr("policy_id","holder_name","holder_company_person_name","master_policy_no","policy_code","policy_type","order_id","product_code","product_name","order_code","user_id","first_premium","premium",
         "status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_type","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type",
-        "continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num","create_time","update_time")
+        "continued_policy_no","insurance_name","industry_code","industry_name","belongArea","premium_price","first_insure_master_num","create_time","update_time")
 
     /**
       * 上述结果与产品方案表进行关联
@@ -219,7 +221,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val bPolicyHolderCompanyProductInsured = bPolicyHolderCompanyProduct.join(bPolicySubject,bPolicyHolderCompanyProduct("master_policy_no") ===bPolicySubject("policy_no"),"leftouter")
       .selectExpr("policy_id","holder_name","holder_company_person_name","master_policy_no","policy_code","policy_type","order_id","product_code","product_name",
         "order_code","user_id","first_premium","premium","insured_name","status","channel_id","channel_name","start_date","end_date","effect_date","order_date","pay_type",
-        "commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","continued_policy_no","insurance_name","industry_code","belongArea","premium_price","first_insure_master_num",
+        "commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","continued_policy_no","insurance_name","industry_code","industry_name","belongArea","premium_price","first_insure_master_num",
         "create_time","update_time")
 
     bPolicyHolderCompanyProductInsured.registerTempTable("bPolicyHolderCompanyProductTemp")
@@ -233,7 +235,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       .selectExpr("getUUID() as id","master_policy_no","order_id","order_code","user_id","product_code","product_name","policy_id","policy_code","policy_type","first_premium",
         "premium as sum_premium","holder_name_new as holder_name","insured_name as insured_subject","start_date as policy_start_date",
         "end_date as policy_end_date","effect_date as policy_effect_date","order_date","pay_type","commission_discount_percent","policy_source_code","policy_source_name","big_policy","invoice_type","policy_status","continued_policy_no as preserve_policy_no",
-        "insurance_name as insure_company_name","belongArea as belongs_regional","industry_code as belongs_industry","channel_id","channel_name",
+        "insurance_name as insure_company_name","belongArea as belongs_regional","industry_code as belongs_industry","industry_name as belongs_industry_name","channel_id","channel_name",
         "product_code as sku_id","first_insure_master_num as num_of_preson_first_policy","create_time as policy_create_time",
         "update_time as policy_update_time","getNow() as dw_create_time")
 
@@ -299,7 +301,9 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "policy_status",
         "clean(preserve_policy_no) as preserve_policy_no",
         "clean(insure_company_name) as insure_company_name",
-        "clean(belongs_regional) as belongs_regional","clean(belongs_industry) as belongs_industry",
+        "clean(belongs_regional) as belongs_regional",
+        "clean(belongs_industry) as belongs_industry",
+        "clean(belongs_industry_name) as belongs_industry_name",
         "clean(channel_id) as channel_id",
         "clean(channel_name) as channel_name",
         "num_of_preson_first_policy",
@@ -335,7 +339,9 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "preserve_policy_no",
         "order_date",
         "insure_company_name",
-        "belongs_regional", "belongs_industry",
+        "belongs_regional",
+        "belongs_industry",
+        "belongs_industry_name",
         "channel_id",
         "channel_name",
         "clean(case when sales_name = '' then null when sales_name = '客户运营负责人' then null " + "when sales_name ='销售默认' then null when sales_name = '运营默认' then null else sales_name end) as sales_name",
@@ -375,8 +381,6 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val odrOrderInfoBznprd: DataFrame = readMysqlTable(sqlContext,"odr_order_info_bznprd")
       .selectExpr("id as master_order_id","order_code","user_id","pay_amount as pay_amount_master","sales_name","pay_type") //1是线上 2是线下
 
-
-
     /**
       * 读取初投保费表
       */
@@ -395,11 +399,13 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取投保人信息表
       */
     val odrPolicyHolderBznprd: DataFrame = readMysqlTable(sqlContext,"odr_policy_holder_bznprd")
-      .selectExpr("policy_id","name","province","city","district","company_name")
+      .selectExpr("policy_id","name","province","city","district","company_name","business_nature","business_line")
       .map(x => {
         val policyId = x.getAs[String]("policy_id")
         var name = x.getAs[String]("name")
         val companyName = x.getAs[String]("company_name")
+        val industryCode = x.getAs[String]("business_nature")
+        val industryName = x.getAs[String]("business_line")
         if(companyName != null && companyName.length >0){
           name = companyName
         }
@@ -411,8 +417,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
           if(province.length == 6 && city.length == 6 && district.length == 6)
             belongArea = province.substring(0,2)+city.substring(2,4)+district.substring(4,6)
         }
-        (policyId,name,belongArea)
-      }).toDF("policy_id","holder_subject","belongArea")
+        (policyId,name,industryCode,industryName,belongArea)
+      }).toDF("policy_id","holder_subject","industry_code","industry_name","belongArea")
 
     /**
       * 读取被保企业信息表
@@ -430,7 +436,7 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
       * 读取子保单表
       */
     val odrOrderItemInfoBznprd: DataFrame = readMysqlTable(sqlContext,"odr_order_item_info_bznprd")
-      .selectExpr("order_id","industry_code","quantity")
+      .selectExpr("order_id","quantity")
 
     /**
       * 读取保单表和方案表作为临时表
@@ -526,12 +532,12 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
     val orderPolicyProductHolder = orderPolicyProduct.join(odrPolicyHolderBznprd,orderPolicyProduct("master_policy_id") === odrPolicyHolderBznprd("policy_id"),"leftouter")
       .selectExpr("master_order_id","policy_type","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium",
         "holder_subject","status","channelId","channel_name","sales_name","start_date","end_date","effect_date","commission_discount_percent","policy_source_code","policy_source_name",
-        "big_policy","invoice_type","pay_type", "renewal_policy_code","order_date","insure_company_name","belongArea","create_time","update_time")
+        "big_policy","invoice_type","pay_type", "renewal_policy_code","order_date","insure_company_name","industry_code","industry_name","belongArea","create_time","update_time")
 
     val orderPolicyProductHolderInsurant = orderPolicyProductHolder.join(odrPolicyInsurantBznprd,orderPolicyProductHolder("master_policy_id") === odrPolicyInsurantBznprd("policy_id"),"leftouter")
       .selectExpr("master_order_id","policy_type","order_code","user_id","pay_amount","master_policy_id","policy_code","insure_code","product_name","premium","holder_subject",
         "insured_subject","status","channelId","channel_name","sales_name","start_date","end_date","effect_date","commission_discount_percent","policy_source_code","policy_source_name",
-        "big_policy","invoice_type","pay_type", "renewal_policy_code","order_date", "insure_company_name","belongArea","create_time","update_time")
+        "big_policy","invoice_type","pay_type", "renewal_policy_code","order_date", "insure_company_name","industry_code","industry_name","belongArea","create_time","update_time")
 
     val orderPolicyProductHolderInsurantItemOrder = orderPolicyProductHolderInsurant.join(odrOrderItemInfoBznprd,orderPolicyProductHolderInsurant("master_order_id") === odrOrderItemInfoBznprd("order_id"),"leftouter")
       .selectExpr("getUUID() as id",
@@ -561,7 +567,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "order_date",
         "insure_company_name",
         "belongArea as belongs_regional",
-        "industry_code as belongs_industry",
+        "industry_code",
+        "industry_name",
         "channelId","channel_name","sales_name",
         "quantity as num_of_preson_first_policy",
         "create_time as policy_create_time",
@@ -606,7 +613,8 @@ object OdsPolicyDetailTest extends SparkUtil with Until{
         "order_date",
         "clean(insure_company_name) as insure_company_name",
         "clean(belongs_regional) as belongs_regional",
-        "clean(belongs_industry) as belongs_industry",
+        "clean(industry_code) as belongs_industry",
+        "clean(industry_name) as belongs_industry_name",
         "clean(channelId) as channel_id","clean(channel_name) as channel_name",
         "case when sales_name = '' then null " +
           "when sales_name = '客户运营负责人' then null " +

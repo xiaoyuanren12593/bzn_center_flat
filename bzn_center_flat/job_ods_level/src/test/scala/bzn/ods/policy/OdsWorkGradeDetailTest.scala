@@ -157,6 +157,9 @@ object OdsWorkGradeDetailTest extends SparkUtil with Until with DataBaseUtil{
       })
       .toDF("insurance_policy_no","proposal_no","policy_no","proposal_status","insurance_name","profession_type_master","plan_name","product_code","plan_detail_code")
 
+    /**
+      * 无忧保方案数据
+      */
     val wybData = proposalAndPolicy.join(dictChinalifeWybPlanBznbusi,'plan_detail_code==='plan_code_salve)
       .where("product_code = 'P00001800' and profession_type is not null")
       .selectExpr(
@@ -200,7 +203,8 @@ object OdsWorkGradeDetailTest extends SparkUtil with Until with DataBaseUtil{
         "is_social_insurance as join_social",
         "is_commission_discount",
         "extend_new_person",
-        "is_month_replace"
+        "is_month_replace",
+        "plan_type"
       )
 //    wybData.show()
     wybData.printSchema()
@@ -257,9 +261,13 @@ object OdsWorkGradeDetailTest extends SparkUtil with Until with DataBaseUtil{
         "case join_social when '1' then 'Y' when '0' then 'N' else null end as join_social",
         "is_commission as is_commission_discount",
         "'' as extend_new_person",
-        "'' as is_month_replace"
+        "'' as is_month_replace",
+        "type as plan_type"
       )
 
+    /**
+      * 泰康団意
+      */
     val tkData = proposalAndPolicy.where("product_code = 'P00001728'")
       .selectExpr(
         "insurance_policy_no as policy_code","proposal_no","policy_no","proposal_status","insurance_name","plan_name",
@@ -302,7 +310,8 @@ object OdsWorkGradeDetailTest extends SparkUtil with Until with DataBaseUtil{
         "'' as join_social",
         "'' is_commission_discount",
         "'' as extend_new_person",
-        "'' as is_month_replace"
+        "'' as is_month_replace",
+        "'' as plan_type"
       )
 
     tkData.printSchema()
@@ -323,7 +332,7 @@ object OdsWorkGradeDetailTest extends SparkUtil with Until with DataBaseUtil{
       """
         |select *,case profession_type when 'K1' then '1-2类'
         |when 'K2' then '1-3类' when 'K3' then '1-4类' when 'K4' then '5类' else null end as profession_type_new,society_scale as join_social,
-        |'' as is_commission_discount,'' as extend_new_person,'' as is_month_replace
+        |'' as is_commission_discount,'' as extend_new_person,'' as is_month_replace, '' as plan_type
         |from zhDataTemp
       """.stripMargin)
       .drop("profession_type")
@@ -378,6 +387,7 @@ object OdsWorkGradeDetailTest extends SparkUtil with Until with DataBaseUtil{
         "clean(is_commission_discount) as is_commission_discount",
         "clean(extend_new_person) as extend_new_person",
         "clean(is_month_replace) as is_month_replace",
+        "clean(plan_type) as plan_type",
         "getNow() as dw_create_time"
       )
 
