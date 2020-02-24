@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.job.common.{MysqlUntil, Until}
+import bzn.ods.datamonitoring.OdsDataQualityMonitoringDetail.{LinefeedMatching, SpaceMatching}
 import bzn.ods.datamonitoring.OdsEnumerationTypeMonitoringTest.{readMysqlTable, saveASMysqlTable, sparkConfInfo}
 import bzn.ods.datamonitoring.OdsRateRuleMonitoringTest.{MysqlRateRules, readMysqlTable}
 import bzn.ods.datamonitoring.OdsSpecialCharacterMonitoringTest.{LinefeedMatching, MysqlPecialCharacter, SpaceMatching, readMysqlTable}
@@ -59,11 +60,12 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
       "mysql.url.106")
 
     //方案类别
-    val bPolicyBzncenPayMent = MysqlPaymentTypeMonitorings(sqlContext, "sourcedb", "b_policy_bzncen",
-      "payment_type", "mysql.username.106",
-      "mysql.password.106", "mysql.driver",
-      "mysql.url.106")
-
+    /*   val bPolicyBzncenPayMent = MysqlPaymentTypeMonitorings(sqlContext,
+         "sourcedb", "b_policy_bzncen",
+         "payment_type", "mysql.username.106",
+         "mysql.password.106", "mysql.driver",
+         "mysql.url.106")
+   */
     //团单个单
     val odrPolicyBznprdPolicyType = MysqlPolicyTypeMonitorings(sqlContext, "sourcedb", "odr_policy_bznprd",
       "policy_type", "mysql.username.106",
@@ -76,7 +78,6 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
       .unionAll(twoPreserveStatus)
       .unionAll(onePreserveStatus)
       .unionAll(bPlicyPreserVationPayStatus)
-      .unionAll(bPolicyBzncenPayMent)
       .unionAll(odrPolicyBznprdPolicyType)
 
 
@@ -412,6 +413,34 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "mysql.driver", "mysql.url.106")
 
 
+    //2.0被保人表
+    val bPolicySubjectPersonMasterBzncen1 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "policy_no")
+
+    val bPolicySubjectPersonMasterBzncen2 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "name")
+
+    val bPolicySubjectPersonMasterBzncen3 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "cert_no")
+
+    val bPolicySubjectPersonMasterBzncen4 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "tel")
+    //1.0被保人表
+
+    val odrPolicyInsuredBznprd1 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "policy_code")
+
+
+    val odrPolicyInsuredBznprd2 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "name")
+
+
+    val odrPolicyInsuredBznprd3 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "mobile")
+
+    val odrPolicyInsuredBznprd4 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "cert_no")
+
     val resTemp1 = bPolicyOne.unionAll(openEmployerPolicyBznopen1).unionAll(openEmployerPolicyBznopen2)
       .unionAll(openEmployerPolicyBznopen3)
       .unionAll(openEmployerPolicyBznope4).unionAll(openEmployerPolicyBznope5)
@@ -434,7 +463,10 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
       .unionAll(tProposalBznbusi1).unionAll(tProposalBznbusi2).unionAll(tProposalBznbusi3)
       .unionAll(tProposalBznbusi4).unionAll(tProposalHolderCompanyBznbusi1)
       .unionAll(tProposalHolderCompanyBznbusi2).unionAll(tProposalHolderCompanyBznbusi3)
-
+      .unionAll(bPolicySubjectPersonMasterBzncen1).unionAll(bPolicySubjectPersonMasterBzncen2)
+      .unionAll(bPolicySubjectPersonMasterBzncen3).unionAll(bPolicySubjectPersonMasterBzncen4)
+      .unionAll(odrPolicyInsuredBznprd1).unionAll(odrPolicyInsuredBznprd2).unionAll(odrPolicyInsuredBznprd3)
+      .unionAll(odrPolicyInsuredBznprd4)
 
     //费率监控
     //经纪费
@@ -456,16 +488,26 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
       "mysql.url.106")
     val resTemp3 = bPolicyProductPlanBzncenRate1.unionAll(bPolicyProductPlanBzncenRate2).unionAll(bPolicyProductPlanBzncenRate3)
 
-    val res = resTemp1.unionAll(resTemp2).unionAll(resTemp3)
+    val resTable = resTemp1.unionAll(resTemp2).unionAll(resTemp3)
+    resTable.registerTempTable("RateRangeMonitoring")
+    val res = sqlContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from RateRangeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
+res.printSchema()
 
 
-
-    //写入
+   /* //写入103
     saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
       "mysql.username.103",
       "mysql.password.103",
       "mysql.driver",
       "mysql.url.103.dmdb")
+    //写入106
+
+    //106存储
+    saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
+      "mysql.username.106",
+      "mysql.password.106",
+      "mysql.driver",
+      "mysql.url.106.dmdb")*/
 
 
   }
@@ -508,9 +550,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
 
   }
 
@@ -554,10 +594,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
-
+    resTable
   }
 
 
@@ -599,9 +636,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
 
   }
 
@@ -644,9 +679,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
 
   }
 
@@ -689,9 +722,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
 
   }
 
@@ -734,9 +765,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
 
   }
 
@@ -779,14 +808,13 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("EnumerationTypeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from EnumerationTypeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
 
   }
 
   //mysql表字符串匹配特殊字符
-  def MysqlPecialCharacter(SQLContext: SQLContext, houseName: String, tableName: String, fieldType: String, user: String, pass: String, driver: String, url: String): DataFrame = {
+  def MysqlPecialCharacter(SQLContext: SQLContext, houseName: String, tableName: String,
+                           fieldType: String, user: String, pass: String, driver: String, url: String): DataFrame = {
     SQLContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") //设置日期格式
       val date = df.format(new Date()) // new Date()为获取当前系统时间
@@ -810,11 +838,11 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         //匹配换行
         val Linefeed = LinefeedMatching(fieldInfo)
         val str = if (Space == true) {
-          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001"  + 2+ "\u0001" +  2
+          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + 2 + "\u0001" + 2
         } else if (Linefeed == true) {
-          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001"  + 1 + "\u0001"+  2
+          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + 1 + "\u0001" + 2
         } else {
-          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001"  + 0 + "\u0001" + 2
+          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + 0 + "\u0001" + 2
         }
         val split = str.split("\u0001")
         (split(0), split(1), split(2), split(3), split(4))
@@ -825,10 +853,51 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("SpecialCharacterMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from SpecialCharacterMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
   }
+
+
+  //hive监控特殊字符字段
+
+  def HivePecialCharacter(hiveContext: HiveContext, houseName: String, tableName: String,
+                          fieldType: String): DataFrame = {
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
+      date + ""
+    })
+    import hiveContext.implicits._
+    val table = tableName
+    var field = fieldType
+    val house = houseName
+
+
+    val resTemp: DataFrame = hiveContext.sql(s"select cast($field as string) as field from $table")
+      .map(x => {
+        val fieldInfo = x.getAs[String]("field")
+        //匹配空格
+        val Space: Boolean = SpaceMatching(fieldInfo)
+        //匹配换行
+        val Linefeed = LinefeedMatching(fieldInfo)
+        val str = if (Space == true) {
+          house + "\u0001" + s"$table" + "\u0001" + s"$field" + "\u0001" + 2 + "\u0001" + 2
+        } else if (Linefeed == true) {
+          house + "\u0001" + s"$table" + "\u0001" + s"$field" + "\u0001" + 1 + "\u0001" + 2
+        } else {
+          house + "\u0001" + s"$table" + "\u0001" + s"$field" + "\u0001" + 0 + "\u0001" + 2
+        }
+        val split = str.split("\u0001")
+        (split(0), split(1), split(2), split(3), split(4))
+      }).toDF("monitoring_house", "monitoring_table", "monitoring_field", "monitoring_level", "monitoring_desc")
+    val resTable = resTemp
+      .selectExpr("monitoring_house",
+        "monitoring_table",
+        "monitoring_field",
+        "monitoring_level",
+        "monitoring_desc")
+    resTable
+  }
+
 
   //Mysql表费率超过正常范围值
   def MysqlRateRules(SQLContext: SQLContext, houseName: String, tableName: String, fieldType: String, user: String, pass: String, driver: String, url: String): DataFrame = {
@@ -868,26 +937,24 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "monitoring_field",
         "monitoring_level",
         "monitoring_desc")
-    resTable.registerTempTable("RateRangeMonitoring")
-    val res = SQLContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from RateRangeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-    res
+    resTable
   }
+
 
 
   //匹配空格
   def SpaceMatching(Temp: String): Boolean = {
     if (Temp != null) {
-      "\\s".r.findFirstIn(Temp).isDefined
+      "^\\s|\\s+$  ".r.findFirstIn(Temp).isDefined
     } else false
   }
 
   //匹配换行符
   def LinefeedMatching(Temp: String): Boolean = {
     if (Temp != null) {
-      "\\n".r.findFirstIn(Temp).isDefined
+      "^\\n|\\n+$".r.findFirstIn(Temp).isDefined
     } else false
   }
 
 
 }
-

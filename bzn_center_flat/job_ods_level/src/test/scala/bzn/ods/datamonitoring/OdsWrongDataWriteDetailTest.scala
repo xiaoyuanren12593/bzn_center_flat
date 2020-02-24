@@ -23,6 +23,7 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
     val hiveContext = sparkConf._4
 
 
+
     //监控1.0保单特殊字符
     val bPolicyOne =
       MysqlPecialCharacterDetail(sqlContext, "sourced",
@@ -353,6 +354,33 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
         "t_proposal_holder_company_bznbusi", "proposal_no",
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
+    //2.0被保人表
+    val bPolicySubjectPersonMasterBzncen1 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "policy_no")
+
+    val bPolicySubjectPersonMasterBzncen2 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "name")
+
+    val bPolicySubjectPersonMasterBzncen3 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "cert_no")
+
+    val bPolicySubjectPersonMasterBzncen4 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.b_policy_subject_person_master_bzncen", "tel")
+    //1.0被保人表
+
+    val odrPolicyInsuredBznprd1 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "policy_code")
+
+
+    val odrPolicyInsuredBznprd2 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "name")
+
+
+    val odrPolicyInsuredBznprd3 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "mobile")
+
+    val odrPolicyInsuredBznprd4 = HivePecialCharacter(hiveContext, "sourced",
+      "sourcedb.odr_policy_insured_bznprd", "cert_no")
 
 
     val res1 = bPolicyOne.unionAll(openEmployerPolicyBznopen1).unionAll(openEmployerPolicyBznopen2)
@@ -377,6 +405,10 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
       .unionAll(tProposalBznbusi1).unionAll(tProposalBznbusi2).unionAll(tProposalBznbusi3)
       .unionAll(tProposalBznbusi4).unionAll(tProposalHolderCompanyBznbusi1)
       .unionAll(tProposalHolderCompanyBznbusi2).unionAll(tProposalHolderCompanyBznbusi3)
+      .unionAll(bPolicySubjectPersonMasterBzncen1).unionAll(bPolicySubjectPersonMasterBzncen2)
+      .unionAll(bPolicySubjectPersonMasterBzncen3).unionAll(bPolicySubjectPersonMasterBzncen4)
+      .unionAll(odrPolicyInsuredBznprd1).unionAll(odrPolicyInsuredBznprd2).unionAll(odrPolicyInsuredBznprd3)
+      .unionAll(odrPolicyInsuredBznprd4)
 
 
     //2.0保单状态监控
@@ -451,13 +483,22 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
 
 
     val res = res1.unionAll(res2).unionAll(res3)
+  res.printSchema()
 
+    /*//103存储
     saveASMysqlTable(res, "dm_warning_interdict_monitoring_detail", SaveMode.Overwrite,
       "mysql.username.103",
       "mysql.password.103",
       "mysql.driver",
       "mysql.url.103.dmdb")
 
+    //106存储
+    saveASMysqlTable(res, "dm_warning_interdict_monitoring_detail", SaveMode.Overwrite,
+      "mysql.username.106",
+      "mysql.password.106",
+      "mysql.driver",
+      "mysql.url.106.dmdb")
+*/
 
   }
 
@@ -911,17 +952,70 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
   }
 
 
+  //hive监控特殊字符字段
+
+  def HivePecialCharacter(hiveContext: HiveContext, houseName: String, tableName: String,
+                          fieldType: String): DataFrame = {
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
+      date + ""
+    })
+    import hiveContext.implicits._
+    val table = tableName
+    val field = fieldType
+    val house = houseName
+
+
+    val resTemp: DataFrame = hiveContext.sql(s"select cast($field as string) as field from $table")
+      .selectExpr("field")
+      .map(x => {
+        val fieldInfo = x.getAs[String]("field")
+        //匹配空格
+        val Space: Boolean = SpaceMatching(fieldInfo)
+        //匹配换行
+        val Linefeed = LinefeedMatching(fieldInfo)
+        val str = if (Space == true) {
+          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + fieldInfo + "\u0001" + "有空格" + "\u0001" + "是否含有特殊字符" + "\u0001" + 2
+        } else if (Linefeed == true) {
+          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + fieldInfo + "\u0001" + "有换行" + "\u0001" + "是否含有特殊字符" + "\u0001" + 1
+        } else {
+          house + "\u0001" + table + "\u0001" + s"$field" + "\u0001" + fieldInfo + "\u0001" + "正确" + "\u0001" + "是否含有特殊字符" + "\u0001" + 0
+        }
+        val strings = str.split("\u0001")
+        (strings(0), strings(1), strings(2), strings(3), strings(4), strings(5), strings(6))
+      }).toDF("monitoring_house", "monitoring_table", "monitoring_field", "monitoring_text", "warn_desc", "rule_desc", "monitoring_level")
+    val resTable = resTemp.
+      selectExpr(
+        "monitoring_house",
+        "monitoring_table",
+        "monitoring_field",
+        "monitoring_text",
+        "monitoring_level",
+        "warn_desc",
+        "rule_desc",
+        "getNow() as create_time",
+        "getNow() as update_time")
+
+    resTable.registerTempTable("SpecialCharacterMonitorings")
+    val res = hiveContext.sql("select * from SpecialCharacterMonitorings where monitoring_level=1 or monitoring_level=2")
+
+    res
+  }
+
+
+
   //匹配空格
   def SpaceMatching(Temp: String): Boolean = {
     if (Temp != null) {
-      "\\s".r.findFirstIn(Temp).isDefined
+      "^\\s|\\s+$  ".r.findFirstIn(Temp).isDefined
     } else false
   }
 
   //匹配换行符
   def LinefeedMatching(Temp: String): Boolean = {
     if (Temp != null) {
-      "\\n".r.findFirstIn(Temp).isDefined
+      "^\\n|\\n+$".r.findFirstIn(Temp).isDefined
     } else false
   }
 }
