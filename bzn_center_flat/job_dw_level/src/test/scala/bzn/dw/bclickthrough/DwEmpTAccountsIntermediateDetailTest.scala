@@ -596,7 +596,10 @@ import org.apache.spark.{SparkConf, SparkContext}
     /**
       * 读取业务表的数据
       */
-
+    /**
+     * val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer", "mysql.username.106",
+     * "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+     */
     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username",
       "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")

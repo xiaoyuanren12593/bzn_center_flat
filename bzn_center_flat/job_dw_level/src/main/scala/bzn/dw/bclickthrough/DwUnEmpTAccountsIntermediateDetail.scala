@@ -34,8 +34,8 @@ import org.apache.spark.sql.hive.HiveContext
       "mysql.password", "mysql.driver", "mysql.url")
 
     //106
-    saveASMysqlTable(finRes, "ods_t_accounts_un_employer", SaveMode.Append, "mysql.username.106",
-      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+    saveASMysqlTable(finRes, "ods_t_accounts_un_employer", SaveMode.Append, "mysql.username.103",
+      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
 
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
     sc.stop()
@@ -602,7 +602,10 @@ import org.apache.spark.sql.hive.HiveContext
      * 拿到批单增量数据
      */
 
-
+    /**
+     * val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer", "mysql.username.106",
+     * "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+     */
     val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "t_accounts_un_employer", "mysql.username",
       "mysql.password", "mysql.driver", "mysql.url")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
