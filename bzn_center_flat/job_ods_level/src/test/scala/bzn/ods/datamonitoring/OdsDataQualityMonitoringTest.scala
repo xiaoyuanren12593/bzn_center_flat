@@ -197,6 +197,18 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
 
+    val odrPolicyInsurantBznprd7 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "odr_policy_insurant_bznprd", "business_nature",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+    val odrPolicyInsurantBznprd8 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "odr_policy_insurant_bznprd", "business_line",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
 
     val pdtProductBznprd1 =
       MysqlPecialCharacter(sqlContext, "sourced",
@@ -412,6 +424,19 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
 
+    val bPolicyHolderCompanyBzncen1 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "b_policy_holder_company_bzncen", "industry_name",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+
+    val bPolicyHolderCompanyBzncen2 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "b_policy_holder_company_bzncen", "industry_code",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
 
     //2.0被保人表
     val bPolicySubjectPersonMasterBzncen1 = HivePecialCharacter(hiveContext, "sourced",
@@ -441,6 +466,7 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
     val odrPolicyInsuredBznprd4 = HivePecialCharacter(hiveContext, "sourced",
       "sourcedb.odr_policy_insured_bznprd", "cert_no")
 
+
     val resTemp1 = bPolicyOne.unionAll(openEmployerPolicyBznopen1).unionAll(openEmployerPolicyBznopen2)
       .unionAll(openEmployerPolicyBznopen3)
       .unionAll(openEmployerPolicyBznope4).unionAll(openEmployerPolicyBznope5)
@@ -466,7 +492,8 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
       .unionAll(bPolicySubjectPersonMasterBzncen1).unionAll(bPolicySubjectPersonMasterBzncen2)
       .unionAll(bPolicySubjectPersonMasterBzncen3).unionAll(bPolicySubjectPersonMasterBzncen4)
       .unionAll(odrPolicyInsuredBznprd1).unionAll(odrPolicyInsuredBznprd2).unionAll(odrPolicyInsuredBznprd3)
-      .unionAll(odrPolicyInsuredBznprd4)
+      .unionAll(odrPolicyInsuredBznprd4).unionAll(odrPolicyInsurantBznprd7).unionAll(odrPolicyInsurantBznprd8)
+      .unionAll(bPolicyHolderCompanyBzncen1).unionAll(bPolicyHolderCompanyBzncen2)
 
     //费率监控
     //经纪费
@@ -491,23 +518,23 @@ object OdsDataQualityMonitoringTest extends SparkUtil with Until with MysqlUntil
     val resTable = resTemp1.unionAll(resTemp2).unionAll(resTemp3)
     resTable.registerTempTable("RateRangeMonitoring")
     val res = sqlContext.sql("select monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc,count(1) as level_counts from RateRangeMonitoring group by monitoring_house,monitoring_table,monitoring_field,monitoring_level,monitoring_desc")
-res.printSchema()
+    res.printSchema()
 
 
-   /* //写入103
-    saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
-      "mysql.username.103",
-      "mysql.password.103",
-      "mysql.driver",
-      "mysql.url.103.dmdb")
-    //写入106
+    /* //写入103
+     saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
+       "mysql.username.103",
+       "mysql.password.103",
+       "mysql.driver",
+       "mysql.url.103.dmdb")
+     //写入106
 
-    //106存储
-    saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
-      "mysql.username.106",
-      "mysql.password.106",
-      "mysql.driver",
-      "mysql.url.106.dmdb")*/
+     //106存储
+     saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
+       "mysql.username.106",
+       "mysql.password.106",
+       "mysql.driver",
+       "mysql.url.106.dmdb")*/
 
 
   }
@@ -939,7 +966,6 @@ res.printSchema()
         "monitoring_desc")
     resTable
   }
-
 
 
   //匹配空格

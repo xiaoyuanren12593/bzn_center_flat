@@ -31,10 +31,10 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
   /**
-    *
-    * @param sqlContext
-    * @return
-    */
+   *
+   * @param sqlContext
+   * @return
+   */
 
   def EmployerBaseInfoPersonDetail(sqlContext: HiveContext) = {
     import sqlContext.implicits._
@@ -50,7 +50,7 @@ import org.apache.spark.sql.hive.HiveContext
     //读取保单明细表
 
     val odsPolicyDetailTemp: DataFrame = sqlContext.sql("select policy_id,policy_no,policy_code,holder_name,insured_subject,product_code " +
-      ",policy_status,policy_start_date,policy_end_date,order_date as proposal_time,channel_id as channelId,channel_name as channelName,sales_name as salesName,insure_company_name from odsdb.ods_policy_detail")
+      ",policy_status,policy_start_date,policy_end_date,order_date as proposal_time,channel_id as channelId,channel_name as channelName,sales_name as salesName,insure_company_name,belongs_industry_name from odsdb.ods_policy_detail")
       .where("policy_status in (1,0,-1)")
 
     //读取保险公司表
@@ -59,7 +59,7 @@ import org.apache.spark.sql.hive.HiveContext
     //关联两个表
     val odsPolicyDetail = odsPolicyDetailTemp.join(insuranceCompany, odsPolicyDetailTemp("insure_company_name") === insuranceCompany("insurance_company"), "leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "holder_name",
-        "insured_subject", "product_code", "policy_status", "policy_start_date", "policy_end_date","proposal_time", "channelId", "channelName", "salesName", "insure_company_name", "short_name")
+        "insured_subject", "product_code", "policy_status", "policy_start_date", "policy_end_date","proposal_time", "channelId", "channelName", "salesName", "insure_company_name", "short_name","belongs_industry_name")
 
     //读取企业联系人
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
@@ -76,14 +76,14 @@ import org.apache.spark.sql.hive.HiveContext
     val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
-      * 关联两个表，拿字段
-      */
+     * 关联两个表，拿字段
+     */
     val enterperiseAndSaleRes = enterperiseAndEntGuzhu.join(odsSalesmanDetail, enterperiseAndEntGuzhu("salesman") === odsSalesmanDetail("sale_name"), "leftouter")
       .selectExpr("ent_id", "ent_name", "channel_id", "channel_name", "salesman", "team_name","biz_operator")
 
     // 将关联结果与保单明细表关联
     val resDetail = odsPolicyDetail.join(enterperiseAndSaleRes, odsPolicyDetail("holder_name") === enterperiseAndSaleRes("ent_name"), "leftouter")
-      .selectExpr("policy_id","policy_no", "policy_code","policy_start_date","policy_end_date","proposal_time","holder_name", "insured_subject", "product_code","policy_status","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "insure_company_name","short_name","team_name","biz_operator")
+      .selectExpr("policy_id","policy_no", "policy_code","policy_start_date","policy_end_date","proposal_time","holder_name", "insured_subject", "product_code","policy_status","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "insure_company_name","short_name","team_name","biz_operator","belongs_industry_name")
 
     //读取产品表
     val odsProductDetail = sqlContext.sql("select product_code as product_code_temp,product_name,one_level_pdt_cate,two_level_pdt_cate from odsdb.ods_product_detail")
@@ -91,15 +91,15 @@ import org.apache.spark.sql.hive.HiveContext
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
       .selectExpr("policy_id","policy_no","policy_code", "policy_start_date","policy_end_date","proposal_time","holder_name", "insured_subject", "product_code","product_name", "policy_status","one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name",
-        "channel_id", "channelId","channel_name","channelName", "salesman","salesName","insure_company_name","short_name","team_name","biz_operator")
+        "channel_id", "channelId","channel_name","channelName", "salesman","salesName","insure_company_name","short_name","team_name","biz_operator","belongs_industry_name")
       .where("one_level_pdt_cate = '蓝领外包'")
 
     //读取被保人表
     val odsPolicyInsured = sqlContext.sql("select policy_id as policy_id_salve,insured_name,insured_cert_no,insured_mobile,start_date,end_date,work_type from odsdb.ods_policy_insured_detail")
 
     /**
-      * 将上述结果与被保人表关联
-      */
+     * 将上述结果与被保人表关联
+     */
     val resProductAndInsuredDetail = resProductDetail.join(odsPolicyInsured,resProductDetail("policy_id")===odsPolicyInsured("policy_id_salve"),"leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "policy_start_date","policy_end_date","holder_name", "insured_subject","insured_name", "insured_cert_no",
         "insured_mobile",
@@ -108,15 +108,17 @@ import org.apache.spark.sql.hive.HiveContext
         "proposal_time","work_type",
         "product_code","product_name","policy_status",
         "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name",
-        "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "insure_company_name","short_name","team_name","biz_operator")
+        "channel_id", "channelId","channel_name","channelName", "salesman","salesName", "insure_company_name","short_name","team_name","biz_operator","belongs_industry_name")
 
     val res1 = resProductAndInsuredDetail.selectExpr("policy_id","insured_cert_no","start_date","end_date")
 
 
+
     /**
-      * 读取理赔表
-      */
+     * 读取理赔表
+     */
     val res2 = sqlContext.sql("SELECT policy_id as id,risk_cert_no,risk_date ,res_pay ,risk_cert_no,risk_date ,res_pay from dwdb.dw_policy_claim_detail")
+
     //将res1 关联 res2  判断理赔表中的 每个保单的每个人的理赔钱数
 
     val res3 = res1.join(res2, 'policy_id === 'id and 'insured_cert_no === 'risk_cert_no)
@@ -145,25 +147,23 @@ import org.apache.spark.sql.hive.HiveContext
       "case when risk_date is null then 1 when risk_date >= substring(cast(start_date as string),1,10) and risk_date <= substring(cast(end_date as string),1,10) then 1 else 0 end as tem")
       .where("tem = 1")
 
-    val res5 = res4.selectExpr("id", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay",
-      "tem")
+    val res5 = res4.selectExpr("id", "risk_cert_no", "start_date as start_date_temp ", "end_date as end_date_temp", "risk_date", "res_pay","tem")
 
     res5.registerTempTable("tempTable")
     val tenmpTbles = sqlContext.sql("select sum(res_pay) as res_pay,id,risk_cert_no,start_date_temp from tempTable group by id, risk_cert_no,start_date_temp")
 
     /**
-      * 将上述结果与理赔表关联
-      */
+     * 将上述结果与理赔表关联
+     */
     val insuredAndClaimRes = resProductAndInsuredDetail.join(tenmpTbles, 'policy_id === 'id and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp,"leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "policy_start_date","policy_end_date","proposal_time","holder_name","insured_subject","product_code","product_name","insured_name","insured_cert_no",
 
-        "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName","insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay")
+        "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName","insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay","belongs_industry_name")
 
     //读取方案信息表
     val odsPolicyProductPlanDetailTemp: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
       "sku_ratio,sku_price,sku_charge_type,tech_service_rate,economic_rate," +
       "commission_discount_rate,commission_rate from odsdb.ods_policy_product_plan_detail")
-
     //读取工种类别表
     val odsWorkGradeDetail = sqlContext.sql("select policy_code,profession_type from odsdb.ods_work_grade_detail")
 
@@ -191,7 +191,8 @@ import org.apache.spark.sql.hive.HiveContext
         "policy_start_date","policy_end_date",
         "proposal_time",
         "policy_status",
-        " clean(holder_name) as holder_name",
+        "clean(holder_name) as holder_name",
+        "clean(belongs_industry_name) as belongs_industry_name",
         "clean(insured_subject) as insured_subject","clean(insured_name) as insured_name", "clean(insured_cert_no) as insured_cert_no",
         "clean(work_type) as work_type",
         "clean(insured_mobile) as insured_mobile",
@@ -214,6 +215,6 @@ import org.apache.spark.sql.hive.HiveContext
         "tech_service_rate", "economic_rate", "commission_discount_rate", "commission_rate", "res_pay",
         "getNow() as dw_create_time")
     res
-  }
 
+  }
 }
