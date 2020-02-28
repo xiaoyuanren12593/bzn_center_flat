@@ -1,10 +1,16 @@
 package bzn.ods.datamonitoring
 
-object Test {
-  def main(args: Array[String]): Unit = {
-    println(SpaceMatching("liuxiang"))
+import bzn.ods.policy.OdsMonitorSourceAndSourceDataDetailTest.{getCentralBaseMonitor, sparkConfInfo}
+import bzn.ods.util.Until
+import bzn.util.SparkUtil
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.hive.HiveContext
 
-
+object Test extends  SparkUtil with  Until{
+  def main (args: Array[String]): Unit = {
+    System.setProperty("HADOOP_USER_NAME", "hdfs")
+    
 
 
 

@@ -369,14 +369,14 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
 
 
     val bPolicyHolderCompanyBzncen1 =
-      MysqlPecialCharacter(sqlContext, "sourced",
+      MysqlPecialCharacterDetail(sqlContext, "sourced",
         "b_policy_holder_company_bzncen", "industry_name",
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
 
 
     val bPolicyHolderCompanyBzncen2 =
-      MysqlPecialCharacter(sqlContext, "sourced",
+      MysqlPecialCharacterDetail(sqlContext, "sourced",
         "b_policy_holder_company_bzncen", "industry_code",
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
