@@ -32,8 +32,10 @@ import org.apache.spark.{SparkConf, SparkContext}
       "mysql.password", "mysql.driver", "mysql.url")
 
 
-    saveASMysqlTable(res, "ods_t_accounts_employer", SaveMode.Append, "mysql.username.103",
-      "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")
+    saveASMysqlTable(res, "ods_t_accounts_employer_detail", SaveMode.Append, "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+
+
     sc.stop()
 
   }
@@ -206,12 +208,9 @@ import org.apache.spark.{SparkConf, SparkContext}
     /**
       * 读取业务表的数据
       */
-    /**
-     * val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer", "mysql.username.106",
-     * "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
-     */
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username",
-      "mysql.password", "mysql.driver", "mysql.url")
+
+     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
+     "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
     /**
@@ -597,8 +596,8 @@ import org.apache.spark.{SparkConf, SparkContext}
       * 读取业务表的数据
       */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "t_accounts_employer", "mysql.username",
-      "mysql.password", "mysql.driver", "mysql.url")
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
     /**
       * 关联两个表 拿到批单数据的增量数据

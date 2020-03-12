@@ -45,46 +45,46 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   /**
-    * 获取所有业务条线的保单数据
-    *
-    * @param sqlContext 上下文
-    */
+   * 获取所有业务条线的保单数据
+   *
+   * @param sqlContext 上下文
+   */
   def getAllBusinessPolicyDetail(sqlContext: HiveContext): DataFrame = {
 
     /**
-      * 读取保单明细表
-      */
+     * 读取保单明细表
+     */
     val odsPolicyDetail = sqlContext.sql("select policy_code,case when source_system = '2.0' then '2' when source_system = '1.0' then '1' end as source_system,policy_status,policy_effect_date," +
       "policy_start_date,policy_end_date,insure_company_name,channel_id,channel_name,sales_name,first_premium,holder_name,invoice_type,product_code,policy_create_time,insured_subject,order_date,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
       .where("policy_status in (0,1,-1) and policy_code is not null")
 
     /**
-      * 读取产品表
-      */
-    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,two_level_pdt_cate as product_name,product_desc,business_line from odsdb.ods_product_detail")
+     * 读取产品表
+     */
+    val odsProductDetail = sqlContext.sql("select product_code as product_code_slave,product_name,product_desc,business_line from odsdb.ods_product_detail")
 
     /**
-      * 读取方案表
-      */
+     * 读取方案表
+     */
     val odsPolicyProductPlanDetail = sqlContext.sql("select policy_code as policy_code_slave,sku_coverage,sku_charge_type,sku_ratio,sku_price,sku_append,tech_service_rate,economic_rate,commission_discount_rate from odsdb.ods_policy_product_plan_detail")
 
     /**
-      * 产品表  '体育','场景','员福','健康'
-      */
+     * 产品表  '体育','场景','员福','健康'
+     */
     val odsSportProductDetail = odsProductDetail.where("business_line in ('体育','场景','员福','健康')")
 
     /**
-      * 读取体育销售表
-      */
-    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from  odsdb.ods_sports_customers_dimension")
+     * 读取体育销售表
+     */
+    val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from odsdb.ods_sports_customers_dimension")
     /**
-      * 读取销售团队表
-      */
+     * 读取销售团队表
+     */
     val odsEntSalesTeamDimension = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
-      * 保单表和产品方案表进行关联
-      */
+     * 保单表和产品方案表进行关联
+     */
 
     val policyAndPlanRes = odsPolicyDetail.join(odsPolicyProductPlanDetail, odsPolicyDetail("policy_code") === odsPolicyProductPlanDetail("policy_code_slave"), "leftouter")
       .selectExpr(
@@ -118,8 +118,8 @@ import org.apache.spark.sql.hive.HiveContext
       )
 
     /**
-      * 结果与产品表进行关联
-      */
+     * 结果与产品表进行关联
+     */
     val policyAndPlanAndProductRes = policyAndPlanRes.join(odsSportProductDetail, policyAndPlanRes("product_code") === odsSportProductDetail("product_code_slave"))
       .selectExpr(
         "policy_code",
@@ -191,8 +191,8 @@ import org.apache.spark.sql.hive.HiveContext
       )
 
     /**
-      * 上结果与团队表进行关联
-      */
+     * 上结果与团队表进行关联
+     */
     val policyAndPlanAndTeamRes = policyAndPlanAndProductSportsSaleRes.join(odsEntSalesTeamDimension, policyAndPlanAndProductSportsSaleRes("sales_name") === odsEntSalesTeamDimension("sale_name"), "leftouter")
       .selectExpr(
         "policy_code",
@@ -229,8 +229,8 @@ import org.apache.spark.sql.hive.HiveContext
       ).distinct
 
     /**
-      * 获取体育保单数据信息
-      */
+     * 获取体育保单数据信息
+     */
     /* val resPolicy = getSportsScenMemberHealthPolicyDetail(hqlContext,sqlContext,policyAndPlanAndTeamRes)
      resPolicy.printSchema()
  */
@@ -239,12 +239,12 @@ import org.apache.spark.sql.hive.HiveContext
 
 
   /**
-    * 体育,健康,员福,场景 的保单信息
-    *
-    * @param hqlContext
-    * @param policyAndPlanAndTeamRes
-    * @return
-    */
+   * 体育,健康,员福,场景 的保单信息
+   *
+   * @param hqlContext
+   * @param policyAndPlanAndTeamRes
+   * @return
+   */
   def getSportsScenMemberHealthPolicyDetail(hqlContext: HiveContext, sqlContext: SQLContext, policyAndPlanAndTeamRes: DataFrame): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -253,64 +253,64 @@ import org.apache.spark.sql.hive.HiveContext
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
       //  .where("policy_start_date>='2019-01-01 00:00:00'")
       .selectExpr(
-      "getUUID() as id",
-      "clean('') as batch_no",
-      "policy_code as policy_no",
-      "clean('') as preserve_id",
-      "clean('') as preserve_status",
-      "clean('') as add_batch_code",
-      "clean('') as del_batch_code",
-      "source_system as data_source",
-      "business_line as project_name",
-      "product_code",
-      "product_name",
-      "product_desc as product_detail",
-      "channel_name",
-      "sales_name as business_owner",
-      "team_name as business_region",
-      "clean('') as business_source",
-      "'1' as business_type",
-      "order_date",
-      "policy_source_code",
-      "policy_source_name",
-      "if(policy_start_date >= policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day",
-      "holder_name",
-      "insured_subject as insurer_name",
-      "insure_company_name as underwriting_company",
-      "policy_effect_date",
-      "policy_start_date as policy_effective_time",
-      "policy_end_date as policy_expire_time",
-      "cast(policy_status as string) as policy_status",
-      "sku_coverage as plan_coverage",
-      "first_premium as premium_total",
-      "'1' as premium_pay_status", //保费实收状态
-      "clean('') as  behalf_number",
-      "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-      "clean('') as economy_company",
-      "economic_rate as economy_rates",
-      "cast((first_premium * economic_rate) as decimal(14,4)) as economy_fee",
-      "tech_service_rate as technical_service_rates",
-      "cast((first_premium * tech_service_rate) as decimal(14,4)) as technical_service_fee",
-      "clean('') as consulting_service_rates",
-      "clean('') as consulting_service_fee",
-      "clean('') as service_fee_check_time",
-      "clean('') as service_fee_check_status",
-      "clean('') as has_brokerage",
-      "commission_discount_rate as brokerage_ratio",
-      "cast((first_premium * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
-      "clean('') as brokerage_pay_status",
-      "clean('') as remake",
-      "now() as create_time",
-      "now() as update_time",
-      "cast(clean('') as int) as operator"
-    )
+        "getUUID() as id",
+        "clean('') as batch_no",
+        "policy_code as policy_no",
+        "clean('') as preserve_id",
+        "clean('') as preserve_status",
+        "clean('') as add_batch_code",
+        "clean('') as del_batch_code",
+        "source_system as data_source",
+        "business_line as project_name",
+        "product_code",
+        "product_name",
+        "product_desc as product_detail",
+        "channel_name",
+        "sales_name as business_owner",
+        "team_name as business_region",
+        "clean('') as business_source",
+        "'1' as business_type",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name",
+        "if(policy_start_date >= policy_create_time,policy_start_date,policy_create_time) as performance_accounting_day",
+        "holder_name",
+        "insured_subject as insurer_name",
+        "insure_company_name as underwriting_company",
+        "policy_effect_date",
+        "policy_start_date as policy_effective_time",
+        "policy_end_date as policy_expire_time",
+        "cast(policy_status as string) as policy_status",
+        "sku_coverage as plan_coverage",
+        "first_premium as premium_total",
+        "'1' as premium_pay_status", //保费实收状态
+        "clean('') as  behalf_number",
+        "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
+        "clean('') as economy_company",
+        "economic_rate as economy_rates",
+        "cast((first_premium * economic_rate) as decimal(14,4)) as economy_fee",
+        "tech_service_rate as technical_service_rates",
+        "cast((first_premium * tech_service_rate) as decimal(14,4)) as technical_service_fee",
+        "clean('') as consulting_service_rates",
+        "clean('') as consulting_service_fee",
+        "clean('') as service_fee_check_time",
+        "clean('') as service_fee_check_status",
+        "clean('') as has_brokerage",
+        "commission_discount_rate as brokerage_ratio",
+        "cast((first_premium * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
+        "clean('') as brokerage_pay_status",
+        "clean('') as remake",
+        "now() as create_time",
+        "now() as update_time",
+        "cast(clean('') as int) as operator"
+      )
 
 
     /** *
-      * 拿出增量数据
-      */
+     * 拿出增量数据
+     */
 
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer", "mysql.username.106",
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer_detail", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve", "business_type as business_type_salve")
 
@@ -339,21 +339,22 @@ import org.apache.spark.sql.hive.HiveContext
 
   }
 
+
   /**
-    * 体育，员福，场景的批单信息
-    *
-    * @param hqlContext              上下文
-    * @param policyAndPlanAndTeamRes 保单与方案团队结果
-    * @return
-    */
+   * 体育，员福，场景的批单信息
+   *
+   * @param hqlContext              上下文
+   * @param policyAndPlanAndTeamRes 保单与方案团队结果
+   * @return
+   */
   def getSportsScenMemberPreserveDetail(hqlContext: HiveContext, sqlContext: SQLContext, policyAndPlanAndTeamRes: DataFrame): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
 
     /**
-      * 读取保全表
-      */
+     * 读取保全表
+     */
     val odsPreservationDetail = hqlContext.sql("select preserve_id,add_batch_code,add_premium,del_premium,del_batch_code,effective_date,preserve_start_date," +
       "preserve_end_date,preserve_status,pay_status,policy_code as policy_code_preserve,create_time,preserve_type,create_time as order_date from odsdb.ods_preservation_detail")
       .where("preserve_status = 1")
@@ -452,11 +453,11 @@ import org.apache.spark.sql.hive.HiveContext
       )
 
     /**
-      * 拿到批单增量数据
-      */
+     * 拿到批单增量数据
+     */
 
 
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer", "mysql.username.106",
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer_detail", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
 
@@ -487,25 +488,26 @@ import org.apache.spark.sql.hive.HiveContext
   }
 
 
+
   /**
-    * 健康的批单信息
-    *
-    * @param sqlContext              上下文
-    * @param policyAndPlanAndTeamRes 保单与方案团队结果
-    * @return
-    */
+   * 健康的批单信息
+   *
+   * @param sqlContext              上下文
+   * @param policyAndPlanAndTeamRes 保单与方案团队结果
+   * @return
+   */
   def getHealthMemberPreserveDetail(hqlContext: HiveContext, sqlContext: SQLContext, policyAndPlanAndTeamRes: DataFrame): DataFrame = {
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
     import hqlContext.implicits._
     /**
-      * 读取产品表
-      */
+     * 读取产品表
+     */
     val odsSportProductDetail = hqlContext.sql("select product_code as product_code_slave,product_name as product_name_salve,product_desc as product_desc_salve,business_line as business_line_salve from odsdb.ods_product_detail")
       .where("business_line_salve in ('健康')")
     /**
-      * 读取健康批单数据
-      */
+     * 读取健康批单数据
+     */
     val odsHealthPreserceDetail = hqlContext.sql("select policy_code as policy_code_preserve,preserve_id,premium_total,holder_name as holder_name_master,insurer_name,channel_name as channel_name_master," +
       "policy_effective_time,create_time,policy_effective_time as order_date from odsdb.ods_health_installment_plan")
 
@@ -546,65 +548,64 @@ import org.apache.spark.sql.hive.HiveContext
     val policyAndPlanAndTeamAndProductPreserveRes = odsHealthPreserceDetail.join(policyAndPlanAndTeamAndProductRes, odsHealthPreserceDetail("policy_code_preserve") === policyAndPlanAndTeamAndProductRes("policy_code"))
       // .where("policy_start_date >= '2019-01-01 00:00:00'")
       .selectExpr(
-      "getUUID() as id",
-      "clean('')  as batch_no",
-      "policy_code as policy_no",
-      "preserve_id",
-      "clean('') as preserve_status",
-      "clean('') as add_batch_code",
-      "clean('') as del_batch_code",
-      "source_system as data_source",
-      "business_line as project_name",
-      "product_code",
-      "product_name",
-      "product_desc as product_detail",
-      "channel_name_master as  channel_name",
-      "sales_name as business_owner",
-      "team_name as business_region",
-      "clean('')  as business_source",
-      "'6' as business_type",
-      "order_date",
-      "policy_source_code",
-      "policy_source_name",
-      "policy_effective_time as performance_accounting_day",
-      "holder_name_master",
-      "insurer_name",
-      "insure_company_name as underwriting_company",
-      "cast(clean('') as timestamp) as policy_effect_date",
-      "policy_effective_time",
-      "cast(clean('') as timestamp) as policy_expire_time",
-      "cast(policy_status as string) as policy_status",
-      "sku_coverage as plan_coverage",
-      "premium_total as premium_total",
-      "'1' as premium_pay_status", //保费实收状态
-      "clean('')  as behalf_number",
-      "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
-      "clean('') as economy_company",
-      "economic_rate as economy_rates",
-      "cast((premium_total * economic_rate) as decimal(14,4)) as economy_fee",
-      "tech_service_rate as technical_service_rates",
-      "cast((premium_total * tech_service_rate) as decimal(14,4)) as technical_service_fee",
-      "clean('')  as consulting_service_rates",
-      "clean('')  as consulting_service_fee",
-      "clean('')  as service_fee_check_time",
-      "clean('')  as service_fee_check_status",
-      "clean('')  as has_brokerage",
-      "commission_discount_rate as brokerage_ratio",
-      "cast((premium_total * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
-      "clean('')  as brokerage_pay_status",
-      "clean('')  as remake",
-      "now() as create_time",
-      "now() as update_time",
-      "cast(clean('') as int) as operator"
-    )
+        "getUUID() as id",
+        "clean('')  as batch_no",
+        "policy_code as policy_no",
+        "preserve_id",
+        "clean('') as preserve_status",
+        "clean('') as add_batch_code",
+        "clean('') as del_batch_code",
+        "source_system as data_source",
+        "business_line as project_name",
+        "product_code",
+        "product_name",
+        "product_desc as product_detail",
+        "channel_name_master as  channel_name",
+        "sales_name as business_owner",
+        "team_name as business_region",
+        "clean('')  as business_source",
+        "'6' as business_type",
+        "order_date",
+        "policy_source_code",
+        "policy_source_name",
+        "policy_effective_time as performance_accounting_day",
+        "holder_name_master",
+        "insurer_name",
+        "insure_company_name as underwriting_company",
+        "cast(clean('') as timestamp) as policy_effect_date",
+        "policy_effective_time",
+        "cast(clean('') as timestamp) as policy_expire_time",
+        "cast(policy_status as string) as policy_status",
+        "sku_coverage as plan_coverage",
+        "premium_total as premium_total",
+        "'1' as premium_pay_status", //保费实收状态
+        "clean('')  as behalf_number",
+        "case when invoice_type is null then '0' else cast(invoice_type as string) end as premium_invoice_type",
+        "clean('') as economy_company",
+        "economic_rate as economy_rates",
+        "cast((premium_total * economic_rate) as decimal(14,4)) as economy_fee",
+        "tech_service_rate as technical_service_rates",
+        "cast((premium_total * tech_service_rate) as decimal(14,4)) as technical_service_fee",
+        "clean('')  as consulting_service_rates",
+        "clean('')  as consulting_service_fee",
+        "clean('')  as service_fee_check_time",
+        "clean('')  as service_fee_check_status",
+        "clean('')  as has_brokerage",
+        "commission_discount_rate as brokerage_ratio",
+        "cast((premium_total * commission_discount_rate) as decimal(14,4)) as brokerage_fee",
+        "clean('')  as brokerage_pay_status",
+        "clean('')  as remake",
+        "now() as create_time",
+        "now() as update_time",
+        "cast(clean('') as int) as operator"
+      )
 
 
     /**
-      * 拿到批单增量数据
-      */
+     * 拿到批单增量数据
+     */
 
-
-    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer", "mysql.username.106",
+    val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer_detail", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
 

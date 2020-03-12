@@ -23,7 +23,6 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
     val hiveContext = sparkConf._4
 
 
-
     //监控1.0保单特殊字符
     val bPolicyOne =
       MysqlPecialCharacterDetail(sqlContext, "sourced",
@@ -137,6 +136,19 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
     val odrPolicyInsurantBznprd6 =
       MysqlPecialCharacterDetail(sqlContext, "sourced",
         "odr_policy_insurant_bznprd", "mobile",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+
+    val odrPolicyInsurantBznprd7 =
+      MysqlPecialCharacterDetail(sqlContext, "sourced",
+        "odr_policy_insurant_bznprd", "business_nature",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+    val odrPolicyInsurantBznprd8 =
+      MysqlPecialCharacterDetail(sqlContext, "sourced",
+        "odr_policy_insurant_bznprd", "business_line",
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
 
@@ -354,6 +366,22 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
         "t_proposal_holder_company_bznbusi", "proposal_no",
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
+
+
+    val bPolicyHolderCompanyBzncen1 =
+      MysqlPecialCharacterDetail(sqlContext, "sourced",
+        "b_policy_holder_company_bzncen", "industry_name",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+
+    val bPolicyHolderCompanyBzncen2 =
+      MysqlPecialCharacterDetail(sqlContext, "sourced",
+        "b_policy_holder_company_bzncen", "industry_code",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+
     //2.0被保人表
     val bPolicySubjectPersonMasterBzncen1 = HivePecialCharacter(hiveContext, "sourced",
       "sourcedb.b_policy_subject_person_master_bzncen", "policy_no")
@@ -408,7 +436,8 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
       .unionAll(bPolicySubjectPersonMasterBzncen1).unionAll(bPolicySubjectPersonMasterBzncen2)
       .unionAll(bPolicySubjectPersonMasterBzncen3).unionAll(bPolicySubjectPersonMasterBzncen4)
       .unionAll(odrPolicyInsuredBznprd1).unionAll(odrPolicyInsuredBznprd2).unionAll(odrPolicyInsuredBznprd3)
-      .unionAll(odrPolicyInsuredBznprd4)
+      .unionAll(odrPolicyInsuredBznprd4).unionAll(odrPolicyInsurantBznprd7).unionAll(odrPolicyInsurantBznprd8)
+      .unionAll(bPolicyHolderCompanyBzncen1).unionAll(bPolicyHolderCompanyBzncen2)
 
 
     //2.0保单状态监控
@@ -444,11 +473,11 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
       "mysql.password.106", "mysql.driver",
       "mysql.url.106")
 
-    /*    //方案类别
-        val bPolicyBzncenPayMent = MysqlPaymentTypeMonitorings(sqlContext, "sourcedb", "b_policy_bzncen",
-          "payment_type", "mysql.username.106",
-          "mysql.password.106", "mysql.driver",
-          "mysql.url.106")*/
+    //方案类别
+    val bPolicyBzncenPayMent = MysqlPaymentTypeMonitorings(sqlContext, "sourcedb", "b_policy_bzncen",
+      "payment_type", "mysql.username.106",
+      "mysql.password.106", "mysql.driver",
+      "mysql.url.106")
 
     //团单个单
     val odrPolicyBznprdPolicyType = MysqlPolicyTypeMonitorings(sqlContext, "sourcedb", "odr_policy_bznprd",
@@ -483,9 +512,9 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
 
 
     val res = res1.unionAll(res2).unionAll(res3)
-  res.printSchema()
 
-    /*//103存储
+
+    //103存储
     saveASMysqlTable(res, "dm_warning_interdict_monitoring_detail", SaveMode.Overwrite,
       "mysql.username.103",
       "mysql.password.103",
@@ -498,7 +527,7 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
       "mysql.password.106",
       "mysql.driver",
       "mysql.url.106.dmdb")
-*/
+
 
   }
 
@@ -1002,7 +1031,6 @@ object OdsWrongDataWriteDetailTest extends SparkUtil with Until with MysqlUntil 
 
     res
   }
-
 
 
   //匹配空格

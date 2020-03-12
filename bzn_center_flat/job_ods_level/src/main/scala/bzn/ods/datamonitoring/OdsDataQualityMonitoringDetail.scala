@@ -195,6 +195,19 @@ object OdsDataQualityMonitoringDetail extends SparkUtil with Until with MysqlUnt
         "mysql.driver", "mysql.url.106")
 
 
+    val odrPolicyInsurantBznprd7 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "odr_policy_insurant_bznprd", "business_nature",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+    val odrPolicyInsurantBznprd8 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "odr_policy_insurant_bznprd", "business_line",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+
     val pdtProductBznprd1 =
       MysqlPecialCharacter(sqlContext, "sourced",
         "pdt_product_bznprd", "code",
@@ -409,6 +422,19 @@ object OdsDataQualityMonitoringDetail extends SparkUtil with Until with MysqlUnt
         "mysql.username.106", "mysql.password.106",
         "mysql.driver", "mysql.url.106")
 
+    val bPolicyHolderCompanyBzncen1 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "b_policy_holder_company_bzncen", "industry_name",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
+
+    val bPolicyHolderCompanyBzncen2 =
+      MysqlPecialCharacter(sqlContext, "sourced",
+        "b_policy_holder_company_bzncen", "industry_code",
+        "mysql.username.106", "mysql.password.106",
+        "mysql.driver", "mysql.url.106")
+
 
     //2.0被保人表
     val bPolicySubjectPersonMasterBzncen1 = HivePecialCharacter(hiveContext, "sourced",
@@ -463,7 +489,8 @@ object OdsDataQualityMonitoringDetail extends SparkUtil with Until with MysqlUnt
       .unionAll(bPolicySubjectPersonMasterBzncen1).unionAll(bPolicySubjectPersonMasterBzncen2)
       .unionAll(bPolicySubjectPersonMasterBzncen3).unionAll(bPolicySubjectPersonMasterBzncen4)
       .unionAll(odrPolicyInsuredBznprd1).unionAll(odrPolicyInsuredBznprd2).unionAll(odrPolicyInsuredBznprd3)
-      .unionAll(odrPolicyInsuredBznprd4)
+      .unionAll(odrPolicyInsuredBznprd4).unionAll(odrPolicyInsurantBznprd7).unionAll(odrPolicyInsurantBznprd8)
+      .unionAll(bPolicyHolderCompanyBzncen1).unionAll(bPolicyHolderCompanyBzncen2)
 
     //费率监控
     //经纪费
@@ -491,20 +518,20 @@ object OdsDataQualityMonitoringDetail extends SparkUtil with Until with MysqlUnt
 
 
 
-     //写入103
-     saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
-       "mysql.username.103",
-       "mysql.password.103",
-       "mysql.driver",
-       "mysql.url.103.dmdb")
-     //写入106
+    //写入103
+    saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
+      "mysql.username.103",
+      "mysql.password.103",
+      "mysql.driver",
+      "mysql.url.103.dmdb")
+    //写入106
 
-     //106存储
-     saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
-       "mysql.username.106",
-       "mysql.password.106",
-       "mysql.driver",
-       "mysql.url.106.dmdb")
+    //106存储
+    saveASMysqlTable(res, "dm_data_quality_monitoring_detail", SaveMode.Overwrite,
+      "mysql.username.106",
+      "mysql.password.106",
+      "mysql.driver",
+      "mysql.url.106.dmdb")
 
 
   }
@@ -936,7 +963,6 @@ object OdsDataQualityMonitoringDetail extends SparkUtil with Until with MysqlUnt
         "monitoring_desc")
     resTable
   }
-
 
 
   //匹配空格
