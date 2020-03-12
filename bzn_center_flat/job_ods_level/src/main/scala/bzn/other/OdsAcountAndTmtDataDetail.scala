@@ -30,22 +30,25 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
     val url = "mysql.url"
     val urlDwdb = "mysql.url.dwdb"
     val urlTableau = "mysql.url.tableau"
+    val url106 = "mysql.url.106.odsdb"
     val user = "mysql.username"
     val pass = "mysql.password"
     val driver = "mysql.driver"
-    val tableName1 = "t_accounts_un_employer"
-    val tableName2 = "t_accounts_employer"
+    val user106 = "mysql.username.106"
+    val pass106 =   "mysql.password.106"
+    val tableName1 = "ods_t_accounts_un_employer_detail"
+    val tableName2 = "ods_t_accounts_employer_detail"
     val tableName3 = "ods_ent_sales_team"
     val tableName5 = "ods_ent_tmt_salesman"
     val tableName4 = "dw_product_detail"
-    val tableName6 = "t_accounts_agency"
+    val tableName6 = "ods_t_accounts_agency_detail"
     val tableName7 = "ods_channel_first_three_month_temp_detail"
 
     /**
       * 非雇主电子台账数据105
       */
     val tAccountsUnEmployer =
-      readMysqlTable(sqlContext: SQLContext, tableName1: String,user:String,pass:String,driver:String,url:String)
+      readMysqlTable(sqlContext: SQLContext, tableName1: String,user106:String,pass106:String,driver:String,url106:String)
         //      .where("performance_accounting_day >= '2019-01-01 00:00:00'")
         .selectExpr("policy_no","preserve_id","data_source","project_name","product_code","product_name","channel_name","business_region",
         "performance_accounting_day","regexp_replace(holder_name,'\\n','') as holder_name","premium_total","economy_rates",
@@ -56,7 +59,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
       * 雇主电子台账的数据
       */
     val tAccountsEmployer =
-      readMysqlTable(sqlContext: SQLContext, tableName2: String,user:String,pass:String,driver:String,url:String)
+      readMysqlTable(sqlContext: SQLContext, tableName2: String,user106:String,pass106:String,driver:String,url106:String)
         //        .where("performance_accounting_day >= '2019-01-01 00:00:00'")
         .selectExpr("policy_no","preserve_id","data_source","'雇主' as project_name","product_code","product_name","channel_name","business_region",
         "performance_accounting_day","regexp_replace(holder_name,'\\n','') as holder_name","premium_total","economy_rates","economy_fee","business_owner","policy_effective_time",
@@ -204,7 +207,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
     /**
       * 平台数据
       */
-    val tAccountsAgency = readMysqlTable(sqlContext: SQLContext, tableName6: String,user:String,pass:String,driver:String,url:String)
+    val tAccountsAgency = readMysqlTable(sqlContext: SQLContext, tableName6: String,user106:String,pass106:String,driver:String,url106:String)
       //      .where("performance_accounting_day >= '2019-01-01 00:00:00'")
       .selectExpr("policy_no as policy_code","project_name","'' as product_code","product_name","channel_name",
       "performance_accounting_day","holder_name","premium_total","economy_rates as economic_rate","economy_fee",
@@ -237,7 +240,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
     /**
       * 健康的业务条线，暂时将（经济费率+技术服务费率）》1的数据的经济费率暂时改成0.5，技术服务费率为0，经纪费为总保费*0.5 技术服务费为0
       */
-    val res =
+    val resData =
       resTemp.join(odsInsuranceCompanyTempDimension,resTemp("underwriting_company")===odsInsuranceCompanyTempDimension("insurance_company"),"leftouter")
         .selectExpr("policy_code","project_name","product_code","product_name",
           "case when channel_name in ('sem推广','体育线渠道','官网渠道','保准健康员工福利','保准健康自主用户','邹德乾','祥峰测试企业','小赛保2.0版本','健康渠道员工福利','线下渠道保单-陈贝贝','娄聪聪个人渠道','陈俊圣','上海吴千里','彭丹','裴仰军个人渠道','sem推广0320','线下渠道保单-刘晓昆','詹阳','毕英杰','赵晓彤个人渠道（菏泽游泳协会）','刘晓昆','李玉杰个人渠道','房山ZX','陈成杰','芦国忠个人渠道(石家庄)','长沙谌林祥','崔路遥','陈贝贝','线下渠道保单-崔路遥','线下渠道保单-毕英杰','线下渠道保单-张博','彭丹线上渠道','线下渠道保单-彭丹','测试认证','官网','刘晓昆-日常运营','体育赠险业务','刘晓昆-活动营销','彭丹-日常运营','李玲玉-日常运营','赵山','体育赞助','保准牛C端业务','线下渠道保单-赵伟','彭丹-营销活动','蔡文静个人渠道','线下渠道保单-刘超','施何辉个人渠道','体育主动营销客户','董佳保个人渠道','刘晓昆-sem','李柏个人渠道','毕英杰-日常运营','曹洋体育业务','优全智汇分销-北京鼎立保险经纪有限责任公司(北京业务)','sem之团建保险','王正松','崔路遥-日常运营','线下渠道保单-林凯成','体育活动','线下','张旸旸','彭丹-sem','线下渠道保单-曹洋','山东王强个人渠道','曹安铭个人渠道（青岛）','bzn','官网打折','线下渠道保费-史剑','徐文龙个人渠道（北京）','军训保险sem','李玲玉-活动营销','沈长鸿个人渠道','公众号菜单','王艳','陈瑞麒个人渠道（武汉华师）','保准牛测试验证','线下-赞助业务','跆拳道罗家春个人渠道','周玉丽个人渠道','成旭个人渠道','丛艳个人渠道','纪涛个人渠道（青岛）','sem之篮球保险','B端用户激活短信-月月e保','滑雪sem','崔路遥-营销活动','王建云','邹金龙','夏旭锋个人渠道','线下渠道保单-温野','优全智汇保准牛网站直销','体育李永岗个人渠道','线下渠道保单-李玲玉','赵伟线下','场地公责sem','亮中国','唐洁个人渠道','青训保险sem','线下渠道保单-吴昊','线下-跆拳道业务','sem之夏令营保险','吴唯个人渠道','保准牛体育','魏军军个人渠道','毕英杰-营销活动','sem之足球保险','体育SEM','风险评测产品推荐','李戈个人渠道','线下渠道保单-闫磊','柴泽雨个人渠道（深圳）','侯旭声') then null else channel_name end as channel_name",
@@ -246,74 +249,24 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
           "economic_rate",
           "economy_fee",
           "sale_name","policy_effective_time", "policy_expire_time","underwriting_company",
-          "case when insurance_company_short_name is null then underwriting_company else insurance_company_short_name end as insurance_company_short_name",
+          "insurance_company_short_name as insurance_company_short_name",
           "technical_service_rates",
           "technical_service_fee",
           "case when brokerage_ratio is null or brokerage_ratio = 0 then '0' else '1' end has_brokerage","brokerage_ratio","brokerage_fee",
-          "num_person","business_line", "short_name","province","source")
+          "num_person","business_line", "short_name","province","source"
+        )
 
     /**
-      * 制作个临时表，如果channel_name值为空，将holder_name值赋值给channel_name
+      * 新老客
       */
-    res.selectExpr("policy_code","case when length(channel_name) = 0 or channel_name is null then holder_name else channel_name end as cus","business_line",
-      "case when policy_effective_time is null then performance_accounting_day else policy_effective_time end as policy_effective_time")
-      .registerTempTable("result_table")
-
-
-    /**
-      * 对上述结果的业务条线和客户进行分组，得到最小的开始时间，作为初投，
-      */
-    val newAndOldDateReffer = sqlContext.sql(
+    val newAndOldData = sqlContext.sql(
       """
-        |select cus as cus_refer,business_line as business_line_refer,substr(cast(min(policy_effective_time) as string),1,7) as date_refer
-        |from result_table
-        |where length(cus) > 0
-        |GROUP BY cus,business_line
+        |select channel_name as channel_name_slave,case when min(policy_start_date) >= '2020-01-01' then '新客' else '老客' end as new_and_old
+        |from dwdb.dw_employer_baseinfo_detail
+        |group by channel_name
       """.stripMargin)
 
-    /***
-      * 将开始时间为空的数据，用业绩核算时间替换，作为比较时间
-      */
-    val resultTemp = res.selectExpr(
-      "policy_code","project_name","product_code","product_name",
-      "channel_name","case when length(channel_name) = 0 or channel_name is null then holder_name else channel_name end as cus",
-      "biz",
-      "performance_accounting_day","holder_name","premium_total",
-      "economic_rate",
-      "economy_fee","substr(cast((case when policy_effective_time is null then performance_accounting_day else policy_effective_time end) as string),1,7) as date",
-      "sale_name","policy_effective_time", "policy_expire_time","underwriting_company",
-      "insurance_company_short_name",
-      "technical_service_rates",
-      "technical_service_fee",
-      "has_brokerage","brokerage_ratio","brokerage_fee",
-      "num_person","business_line", "short_name","province","source"
-    )
-
-    /**
-      * 上述结果进行关联的，比较时间和参照时间正在同一个月份作为新客，其他作为老客
-      */
-    val resultEndTemp =  resultTemp.join(newAndOldDateReffer,'cus === 'cus_refer and 'business_line==='business_line_refer,"leftouter")
-      .selectExpr(
-        "policy_code","project_name","product_code","product_name",
-        "channel_name","cus","substr(cast((case when policy_effective_time is null then performance_accounting_day else policy_effective_time end) as string),1,10) as date",
-        "biz",
-        "performance_accounting_day","holder_name","premium_total",
-        "economic_rate",
-        "economy_fee",
-        "sale_name","policy_effective_time", "policy_expire_time","underwriting_company",
-        "insurance_company_short_name",
-        "technical_service_rates",
-        "technical_service_fee",
-        "has_brokerage","brokerage_ratio","brokerage_fee",
-        "num_person","business_line", "short_name","province",
-        "case when date = date_refer then '新客' " +
-          "when date is not null and date_refer < date then '老客' else null end as new_old_cus","source"
-      )
-
-    /**
-      * 和雇主的初投+三个月的数据进行关联，得到新的新老客结果
-      */
-    val resultEnd = resultEndTemp.join(odsChannelFirstThreeMonthTempDetail,'cus==='channel_name_salve and 'business_line==='business_line_salve,"leftouter")
+    val res = resData.join(newAndOldData,'channel_name==='channel_name_slave,"leftouter")
       .selectExpr(
         "policy_code","project_name","product_code","product_name",
         "channel_name",
@@ -327,46 +280,18 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with MysqlUntil{
         "technical_service_fee",
         "has_brokerage","brokerage_ratio","brokerage_fee",
         "num_person","business_line", "short_name","province",
-        "new_old_cus","first_start_date",
-        "case when business_line = '雇主' and date >= first_start_date and date <= three_month then '新客' " +
-          "when business_line = '雇主' and date > three_month then '老客' else null end as new_old_cus_new",
-        "case when business_line = '雇主' and date >= first_start_date and date <= six_month then '新客' " +
-          "when business_line = '雇主' and date > six_month then '老客' else null end as six_month_new_old_cus_new",
-        "case when business_line = '雇主' and date >= first_start_date and date <= twelve_month then '新客' " +
-          "when business_line = '雇主' and date > twelve_month then '老客' else null end as twelve_month_new_old_cus_new",
-        "source"
-      )
-      .selectExpr(
-        "policy_code","project_name","product_code","product_name",
-        "channel_name",
-        "biz",
-        "performance_accounting_day","holder_name","premium_total",
-        "economic_rate",
-        "economy_fee",
-        "sale_name","policy_effective_time", "policy_expire_time","underwriting_company",
-        "insurance_company_short_name",
-        "technical_service_rates",
-        "technical_service_fee",
-        "has_brokerage","brokerage_ratio","brokerage_fee",
-        "num_person","business_line", "short_name","province",
-        "new_old_cus",
-        "new_old_cus_new",
-        "six_month_new_old_cus_new",
-        "twelve_month_new_old_cus_new",
-        "case when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date <= '2017-10-01' then '纯老客' " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2017-10-01' and first_start_date <= '2018-10-01' then '2018新转老' " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2018-10-01' and first_start_date <= '2019-10-01' then '2019新转老' " +
-          "when new_old_cus_new = '老客' and business_line = '雇主' and first_start_date > '2019-10-01' then '2020新转老' " +
-          "else null end cus_type_new",
+        "case when channel_name_slave is null then null when channel_name_slave is not null and business_line = '雇主' then new_and_old else null end as new_old_cus",
         "source"
       )
 
-    sqlContext.sql("truncate table odsdb.accounts_and_tmt_detail")
-    resultEnd.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.accounts_and_tmt_detail")
+    sqlContext.sql("truncate table odsdb.ods_accounts_and_tmt_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_accounts_and_tmt_detail")
 
     val tableName = "accounts_and_tmt_detail"
-    saveASMysqlTable(resultEnd.repartition(100): DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
+    val tableNameRes = "ods_accounts_and_tmt_detail"
+//    saveASMysqlTable(res.repartition(100): DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
+    saveASMysqlTable(res.repartition(100): DataFrame, tableNameRes: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,url106:String)
 
-    resultEnd
+    res
   }
 }

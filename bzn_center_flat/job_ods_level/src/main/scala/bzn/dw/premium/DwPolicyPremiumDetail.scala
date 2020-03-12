@@ -253,7 +253,7 @@ object DwPolicyPremiumDetail extends SparkUtil with Until{
     /**
       * 读取销售数据
       */
-    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_salesman_detail")
+    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
       * 读取销售渠道表

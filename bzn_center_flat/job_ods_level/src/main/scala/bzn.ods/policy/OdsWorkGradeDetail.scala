@@ -67,6 +67,7 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
     val tablebPolicyzncenName = "b_policy_bzncen"
     val tablebPolicyProductPlanBzncenName = "b_policy_product_plan_bzncen"
     val tableDictChinalifeWybPlanBznbusiName = "dict_chinalife_wyb_plan_bznbusi"
+    val tableDictChinalifeWybPlanGroupBznbusiName = "dict_chinalife_wyb_plan_group_bznbusi"
 
     /**
       * 核心保单表
@@ -122,6 +123,13 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
     val dictChinalifeWybPlanBznbusi = readMysqlTable(sqlContext: SQLContext, tableDictChinalifeWybPlanBznbusiName: String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String)
       .withColumnRenamed("plan_code","plan_code_salve")
 
+    val dictChinalifeWybPlanGroupBznbusiName = readMysqlTable(sqlContext: SQLContext, tableDictChinalifeWybPlanGroupBznbusiName: String,userFormatOfficial:String,possWordFormatOfficial:String,driverFormat:String,urlFormatOfficial:String)
+      .selectExpr("group_code as group_code_slave","service_charge as service_charge_slave")
+
+    val wybPlanData = dictChinalifeWybPlanBznbusi.join(dictChinalifeWybPlanGroupBznbusiName,'group_code==='group_code_slave,"leftouter")
+      .drop("group_code_slave")
+      .drop("service_charge")
+
     /**
       * 投保单表和方案表
       */
@@ -161,12 +169,12 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
     /**
       * 无忧保方案数据
       */
-    val wybData = proposalAndPolicy.join(dictChinalifeWybPlanBznbusi,'plan_detail_code==='plan_code_salve)
+    val wybData = proposalAndPolicy.join(wybPlanData,'plan_detail_code==='plan_code_salve)
       .where("product_code = 'P00001800' and profession_type is not null")
       .selectExpr(
         "insurance_policy_no as policy_code","proposal_no","policy_no","proposal_status","insurance_name","plan_name",
         "policy_category as deadline_type",
-        "service_charge",
+        "service_charge_slave as service_charge",
         "dead_amount",
         "'' as is_medical",
         "medical_amount",
@@ -179,9 +187,13 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "hospital_amount",
         "hospital_days",
         "hospital_total_days",
-        "disability_scale",
+        //`disability_scale` varchar(20) DEFAULT NULL COMMENT '十级赔付(K1-1%, K2-5%,K3-10%)(eq. K1,K2,K3)',
+        "case when disability_scale = 'K1' then 0.01 when disability_scale = 'K2' then 0.05 " +
+          "when  disability_scale = 'K3' then 0.1 else disability_scale end as disability_scale",
         //        "is_social_insurance as society_scale",
-        "min_num as society_num_scale",
+        // 最低投保人数 K1:5-100 K2: 101-300人 K3:301-500人 K4:501人及以上
+        "case when min_num = 'K1' then '5-100' when min_num = 'K2' then '101-300' " +
+          "when min_num = 'K3' then '301-500' when min_num = 'K4' then ':501人及以上' else min_num end as society_num_scale",
         "'' as compensate_scale",
         "extend_24hour",
         "extend_hospital",
@@ -192,7 +204,7 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "extend_three_item",
         "sales_model",
         "sales_model_percent",
-        "commission_percent",
+        "service_charge_slave as commission_percent",
         "min_price",
         "premium",
         "status",
@@ -207,6 +219,8 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "is_month_replace",
         "plan_type"
       )
+    //    wybData.show()
+    wybData.printSchema()
 
     /**
       * 上述数据和国寿财1关联
@@ -237,7 +251,9 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "'' as hospital_total_days",
         "compensate_scale as disability_scale",
         //        "'' as society_scale",
-        "insure_num_type as society_num_scale",
+        //`insure_num_type` tinyint(1) DEFAULT NULL COMMENT '被保人数类型(1:10-50, 2:51-500, 3:501以上)'
+        "case when insure_num_type = 1 then '1-50' when insure_num_type = 2 then '51-500' " +
+          "when insure_num_type = 3 then '501以上' else insure_num_type end as society_num_scale",
         "'' as compensate_scale",
         "'' as extend_24hour",
         "'' as extend_hospital",
@@ -258,7 +274,8 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "update_time",
         "case profession_type when '1' then '1-3类' when '2' then '1-4类' when '3' then '5类' else '未知' end as profession_type",
         "case join_social when '1' then 'Y' when '0' then 'N' else null end as join_social",
-        "is_commission as is_commission_discount",
+        //渠道是否返佣：1是 0否
+        "case when is_commission = 1 then 'Y' when is_commission = 0 then 'N' else is_commission end as is_commission_discount",
         "'' as extend_new_person",
         "'' as is_month_replace",
         "type as plan_type"
@@ -313,6 +330,8 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "'' as plan_type"
       )
 
+    tkData.printSchema()
+
     /**
       * 投保单和方案数据与中华数据关联
       */
@@ -338,6 +357,8 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
       .withColumnRenamed("insurance_policy_no","policy_code")
       .drop("plan_detail_code")
       .drop("plan_code_salve")
+
+    zhData.printSchema()
 
     val res = zhData.unionAll(gscDate).unionAll(tkData).unionAll(wybData)
       .selectExpr(
@@ -369,7 +390,7 @@ object OdsWorkGradeDetail extends SparkUtil with Until with DataBaseUtil{
         "clean(extend_three_item) as extend_three_item",
         "clean(sales_model) as sales_model",
         "clean(sales_model_percent) as sales_model_percent",
-        "commission_percent",
+        "clean(service_charge) as commission_percent",
         "min_price",
         "premium",
         "status",

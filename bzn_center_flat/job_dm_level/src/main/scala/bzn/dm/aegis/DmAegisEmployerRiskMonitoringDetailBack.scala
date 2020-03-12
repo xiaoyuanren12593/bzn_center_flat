@@ -4,9 +4,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dm.util.SparkUtil
-import bzn.job.common.{ClickHouseUntil, MysqlUntil, Until}
+import bzn.job.common.{ClickHouseUntil, Until}
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:14:35
   * describe: 雇主风险监控
   **/
-object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with ClickHouseUntil{
+object DmAegisEmployerRiskMonitoringDetailBack extends SparkUtil with Until with ClickHouseUntil{
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -24,8 +24,8 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     val res = getAegisEmployerRiskMonitoring(hiveContext).cache()
-    hiveContext.sql("truncate table dmdb.dm_aegis_emp_risk_monitor_detail")
-    res.repartition(100).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_aegis_emp_risk_monitor_detail")
+//    hiveContext.sql("truncate table dmdb.dm_aegis_emp_risk_monitor_detail")
+//    res.repartition(100).write.mode(SaveMode.Append).saveAsTable("dmdb.dm_aegis_emp_risk_monitor_detail")
 
     val resNew = hiveContext.sql("select * from dmdb.dm_aegis_emp_risk_monitor_detail")
     val tableName = "emp_risk_monitor_kri_detail"
@@ -33,7 +33,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
-    writeClickHouseTable(resNew:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+//    writeClickHouseTable(resNew:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
     sc.stop()
   }
 
@@ -55,7 +55,8 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
       * 在保人表
       */
     val dwPolicyCurrInsuredDetail =
-      sqlContext.sql("select policy_id as policy_id_insured,policy_code as policy_code_insured,day_id as day_id_insured,count from dwdb.dw_policy_curr_insured_detail")
+      sqlContext.sql("select policy_id as policy_id_insured,policy_code as policy_code_insured,day_id as day_id_insured,count from " +
+        "dwdb.dw_policy_curr_insured_detail  where policy_code in ('01191101510004E6000846','01191101510004E6000569')")
 
     /**
       * 已赚保费表
@@ -81,7 +82,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
           (x._1._1,x._1._2,x._1._3,x._2)
         })
         .toDF("policy_id","policy_code","day_id","sum_premium")
-      .selectExpr("policy_id","policy_code","day_id","cast(sum_premium as decimal(14,4)) as sum_premium")
+        .selectExpr("policy_id","policy_code","day_id","cast(sum_premium as decimal(14,4)) as sum_premium")
 
     /**
       * 雇主基础数据表
@@ -89,7 +90,8 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
     val dwEmployerBaseinfoDetail =
       sqlContext.sql("select policy_id as policy_id_master,policy_code as policy_code_master,channel_id,channel_name,policy_start_date," +
         "case when policy_end_date is null then policy_start_date else policy_end_date end as policy_end_date,insure_company_name," +
-        "insure_company_short_name,sku_charge_type from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
+        "insure_company_short_name,sku_charge_type from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')" +
+        " and channel_name = '湖南三社人力资源有限公司'")
 
     /**
       * 读取时间维度表
@@ -187,11 +189,14 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         "cast(expire_premium as decimal(14,4)) as expire_premium",//满期保费
         "cast(expire_claim_premium as decimal(14,4)) as expire_claim_premium"//满期赔付
       )
+    insuredAndPremiumAccPremiumClaimExpireAndExpClaim.show(1000)
 
     /**
       * 终止的保单补全数据到当前的值
       */
     val toNowData = getToNowData(sqlContext,insuredAndPremiumAccPremiumClaimExpireAndExpClaim:DataFrame)
+
+    toNowData.show(1000)
 
     /**
       * 上述结果与基础数据信息
@@ -277,6 +282,8 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
         "expire_claim_premium"
       )
 
+    toNowDataAndBaseData.show(1000)
+
     toNowDataAndBaseData.join(odsTDayDimension,toNowDataAndBaseData("day_id")===odsTDayDimension("d_day"),"leftouter")
       .selectExpr(
         "channel_id",
@@ -324,6 +331,7 @@ object DmAegisEmployerRiskMonitoringDetail extends SparkUtil with Until with Cli
     )
       .where("channel_name is not null").cache()
       .registerTempTable("toNowDataAndBaseDataAndDateDimension")
+    sqlContext.sql("select * from toNowDataAndBaseDataAndDateDimension").show(1000)
 
     val res = sqlContext.sql(
       """

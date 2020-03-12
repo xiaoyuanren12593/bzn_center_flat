@@ -9,6 +9,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
+import scala.math.BigDecimal.RoundingMode
+
 /**
   * author:xiaoYuanRen
   * Date:2019/11/19
@@ -45,20 +47,23 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       * 在保人表
       */
     val dwPolicyCurrInsuredDetail =
-      sqlContext.sql("select policy_id as policy_id_insured,policy_code as policy_code_insured,day_id as day_id_insured,count from dwdb.dw_policy_curr_insured_detail")
+      sqlContext.sql("select policy_id as policy_id_insured,policy_code as policy_code_insured,day_id as day_id_insured,count from dwdb.dw_policy_curr_insured_detail" +
+        " where policy_code in ('01191101510004E6000846','01191101510004E6000569')")
 
     /**
       * 已赚保费表
       */
     val dwPolicyEverydayPremiumDetail =
-      sqlContext.sql("select policy_id as policy_id_premium,day_id as day_id_premium,premium from dwdb.dw_policy_everyday_premium_detail")
+      sqlContext.sql("select policy_id as policy_id_premium,day_id as day_id_premium,premium from dwdb.dw_policy_everyday_premium_detail " +
+        "where policy_id in ('316227233184354304','327835327236542464')")
 
     /**
       * 累计保费表
       */
     val dwPolicyPremiumDetail =
       sqlContext.sql("select policy_id,policy_code,day_id,add_person_count,del_person_count,add_premium,del_premium," +
-      "case when sum_premium is null then 0 else sum_premium end as sum_premium from dwdb.dw_policy_premium_detail where one_level_pdt_cate = '蓝领外包'")
+      "case when sum_premium is null then 0 else sum_premium end as sum_premium from dwdb.dw_policy_premium_detail " +
+        "where one_level_pdt_cate = '蓝领外包' and policy_code in ('01191101510004E6000846','01191101510004E6000569')")
         .map(x => {
           val policyId = x.getAs[String]("policy_id")
           val policyCode = x.getAs[String]("policy_code")
@@ -71,6 +76,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
         (x._1._1,x._1._2,x._1._3,x._2)
       })
       .toDF("policy_id","policy_code","day_id","sum_premium")
+      .selectExpr("policy_id","policy_code","day_id","cast(sum_premium as decimal(14,4)) as sum_premium")
 
     /**
       * 雇主基础数据表
@@ -78,7 +84,8 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
     val dwEmployerBaseinfoDetail =
       sqlContext.sql("select policy_id as policy_id_master,policy_code as policy_code_master,channel_id,channel_name,policy_start_date," +
         "case when policy_end_date is null then policy_start_date else policy_end_date end as policy_end_date,insure_company_name," +
-        "insure_company_short_name,sku_charge_type from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
+        "insure_company_short_name,sku_charge_type from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001') " +
+        "and channel_name = '湖南三社人力资源有限公司'")
 
     /**
       * 读取时间维度表
@@ -108,6 +115,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       */
     val insuredAndPremium = dwPolicyCurrInsuredDetail.join(dwPolicyEverydayPremiumDetail,'policy_id_insured === 'policy_id_premium and 'day_id_insured==='day_id_premium ,"leftouter")
       .selectExpr(
+        "policy_id_insured",
         "policy_code_insured",
         "day_id_insured",
         "count as insured_count",
@@ -117,7 +125,7 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
     /**
       * 上述结果与与累计保费
       */
-    val insuredAndPremiumAccPremium = insuredAndPremium.join(dwPolicyPremiumDetail,'policy_code_insured === 'policy_code and 'day_id_insured==='day_id ,"leftouter")
+    val insuredAndPremiumAccPremium = insuredAndPremium.join(dwPolicyPremiumDetail,'policy_id_insured === 'policy_id and 'day_id_insured==='day_id ,"leftouter")
       .selectExpr(
         "policy_code_insured",
         "day_id_insured",
@@ -180,6 +188,8 @@ object DmAegisEmployerRiskMonitoringDetailTest extends SparkUtil with Until with
       * 终止的保单补全数据到当前的值
       */
     val toNowData = getToNowData(sqlContext,insuredAndPremiumAccPremiumClaimExpireAndExpClaim:DataFrame)
+
+    toNowData.show(1000)
 
     /**
       * 上述结果与基础数据信息

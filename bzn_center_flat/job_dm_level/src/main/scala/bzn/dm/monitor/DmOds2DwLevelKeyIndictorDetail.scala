@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:15:49
   * describe: ods - dm 关键指标一致性统计
   **/
-object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
+object DmOds2DwLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -23,13 +23,13 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
 
     val dmData = getOds2DmlevelKeyData(hiveContext)
 
-    val dmMonitorTable = "dm_monitor_dm_level_key_indictor_detail"
+    val ods2DwMonitorTable = "dm_monitor_ods2dw_level_key_indictor_detail"
     val user106 = "mysql.username.106"
     val pass106 = "mysql.password.106"
     val url106 = "mysql.url.106.dmdb"
     val mysqlDriver = "mysql.driver"
 
-    saveASMysqlTable(dmData: DataFrame, dmMonitorTable: String, SaveMode.Overwrite,user106:String,pass106:String,mysqlDriver:String,url106:String)
+    saveASMysqlTable(dmData: DataFrame, ods2DwMonitorTable: String, SaveMode.Overwrite,user106:String,pass106:String,mysqlDriver:String,url106:String)
 
     sc.stop()
   }
@@ -38,14 +38,14 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
     * 得到ods-dm层每一层数据
     * @param sqlContext 上下文
     */
-  def getOds2DmlevelKeyData(sqlContext:HiveContext):DataFrame= {
+  def getOds2DmlevelKeyData(sqlContext:HiveContext):DataFrame = {
 
     /**
-      * dm层结果
+      * ods-dw层关键指标结果
       */
-    val dmData = dmLevelData(sqlContext:HiveContext).cache()
+    val odsAndDwData = dwLevelData(sqlContext:HiveContext).cache()
 
-    dmData
+    odsAndDwData
   }
 
   /**
@@ -63,7 +63,7 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
         |as
         |(
         |select a.policy_code,case when to_date(a.policy_end_date) <= to_date(now()) then 1 else 0 end as expire_policy,a.channel_name,a.policy_start_date,a.policy_end_date,
-        |case when g.curr_insured >0 then a.channel_name else null end as channel_name_curr,
+        |case when g.insured_index = 1 then a.channel_name else null end as channel_name_curr,
         |f.case_no,
         |f.dead_case_no,
         |f.disable_case_no,
@@ -89,6 +89,7 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
         |left join
         |(
         |select policy_code,sum(case when day_id = regexp_replace(substr(cast(now() as string),1,10),'-','') then count else 0 end) as curr_insured,
+        |sum(case when day_id = regexp_replace(substr(cast(now() as string),1,10),'-','') then 1 else 0 end) as insured_index,
         |sum(count) as person_count
         |from dwdb.dw_policy_curr_insured_detail
         |where day_id <= regexp_replace(substr(cast(now() as string),1,10),'-','')
@@ -104,15 +105,15 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
         |on a.policy_id = h.policy_id
         |left join
         |(
-        |select policy_code,sum(sum_premium) as sum_premium from dwdb.dw_policy_premium_detail
+        |select policy_id,sum(sum_premium) as sum_premium from dwdb.dw_policy_premium_detail
         |where one_level_pdt_cate = '蓝领外包'
-        |group by policy_code
+        |group by policy_id
         |) i
-        |on a.policy_code = i.policy_code
+        |on a.policy_id = i.policy_id
         |where a.product_code not in ('LGB000001','17000001')
         |)
         |
-        |select z.*,y.ent_count_curr,date_format(now(),'yyyy-MM-dd HH:mm:ss') as dw_create_time from (
+        |select z.*,y.ent_count_curr from (
         |select sum(x.res_pay) as res_pay,sum(x.charge_premium) as charge_premium,sum(x.case_no) as case_no,sum(x.dead_case_no) as dead_case_no,sum(x.disable_case_no) as disable_case_no,
         |sum(x.end_case_no) as end_case_no,sum(x.end_res_pay) as end_res_pay,sum(x.curr_insured) as curr_insured,sum(x.person_count) as person_count,sum(case when x.expire_policy = 1 then x.charge_premium else 0 end) as expire_charge_premium,
         |sum(case when x.expire_policy = 1 then x.res_pay else 0 end) as expire_res_pay,sum(x.sum_premium) as sum_premium,count(distinct channel_name) as ent_count
@@ -152,7 +153,7 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
         |(
         |select a.policy_code,case when to_date(a.policy_end_date) <= to_date(now()) then 1 else 0 end as expire_policy,(if(a.first_premium is null,0,a.first_premium)+if(f.preserve_premium is null,0,f.preserve_premium)) as sum_premium,
         |d.curr_insured,d.person_count,e.case_no,e.dead_case_no,e.disable_case_no,e.end_case_no,e.end_res_pay,e.res_pay,case when b.channel_name = '直客' then b.ent_name else b.channel_name end as channel_name,
-        |case when b.channel_name = '直客' and curr_insured >0 then b.ent_name when b.channel_name != '直客' and curr_insured >0 then b.channel_name else null end as channel_name_curr
+        |case when b.channel_name = '直客' and to_date(a.policy_start_date) <= to_date(now()) and to_date(a.policy_end_date) >= to_date(now()) then b.ent_name when b.channel_name != '直客' and to_date(a.policy_start_date) <= to_date(now()) and to_date(a.policy_end_date) >= to_date(now()) then b.channel_name else null end as channel_name_curr
         |from odsdb.ods_policy_detail a
         |left join odsdb.ods_ent_guzhu_salesman_detail b
         |on a.holder_name = b.ent_name
@@ -161,32 +162,32 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
         |left join
         |(
         |select policy_code,sum(case when to_date(start_date) <= to_date(now()) and to_date(end_date) >= to_date(now()) then 1 else 0 end) as curr_insured,
-        |sum(case when start_date > end_date then 0 else datediff((case when to_date(now()) > to_date(end_date) then end_date else now() end),start_date) end) as person_count from odsdb.ods_policy_insured_detail
+        |sum(case when start_date > end_date then 0 else datediff((case when to_date(now()) > to_date(end_date) then end_date else now() end),start_date)+1 end) as person_count from odsdb.ods_policy_insured_detail
         |group by policy_code
         |) d
         |on a.policy_code = d.policy_code
         |left join
         |(
-        |select policy_no as policy_code,count(case_no) as case_no,sum(case when final_payment is null then cast(pre_com as decimal(14,4)) else cast(final_payment as decimal(14,4)) end) as res_pay,
-        |sum(case when case_status = '结案' then (case when final_payment is null then cast(pre_com as decimal(14,4)) else cast(final_payment as decimal(14,4)) end) else 0 end) as end_res_pay,
-        |sum(case when case_type = '死亡' then 1 else 0 end) as dead_case_no,
-        |sum(case when case_type = '伤残' then 1 else 0 end) as disable_case_no,
-        |sum(case when case_status = '结案' then 1 else 0 end) as end_case_no
+        |select policy_no as policy_code,count(case_no) as case_no,sum(case when final_payment is null or length(final_payment) = 0 then cast(pre_com as decimal(14,4)) else cast(final_payment as decimal(14,4)) end) as res_pay,
+        |sum(case when trim(case_status) = '结案' then (case when final_payment is null or length(final_payment) = 0 then cast(pre_com as decimal(14,4)) else cast(final_payment as decimal(14,4)) end) else 0 end) as end_res_pay,
+        |sum(case when trim(case_type) = '死亡' then 1 else 0 end) as dead_case_no,
+        |sum(case when trim(case_type) = '伤残' then 1 else 0 end) as disable_case_no,
+        |sum(case when trim(case_status) = '结案' then 1 else 0 end) as end_case_no
         |from odsdb.ods_claims_detail
         |group by policy_no
         |) e
         |on a.policy_code = e.policy_code
         |left join
         |(
-        |select sum((if(add_premium is null ,0 ,add_premium)+if(del_premium is null ,0 ,del_premium))) as preserve_premium,policy_code from odsdb.ods_preservation_detail
+        |select sum((if(add_premium is null ,0 ,add_premium)+if(del_premium is null,0,del_premium))) as preserve_premium,policy_id from odsdb.ods_preservation_detail
         |where preserve_status = 1
-        |group by policy_code
+        |group by policy_id
         |) f
-        |on a.policy_code = f.policy_code
+        |on a.policy_id = f.policy_id
         |where c.one_level_pdt_cate = '蓝领外包' and a.product_code not in ('LGB000001','17000001') and a.policy_status in (0,-1,1)
         |)
         |
-        |select z.*,y.ent_count,date_format(now(),'yyyy-MM-dd HH:mm:ss') as dw_create_time from (
+        |select z.*,y.ent_count from (
         |select sum(x.case_no) as case_no,sum(x.curr_insured) as curr_insured,sum(x.person_count) as person_count,
         |sum(x.dead_case_no) as  dead_case_no,sum(x.disable_case_no) as disable_case_no,sum(x.end_case_no) as end_case_no,sum(x.end_res_pay) as end_res_pay,
         |sum(x.res_pay) as res_pay,sum(case when expire_policy = 1 then x.res_pay else 0 end) as expire_res_pay,sum(x.sum_premium) as sum_premium,
@@ -266,7 +267,7 @@ object DmOds2DmLevelKeyIndictorDetail extends SparkUtil with DataBaseUtil{
         |SUM(d.acc_curr_insured) as person_count,
         |SUM(d.acc_prepare_claim_premium) as prepareClaimPremium,
         |sum(acc_charge_premium) as charge_premium,
-        |round(SUM(d.acc_expire_premium),4) expirePremium,
+        |round(SUM(d.acc_expire_premium),2) expirePremium,
         |SUM(d.acc_expire_claim_premium) as expireClaimPremium,
         |SUM(d.acc_settled_claim_premium) as settledClaimPremium
         |from emp_risk_monitor_kri_detail1 d

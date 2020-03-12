@@ -92,8 +92,8 @@ object OdsEntGuzhuSalesmenDetail extends SparkUtil with Until with DataBaseUtil{
 
     val proposalAndChannelData = tProposalAndHolder.join(bsChannelBznmana,tProposalBznbusi("sell_channel_code")===bsChannelBznmana("channel_id"),"leftouter")
       .selectExpr("getMD5(holder_name) as ent_id","holder_name",
-        "case when channel_user_type  = 1 then getMD5(holder_name) else getMD5(channel_name) end as channel_id",
-        "case when channel_user_type  = 1 then '直客' else channel_name end as channel_name","province_name",
+        "case when channel_user_type  = 2 then getMD5(holder_name) else getMD5(channel_name) end as channel_id",
+        "case when channel_user_type  = 2 then '直客' else channel_name end as channel_name","province_name",
         "salesman")
       .cache()
 
