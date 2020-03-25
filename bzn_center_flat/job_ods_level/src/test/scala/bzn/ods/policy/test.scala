@@ -22,20 +22,23 @@ import scala.math.BigDecimal.RoundingMode.RoundingMode
   **/
 object test extends Until {
   def main(args: Array[String]): Unit = {
-    if( 0 > 0){
+/*    if( 0 > 0){
       println("q3")
     }else{
       println("123")
     }
 
+
     println(MD5("北京诠道科技有限公司"))
 //    5efa43fccd26383273bd8ad97451a30a
 //    5efa43fccd26383273bd8ad97451a30a
-    println(MD5("println(MD5(\"\"\"\"))"))
+    println(MD5("println(MD5(\"\"\"\"))"))*/
 
   }
 
-  def returnColStringLength(sourceCol:String,localCol:String,source:Long,local:Long) = {
+
+
+ /* def returnColStringLength(sourceCol:String,localCol:String,source:Long,local:Long) = {
     var ruleColNewId = 0
     if(sourceCol == localCol){
       if(local < source){
@@ -57,6 +60,6 @@ object test extends Until {
     encoded.map("%02x".format(_)).mkString
 
   }
-
+*/
 
 }

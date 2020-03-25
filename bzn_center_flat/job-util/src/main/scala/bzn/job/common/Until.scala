@@ -856,4 +856,32 @@ trait Until {
     else str.replaceAll(" ", "")
   }
 
+    //三个时间最大的时间
+  def maxTime(time_one: java.sql.Timestamp,times_two: java.sql.Timestamp,times_three: java.sql.Timestamp):  java.sql.Timestamp ={
+
+    val str1 =if(time_one !=null){
+       time_one.toString
+    }else "1900-01-01"
+
+    val str2 =if(times_two != null){
+      times_two.toString
+    }else "1900-01-01"
+    val str3 =if(times_three !=null){
+      times_three.toString
+    }else "1900-01-01"
+
+    val xs=Seq(str1,str2,str3)
+
+    val res: java.sql.Timestamp =
+      if(!xs.isEmpty && xs.sorted.reverse(0)!=null){
+         if(xs.sorted.reverse(0).isInstanceOf[String] && xs.sorted.reverse(0) != "1900-01-01") {
+           java.sql.Timestamp.valueOf(xs.sorted.reverse(0))
+         } else  null
+    }else  null
+    res
+
+  }
+
+
+
 }
