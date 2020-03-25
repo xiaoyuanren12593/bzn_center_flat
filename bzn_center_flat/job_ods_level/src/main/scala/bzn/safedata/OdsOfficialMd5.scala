@@ -34,6 +34,7 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
 
   /**
    * 官网全量写法
+   *
    * @param hiveContext
    * @return
    */
@@ -50,17 +51,18 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
     })
 
     //1.0被保人表
-    val res1 = hiveContext.sql("select clean(cert_no) as cert_no,regexp_replace(clean(mobile),' ','') as mobile," +
+    val res1 = hiveContext.sql("select clean(regexp_replace(cert_no,'\\n','')) as cert_no,clean(mobile) as mobile," +
       "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null,if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years " +
-      "from sourcedb.odr_policy_insured_bznprd where clean(cert_no) is not null or regexp_replace(clean(mobile),' ','') is not null")
+      "from sourcedb.odr_policy_insured_bznprd")
 
     //2.0被保人表
-    val res2 = hiveContext.sql("select  clean(cert_no) as cert_no,regexp_replace(clean(tel),' ','') as mobile," +
+    val res2 = hiveContext.sql("select clean(regexp_replace(cert_no,'\\n','')) as cert_no,clean(tel) as mobile," +
       "trim(substring(cast(if(start_date is null,if(end_date is null ,if(create_time is null,if(update_time is null,now(),update_time),create_time),end_date),start_date) as STRING),1,7)) as years " +
-      "from sourcedb.b_policy_subject_person_master_bzncen where clean(cert_no) is not null or regexp_replace(clean(tel),' ','') is not null")
+      "from sourcedb.b_policy_subject_person_master_bzncen")
 
     //合并1.0和2.0的数据
     val res3 = res1.unionAll(res2)
+      .where("cert_no is not null or mobile is not null")
       .selectExpr("cert_no",
         "MD5(cert_no) as cert_no_md5",
         "mobile",
@@ -70,7 +72,9 @@ object OdsOfficialMd5 extends SparkUtil with Until with MysqlUntil {
     res3.registerTempTable("OfficialTable")
     val res4 = hiveContext.sql("select getUUID() as id,cert_no,cert_no_md5,mobile,mobile_md5,getNow() as dw_create_time,business_line,max(years) as years " +
       "from OfficialTable group by cert_no,cert_no_md5,mobile,mobile_md5,business_line")
+
     res4
+
 
   }
 }

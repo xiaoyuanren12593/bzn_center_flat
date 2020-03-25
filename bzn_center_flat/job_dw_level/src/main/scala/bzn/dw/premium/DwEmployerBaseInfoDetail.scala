@@ -39,7 +39,7 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
 
   def DwEmployerBaseInfoDetail(sqlContext: HiveContext) = {
     import sqlContext.implicits._
-    sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+    sqlContext.udf.register("getUUID",()=>(java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -64,8 +64,8 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
 
     //保单明细关联 保险公司表
     val odsPolicyDetailInsureTempSalve = odsPolicyDetailTemp.join(insuranceCompany, odsPolicyDetailTemp("insure_company_name") === insuranceCompany("insurance_company"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_no", "big_policy", "policy_status", "policy_start_date", "policy_end_date", "proposal_time", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
-        "belongs_regional", "belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName", "belongs_industry_name")
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy", "policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
+        "belongs_regional","belongs_regional_salve","sum_premium","num_of_preson_first_policy","product_code","channelId", "channelName", "salesName","belongs_industry_name")
 
     val frame = odsPolicyDetailInsureTempSalve.selectExpr("holder_name", "policy_start_date", "belongs_regional_salve").map(x => {
       val holderName = x.getAs[String]("holder_name")
@@ -90,8 +90,8 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
     }).toDF("holderName", "belongs_regional_salve_temp", "policy_start_date_temp")
 
     val odsPolicyDetailInsureTemp = odsPolicyDetailInsureTempSalve.join(frame, 'holder_name === 'holderName, "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_no", "big_policy", "policy_status", "policy_start_date", "policy_end_date", "proposal_time", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
-        "belongs_regional", "belongs_regional_salve_temp as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName", "belongs_industry_name")
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
+        "belongs_regional", "belongs_regional_salve_temp as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName","belongs_industry_name")
 
     /**
      * 读取地域信息码表
@@ -101,45 +101,48 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
     /**
      * 保单明细表与地域信息关联 如果企业联系人对应多个城市 拿保单开始时间最近的投保城市
      */
-    val odsPolicyDetail = odsPolicyDetailInsureTemp.join(odsArea, odsPolicyDetailInsureTemp("belongs_regional_salve") === odsArea("code"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_no", "big_policy", "policy_status", "policy_start_date", "policy_end_date", "proposal_time", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
-        "sum_premium", "num_of_preson_first_policy", "product_code", "belongs_regional", "belongs_regional_salve", "province as holder_province", "holder_city",
-        "channelId", "channelName", "salesName", "belongs_industry_name")
+    val odsPolicyDetail = odsPolicyDetailInsureTemp.join(odsArea,odsPolicyDetailInsureTemp("belongs_regional_salve")===odsArea("code"),"leftouter")
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status", "policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
+        "sum_premium","num_of_preson_first_policy", "product_code","belongs_regional", "belongs_regional_salve","province as holder_province","holder_city",
+        "channelId", "channelName", "salesName","belongs_industry_name")
 
     //读取企业联系人`
     val odsEnterpriseDetail = sqlContext.sql("select ent_id,ent_name from odsdb.ods_enterprise_detail")
 
     //读取客户归属销售表
     val odsEntGuzhuDetail: DataFrame =
-      sqlContext.sql("select ent_id as entid,ent_name as entname,channel_id,(case when channel_name='直客' then ent_name else channel_name end) as channel_name,salesman,biz_operator,consumer_category,business_source from odsdb.ods_ent_guzhu_salesman_detail")
+      sqlContext.sql("select ent_id as entid,ent_name as entname,channel_id,(case when channel_name='直客' then ent_name else channel_name end) as channel_name,salesman,biz_operator,consumer_category,business_source,consumer_new_old from odsdb.ods_ent_guzhu_salesman_detail")
 
     // 将企业联系人 与 客户归属销售表关联  拿到 渠道id和name 销售名称
     val enterperiseAndEntGuzhu = odsEnterpriseDetail.join(odsEntGuzhuDetail, odsEnterpriseDetail("ent_id") === odsEntGuzhuDetail("entid"), "leftouter")
-      .selectExpr("ent_id", "ent_name", "channel_id", "channel_name", "salesman", "biz_operator", "consumer_category", "business_source")
+      .selectExpr("ent_id", "ent_name", "channel_id", "channel_name","salesman","biz_operator","consumer_category","business_source","consumer_new_old")
 
     //读取销售团队表
-    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name from odsdb.ods_ent_sales_team_dimension")
+    val odsSalesmanDetail = sqlContext.sql("select sale_name,team_name,department,group_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
      * 关联两个表，拿字段
      */
     val enterperiseAndSaleRes = enterperiseAndEntGuzhu.join(odsSalesmanDetail, enterperiseAndEntGuzhu("salesman") === odsSalesmanDetail("sale_name"), "leftouter")
-      .selectExpr("ent_id", "ent_name", "channel_id", "channel_name", "salesman", "team_name", "biz_operator", "consumer_category", "business_source")
+      .selectExpr("ent_id", "ent_name", "channel_id", "channel_name", "salesman", "team_name","biz_operator",
+        "consumer_category","business_source","department","group_name","consumer_new_old")
 
     // 将关联结果与保单明细表关联
     val resDetail = odsPolicyDetail.join(enterperiseAndSaleRes, odsPolicyDetail("holder_name") === enterperiseAndSaleRes("ent_name"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_no", "big_policy", "policy_status", "policy_start_date", "policy_end_date", "proposal_time", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
-        "sum_premium", "num_of_preson_first_policy", "product_code", "belongs_regional", "belongs_regional_salve", "holder_province", "holder_city", "ent_id", "ent_name",
-        "channel_id", "channelId", "channel_name", "channelName", "salesName", "salesman", "team_name", "biz_operator", "consumer_category", "business_source", "belongs_industry_name")
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date","policy_end_date","proposal_time", "insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+        "sum_premium","num_of_preson_first_policy","product_code","belongs_regional","belongs_regional_salve", "holder_province","holder_city","ent_id", "ent_name",
+        "channel_id","channelId", "channel_name","channelName","salesName","salesman", "team_name","biz_operator",
+        "consumer_category","business_source","belongs_industry_name","department","group_name","consumer_new_old")
 
     //读取产品表
     val odsProductDetail = sqlContext.sql("select product_code as product_code_temp,product_name,one_level_pdt_cate,two_level_pdt_cate from odsdb.ods_product_detail")
 
     //将关联结果与产品表关联 拿到产品类别
     val resProductDetail = resDetail.join(odsProductDetail, resDetail("product_code") === odsProductDetail("product_code_temp"), "leftouter")
-      .selectExpr("policy_id", "policy_code", "policy_no", "big_policy", "policy_status", "policy_start_date", "proposal_time", "policy_end_date", "insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
-        "sum_premium", "num_of_preson_first_policy", "product_code", "product_name", "belongs_regional", "belongs_regional_salve", "holder_province", "holder_city", "one_level_pdt_cate",
-        "two_level_pdt_cate", "ent_id", "ent_name", "channel_id", "channelId", "channel_name", "channelName", "salesName", "salesman", "team_name", "biz_operator", "consumer_category", "business_source", "belongs_industry_name")
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date","proposal_time","policy_end_date","insure_company_name", "short_name","holder_name", "insured_subject","first_premium",
+        "sum_premium","num_of_preson_first_policy","product_code","product_name","belongs_regional", "belongs_regional_salve","holder_province","holder_city","one_level_pdt_cate",
+        "two_level_pdt_cate","ent_id", "ent_name", "channel_id","channelId", "channel_name","channelName",
+        "salesName","salesman", "team_name","biz_operator","consumer_category","business_source","belongs_industry_name","department","group_name","consumer_new_old")
       .where("one_level_pdt_cate = '蓝领外包'")
 
     /**
@@ -212,8 +215,11 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
         "clean(ent_name) as ent_name",
         "clean(case when channel_id is null or channel_id = '' then channelId else channel_id end)as channel_id ",
         "clean(case when channel_name is null or channel_name = '' then channelName else channel_name end)as channel_name",
+        "clean(consumer_new_old) as consumer_new_old",
         "clean(case when salesman is null or salesman = '' then salesName else salesman end) as sale_name",
         "clean(team_name) as team_name",
+        "clean(department) as department",
+        "clean(group_name) as group_name",
         "clean(biz_operator) as biz_operator",
         "clean(consumer_category) as consumer_category",
         "clean(business_source) as business_source",
@@ -227,7 +233,8 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
         "commission_discount_rate",
         "commission_rate",
         "getNow() as dw_create_time")
-    res.printSchema()
+
     res
   }
+
 }

@@ -1,5 +1,6 @@
 package bzn.dw.bclickthrough
 
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -430,6 +431,7 @@ import org.apache.spark.{SparkConf, SparkContext}
    */
   def TAccountsEmployerAddPreserve(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
+    hqlContext.udf.register("maxTime",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp)=>maxTime(time_one,times_two,times_three))
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("getNow", () => {
@@ -540,6 +542,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       "order_date",
       "policy_source_code",
       "policy_source_name",
+      //业绩核算日期
       "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day",
       "biz_operator as operational_name",
       "holder_name",
