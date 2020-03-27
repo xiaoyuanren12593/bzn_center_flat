@@ -29,8 +29,8 @@ import org.apache.spark.{SparkConf, SparkContext}
     val preRes = TAccountsEmployerAddPreserve(hqlContext,sqlContext)
     val res = AddPolicyRes.unionAll(preRes)
 
-    saveASMysqlTable(res, "t_accounts_employer", SaveMode.Append, "mysql.username",
-      "mysql.password", "mysql.driver", "mysql.url")
+/*    saveASMysqlTable(res, "t_accounts_employer", SaveMode.Append, "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")*/
 
 
     saveASMysqlTable(res, "ods_t_accounts_employer_detail", SaveMode.Append, "mysql.username.106",

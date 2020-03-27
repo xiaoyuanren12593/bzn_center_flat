@@ -1,19 +1,18 @@
-package bzn.dw.bclickthrough
+package bzn.ods.accounts
 
 import java.sql.Timestamp
 
-import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.saveASMysqlTable
-import bzn.dw.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /*
 * @Author:liuxiang
 * @Date：2019/11/28
 * @Describe:
-*/ object DwUnEmpTAccountsIntermediateDetail extends SparkUtil with Until with MysqlUntil {
+*/ object OdsUnEmpTAccountsIntermediateDetail extends SparkUtil with Until with MysqlUntil {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName

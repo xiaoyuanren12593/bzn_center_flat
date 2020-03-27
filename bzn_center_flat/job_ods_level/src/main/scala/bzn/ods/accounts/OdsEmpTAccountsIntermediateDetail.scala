@@ -1,12 +1,11 @@
-package bzn.dw.bclickthrough
+package bzn.ods.accounts
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.{clean, readMysqlTable, saveASMysqlTable}
-import bzn.dw.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
+import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -15,41 +14,38 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/11/6
 * @Describe:
-*/ object DwEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with MysqlUntil {
+*/ object OdsEmpTAccountsIntermediateDetail   extends SparkUtil with Until with MysqlUntil{
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[*]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hqlContext = sparkConf._4
     val sqlContext = sparkConf._3
-   val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
-    //AddPolicyRes.printSchema()
-    //  AddPolicyRes.printSchema()
-    /*  saveASMysqlTable(AddPolicyRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
-        "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
 
-    val preRes = TAccountsEmployerAddPreserve(hqlContext, sqlContext)
+    val AddPolicyRes = TAccountsEmployerAddPolicy(hqlContext, sqlContext)
+    val preRes = TAccountsEmployerAddPreserve(hqlContext,sqlContext)
     val res = AddPolicyRes.unionAll(preRes)
-   // res.printSchema()
-    /* saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
-       "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
-    // preRes.show(100)
+
+/*    saveASMysqlTable(res, "t_accounts_employer", SaveMode.Append, "mysql.username",
+      "mysql.password", "mysql.driver", "mysql.url")*/
+
+
     saveASMysqlTable(res, "ods_t_accounts_employer_detail", SaveMode.Append, "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
 
-    preRes.printSchema()
+
     sc.stop()
 
   }
 
   /**
-   * 添加保单数据
-   *
-   * @param hqlContext
-   */
+    * 添加保单数据
+    *
+    * @param hqlContext
+    */
   def TAccountsEmployerAddPolicy(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
@@ -62,8 +58,8 @@ import org.apache.spark.{SparkConf, SparkContext}
       date + ""
     })
     /**
-     * 读取保单明细表
-     */
+      * 读取保单明细表
+      */
 
     val odsPolicyDetail = hqlContext.sql("select distinct policy_code,case source_system when '1.0' then '1' when '2.0' then '2' end as data_source," +
       "policy_status,policy_effect_date,policy_start_date,policy_end_date,product_code,insure_company_name,f" +
@@ -71,15 +67,15 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-     * 读取客户归属表
-     */
+      * 读取客户归属表
+      */
 
     val odsEntGuzhuDetail = hqlContext.sql("select salesman,ent_name,biz_operator,channel_name,business_source from odsdb.ods_ent_guzhu_salesman_detail")
 
 
     /**
-     * 保单明细表关联客户归属信息表
-     */
+      * 保单明细表关联客户归属信息表
+      */
     val policyAndGuzhuRes = odsPolicyDetail.join(odsEntGuzhuDetail, 'holder_name === 'ent_name, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date", "insure_company_name", "first_premium",
         "holder_name", "insured_subject", "invoice_type", "salesman", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no","order_date","policy_source_code","policy_source_name","policy_create_time")
@@ -87,43 +83,43 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-     * 读取销售团队表
-     */
+      * 读取销售团队表
+      */
 
     val odsEntSalesTeam = hqlContext.sql("select team_name,sale_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
-     * 将结果关联销售团队表
-     */
+      * 将结果关联销售团队表
+      */
 
     val policyAndGuzhuSalve = policyAndGuzhuRes.join(odsEntSalesTeam, 'salesman === 'sale_name, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no", "order_date","policy_source_code","policy_source_name","policy_create_time")
 
     /**
-     * 读取方案类别表
-     */
+      * 读取方案类别表
+      */
 
     val odsPolicyProductPlanDetail = hqlContext.sql("select policy_code as policy_code_salve,sku_price,sku_ratio,sku_append,sku_coverage,economic_rate,tech_service_rate,sku_charge_type,commission_discount_rate from odsdb.ods_policy_product_plan_detail")
 
 
     /**
-     * 将上述结果关联方案类别表
-     */
+      * 将上述结果关联方案类别表
+      */
     val policyAndProductPlan = policyAndGuzhuSalve.join(odsPolicyProductPlanDetail, 'policy_code === 'policy_code_salve, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source",
         "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "sku_charge_type", "preserve_policy_no", "commission_discount_rate","order_date","policy_source_code","policy_source_name","policy_create_time")
 
     /**
-     * 读取产品表
-     */
+      * 读取产品表
+      */
     val odsProductDetail = hqlContext.sql("select product_desc,product_code as insure_code,two_level_pdt_cate as product_name,two_level_pdt_cate from odsdb.ods_product_detail")
 
 
     /**
-     * 关联产品表
-     */
+      * 关联产品表
+      */
     val resTempRes = policyAndProductPlan.join(odsProductDetail, 'product_code === 'insure_code, "leftouter")
       .selectExpr("policy_code", "product_code", "product_desc", "product_name", "two_level_pdt_cate", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "sku_price", "sku_ratio", "sku_append", "sku_coverage",
@@ -194,13 +190,13 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-     * 将结果注册成临时表
-     */
+      * 将结果注册成临时表
+      */
     res.registerTempTable("t_accounts_employer_intermediate_temp")
 
     /**
-     * 读取保单和批单的数据
-     */
+      * 读取保单和批单的数据
+      */
     val dwTaccountEmployerIntermeditae = hqlContext.sql("select distinct batch_no,policy_no,preserve_id,add_batch_code,del_batch_code,preserve_status,data_source," +
       "project_name,product_code,product_name,channel_name,business_owner,business_region,business_source,business_type,order_date,policy_source_code,policy_source_name,performance_accounting_day," +
       "operational_name,holder_name,insurer_name,plan_price,plan_coverage,plan_append,plan_disability_rate,plan_pay_type,underwriting_company," +
@@ -211,16 +207,16 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-     * 读取业务表的数据
-     */
+      * 读取业务表的数据
+      */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
-      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
+     "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
     /**
-     * 关联两个表 过滤出保单数据的增量数据
-     */
+      * 关联两个表 过滤出保单数据的增量数据
+      */
     val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
       .selectExpr("batch_no","policy_no", "policy_no_salve","preserve_id","add_batch_code","del_batch_code","preserve_status", "data_source",
         "project_name", "product_code", "product_name", "channel_name","business_owner", "business_region", "business_source","business_type","order_date","policy_source_code","policy_source_name", "performance_accounting_day",
@@ -294,8 +290,8 @@ import org.apache.spark.{SparkConf, SparkContext}
     //更新数据
 
     /**
-     * 读取销售渠道表
-     */
+      * 读取销售渠道表
+      */
 
     val odsGuzhuSalemanDetail = hqlContext.sql("select ent_name as ent_name_salve,channel_name as channel_name_salve,biz_operator as biz_operator_salve," +
       "salesman as salesman_salve,business_source as business_source_salve from odsdb.ods_ent_guzhu_salesman_detail")
@@ -425,7 +421,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
   }
 
-
   /**
    * 批单数据
    *
@@ -551,10 +546,10 @@ import org.apache.spark.{SparkConf, SparkContext}
       "policy_source_code",
       "policy_source_name",
       //业绩核算日期
-      "case when policy_status=-1 and (preserve_start_date is not null and preserve_end_date is not null) " +
+      "case when policy_status= -1 and (preserve_start_date is not null and preserve_end_date is not null) " +
         "then (case when preserve_start_date > preserve_end_date then maxTime_three(policy_start_date,preserve_start_date,create_time) " +
         "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time))) end)" +
-        "when policy_status=-1 and (preserve_start_date is  null or preserve_end_date is  null) then maxTime_four(policy_start_date,preserve_start_date,preserve_end_date,create_time) " +
+        "when policy_status= -1 and (preserve_start_date is  null or preserve_end_date is  null) then maxTime_four(policy_start_date,preserve_start_date,preserve_end_date,create_time) " +
         "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time))) end as performance_accounting_day",
       "biz_operator as operational_name",
       "holder_name",

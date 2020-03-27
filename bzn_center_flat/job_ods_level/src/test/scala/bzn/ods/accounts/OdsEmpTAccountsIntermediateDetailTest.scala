@@ -1,12 +1,11 @@
-package bzn.dw.bclickthrough
+package bzn.ods.accounts
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.{clean, readMysqlTable, saveASMysqlTable}
-import bzn.dw.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
+import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -15,7 +14,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/11/6
 * @Describe:
-*/ object DwEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with MysqlUntil {
+*/ object OdsEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with MysqlUntil {
 
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")

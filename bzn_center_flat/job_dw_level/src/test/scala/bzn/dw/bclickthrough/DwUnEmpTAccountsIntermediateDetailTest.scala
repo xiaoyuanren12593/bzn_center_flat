@@ -51,7 +51,7 @@ import org.apache.spark.sql.hive.HiveContext
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
 
     //106
-    saveASMysqlTable(finRes, "ods_t_accounts_un_employer_detail_20200327", SaveMode.Append, "mysql.username.106",
+    saveASMysqlTable(finRes, "ods_t_accounts_un_employer_detail", SaveMode.Append, "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
 
 
