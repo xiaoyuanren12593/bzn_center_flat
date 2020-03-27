@@ -4,11 +4,11 @@ import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.{clean, readMysqlTable}
+import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetail.{clean, readMysqlTable, saveASMysqlTable}
 import bzn.dw.util.SparkUtil
 import bzn.job.common.{MysqlUntil, Until}
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /*
@@ -37,7 +37,10 @@ import org.apache.spark.{SparkConf, SparkContext}
     /* saveASMysqlTable(preRes, "t_update_employer_detail_test", SaveMode.Append, "mysql.username.103",
        "mysql.password.103", "mysql.driver", "mysql_url.103.odsdb")*/
     // preRes.show(100)
+    saveASMysqlTable(res, "ods_t_accounts_employer_detail_20200327", SaveMode.Append, "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
 
+    preRes.printSchema()
     sc.stop()
 
   }
@@ -211,7 +214,7 @@ import org.apache.spark.{SparkConf, SparkContext}
      * 读取业务表的数据
      */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail_20200327", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve")
 
@@ -431,7 +434,8 @@ import org.apache.spark.{SparkConf, SparkContext}
    */
   def TAccountsEmployerAddPreserve(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
-    hqlContext.udf.register("maxTime",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp)=>maxTime(time_one,times_two,times_three))
+    hqlContext.udf.register("maxTime_three",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp)=>maxTime_three(time_one,times_two,times_three))
+    hqlContext.udf.register("maxTime_four",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp,times_four:Timestamp)=>maxTime_four(time_one,times_two,times_three,times_four))
     hqlContext.udf.register("clean", (str: String) => clean(str))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("getNow", () => {
@@ -453,7 +457,7 @@ import org.apache.spark.{SparkConf, SparkContext}
      * 读取保单明细表
      */
 
-    val odsPolicyDetail = hqlContext.sql("select policy_id as policy_id_salve,product_code as insure_code,holder_name,insure_company_name,source_system,invoice_type,insured_subject,policy_status,policy_source_code,policy_source_name from odsdb.ods_policy_detail")
+    val odsPolicyDetail = hqlContext.sql("select policy_id as policy_id_salve,product_code as insure_code,holder_name,insure_company_name,source_system,invoice_type,insured_subject,policy_status,policy_source_code,policy_source_name,policy_start_date,policy_create_time from odsdb.ods_policy_detail")
 
 
     /**
@@ -462,7 +466,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     val policyAndPreserveDetailRes = odsPolicyPreserveDetail.join(odsPolicyDetail, 'policy_id === 'policy_id_salve, "leftouter")
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
-        "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject", "policy_status","order_date","policy_source_code","policy_source_name")
+        "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject", "policy_status",
+        "order_date","policy_source_code","policy_source_name","policy_start_date","policy_create_time")
 
 
     /**
@@ -475,7 +480,8 @@ import org.apache.spark.{SparkConf, SparkContext}
     val preserveAndPorductPlan = policyAndPreserveDetailRes.join(productPlan, 'policy_code === 'policy_code_salve, "leftouter")
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject", "policy_status",
-        "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate","order_date","policy_source_code","policy_source_name")
+        "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate",
+        "commission_discount_rate","order_date","policy_source_code","policy_source_name","policy_start_date","policy_create_time")
 
     /**
      * 读取销售表和团队表
@@ -493,13 +499,15 @@ import org.apache.spark.{SparkConf, SparkContext}
     val preserveAndSale = preserveAndPorductPlan.join(odsEntGuzhuSale, 'holder_name === 'ent_name, "leftouter")
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
-        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name","order_date","policy_source_code","policy_source_name")
+        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman",
+        "biz_operator", "business_source", "ent_name", "channel_name","order_date","policy_source_code","policy_source_name","policy_start_date","policy_create_time")
 
 
     val preserveAndsaleAndTeam = preserveAndSale.join(odsEntSaleTeam, 'salesman === 'sale_name, "leftouter")
       .selectExpr("policy_id", "preserve_id", "policy_code", "add_batch_code", "del_batch_code", "add_premium", "del_premium", "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
-        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name","order_date","policy_source_code","policy_source_name")
+        "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman",
+        "biz_operator", "business_source", "ent_name", "channel_name", "team_name","order_date","policy_source_code","policy_source_name","policy_start_date","policy_create_time")
 
     /**
      * 读取产品表
@@ -518,7 +526,7 @@ import org.apache.spark.{SparkConf, SparkContext}
         "preserve_start_date", "preserve_end_date", "effective_date",
         "preserve_type", "pay_status", "create_time", "preserve_status", "insure_code", "holder_name", "insure_company_name", "source_system", "invoice_type", "insured_subject",
         "policy_status", "sku_charge_type", "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "commission_discount_rate", "salesman", "biz_operator", "business_source", "ent_name", "channel_name", "team_name", "product_desc",
-        "product_name", "two_level_pdt_cate","order_date","policy_source_code","policy_source_name")
+        "product_name", "two_level_pdt_cate","order_date","policy_source_code","policy_source_name","policy_start_date","policy_create_time")
       .where("policy_status in (0,1,-1) and if(preserve_start_date is null,if(preserve_end_date is null,create_time>=cast('2019-01-01' as timestamp),preserve_end_date>=cast('2019-01-01' as timestamp)),preserve_start_date >=cast('2019-01-01' as timestamp)) and preserve_status = 1 " +
         "and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
 
@@ -538,12 +546,16 @@ import org.apache.spark.{SparkConf, SparkContext}
       "salesman as business_owner",
       "team_name as business_region",
       "business_source",
-      "cast(case preserve_type when 1 then 0 when 2 then 2 when 5 then 5 else preserve_type end as string) as business_type",
+      "cast(case preserve_type when 1 then 0 when 2 then 2 when 3 then 5 else preserve_type end as string) as business_type",
       "order_date",
       "policy_source_code",
       "policy_source_name",
       //业绩核算日期
-      "if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time)) as performance_accounting_day",
+      "case when policy_status=-1 and (preserve_start_date is not null and preserve_end_date is not null) " +
+        "then (case when preserve_start_date > preserve_end_date then maxTime_three(policy_start_date,preserve_start_date,create_time) " +
+        "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time))) end)" +
+        "when policy_status=-1 and (preserve_start_date is  null or preserve_end_date is  null) then maxTime_four(policy_start_date,preserve_start_date,preserve_end_date,create_time) " +
+        "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time))) end as performance_accounting_day",
       "biz_operator as operational_name",
       "holder_name",
       "insured_subject as insurer_name",
@@ -600,7 +612,7 @@ import org.apache.spark.{SparkConf, SparkContext}
      * 读取业务表的数据
      */
 
-    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail_20200327", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
       .selectExpr("policy_no as policy_no_salve", "preserve_id as preserve_id_salve")
     /**

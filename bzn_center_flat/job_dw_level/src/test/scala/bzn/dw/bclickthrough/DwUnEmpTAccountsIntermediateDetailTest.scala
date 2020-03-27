@@ -1,11 +1,14 @@
 package bzn.dw.bclickthrough
 
 
-import bzn.dw.bclickthrough.DwUnEmpTAccountsIntermediateDetail._
+import java.sql.Timestamp
+
+import bzn.dw.bclickthrough.DwEmpTAccountsIntermediateDetailTest.{maxTime_four, maxTime_three}
+import bzn.dw.bclickthrough.DwUnEmpTAccountsIntermediateDetail.{getAllBusinessPolicyDetail, getHealthMemberPreserveDetail, getSportsScenMemberHealthPolicyDetail, getSportsScenMemberPreserveDetail, _}
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
 
 /*
@@ -22,24 +25,38 @@ import org.apache.spark.sql.hive.HiveContext
     val sqlContext = sparkConf._3
     val hiveContext = sparkConf._4
 
-
-    val res = getAllBusinessPolicyDetail(hiveContext)
   /*  val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
     val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)*/
-    val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
+    //val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
 
   /*
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
 
     finRes.printSchema()*/
     // res.printSchema()
-    // val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
+   // val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
     // val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
 
     // frame2.printSchema()
     //  val finRes = frame1.unionAll(frame2).unionAll(frame3)
     // finRes.printSchema()
     //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
+    //frame2.printSchema()
+
+
+    val res = getAllBusinessPolicyDetail(hiveContext)
+    val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
+    val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
+    val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
+    val finRes = frame1.unionAll(frame2).unionAll(frame3)
+
+    //106
+    saveASMysqlTable(finRes, "ods_t_accounts_un_employer_detail_20200327", SaveMode.Append, "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+
+
+
+
     sc.stop()
   }
 
@@ -349,6 +366,8 @@ import org.apache.spark.sql.hive.HiveContext
    */
   def getSportsScenMemberPreserveDetail(hqlContext: HiveContext, sqlContext: SQLContext, policyAndPlanAndTeamRes: DataFrame): DataFrame = {
     import hqlContext.implicits._
+    hqlContext.udf.register("maxTime_three",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp)=>maxTime_three(time_one,times_two,times_three))
+    hqlContext.udf.register("maxTime_four",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp,times_four:Timestamp)=>maxTime_four(time_one,times_two,times_three,times_four))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
 
@@ -418,9 +437,12 @@ import org.apache.spark.sql.hive.HiveContext
         "order_date",
         "policy_source_code",
         "policy_source_name",
-        "if(preserve_start_date is null," +
-          "if(preserve_end_date is not null and preserve_end_date>create_time,preserve_end_date,create_time)," +
-          "if(preserve_start_date >= create_time,preserve_start_date,create_time)) as performance_accounting_day",
+        //业绩核算日期
+        "case when policy_status= -1 and (preserve_start_date is not null and preserve_end_date is not null) " +
+          "then (case when preserve_start_date > preserve_end_date then maxTime_three(policy_start_date,preserve_start_date,create_time) " +
+          "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>create_time,preserve_end_date,create_time),if(preserve_start_date >= create_time,preserve_start_date,create_time))) end) " +
+          "when policy_status=-1 and (preserve_start_date is  null or preserve_end_date is  null) then maxTime_four(policy_start_date,preserve_start_date,preserve_end_date,create_time)  " +
+          "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>create_time,preserve_end_date,create_time),if(preserve_start_date >= create_time,preserve_start_date,create_time))) end as performance_accounting_day",
         "holder_name",
         "insured_subject as insurer_name",
         "insure_company_name as underwriting_company",
