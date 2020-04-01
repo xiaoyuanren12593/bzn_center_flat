@@ -22,6 +22,7 @@ object DwRiskManagementOutputDetailTest extends SparkUtil with Until with MysqlU
   }
 
 
+
   /**
    *
    * @param hiveContext
@@ -67,12 +68,11 @@ object DwRiskManagementOutputDetailTest extends SparkUtil with Until with MysqlU
       "sum(case when bzn_work_risk not in ( '1','2','3','4','5','6') then 1 else 0 end) as other_risk_count " +
       "from dwdb.dw_work_type_matching_claim_detail group by policy_code,profession_type")
 
+
     //读取工种表_未知工种和其他工种个数
     val dwWorkTypeMatching_two = hiveContext.sql("SELECT " +
-      "sum(case when work_name_check='未知' then 1 else 0 end) as work_risk_unknown," +
-      "sum(case when work_name_check is null then 1 else 0 end) as work_risk_other," +
-      "policy_code as policy_code_work " +
-      "from dwdb.dw_work_type_matching_detail GROUP BY policy_code")
+      "sum(case when work_name_check='未知' then 1 else 0 end) as work_risk_unknown,count(work_type) as work_counts,policy_code as policy_code_work " +
+      "from dwdb.dw_work_type_matching_claim_detail GROUP BY policy_code")
 
 
     //保单表关联产品表
@@ -131,7 +131,7 @@ object DwRiskManagementOutputDetailTest extends SparkUtil with Until with MysqlU
         "sku_price", "sku_coverage", "office_address", "office_province", "profession_type",
         "office_district", "case_no_count", "res_pay", "charge_premium", "one_risk_count",
         "two_risk_count", "three_risk_count", "four_risk_count", "five_risk_count","salesman",
-        "six_risk_count", "work_risk_unknown", "work_risk_other")
+        "six_risk_count", "work_risk_unknown","work_counts")
 
     //将上述结果关联被人表
     val res8 = res7.join(odsPoliocyInsureDetail, 'policy_id === 'policy_id_salve, "leftouter")
@@ -140,8 +140,8 @@ object DwRiskManagementOutputDetailTest extends SparkUtil with Until with MysqlU
         "sku_price", "sku_coverage", "office_address", "office_province", "profession_type",
         "office_district", "case_no_count", "res_pay", "charge_premium", "person_count", "one_risk_count",
         "two_risk_count", "three_risk_count", "four_risk_count", "five_risk_count",
-        "six_risk_count", "work_risk_unknown", "work_risk_other","salesman",
-        "(one_risk_count+two_risk_count+three_risk_count+four_risk_count+five_risk_count+six_risk_count+work_risk_unknown+work_risk_other) as work_counts")
+        "six_risk_count", "work_risk_unknown", "salesman","work_counts",
+        "(work_counts-one_risk_count-two_risk_count-three_risk_count-four_risk_count-five_risk_count-six_risk_count-work_risk_unknown) as work_risk_other")
 
 
     //注册临时表
@@ -164,7 +164,7 @@ object DwRiskManagementOutputDetailTest extends SparkUtil with Until with MysqlU
     //父级三类和总工种:假如B是通过A保单来的,那么A就是B的父级保单.
     val res10 = hiveContext.sql(
       """
-        |select b.policy_code as preserve_policy_no_salve,a.work_counts as max_work_counts,a.three_risk_count as max_three_risk_count
+        |select a.policy_code as preserve_policy_no_salve,b.work_counts as max_work_counts,b.three_risk_count as max_three_risk_count
         |from tableTemp a
         |left join tableTemp b
         |on b.policy_code=a.preserve_policy_no
@@ -186,7 +186,7 @@ object DwRiskManagementOutputDetailTest extends SparkUtil with Until with MysqlU
         "renewal_policy",
         "office_address",
         "office_province",
-        "office_district",
+        "case when office_district =0 then null else office_district end as office_district",
         "one_case_no_count",
         "one_charge_premium",
         "two_person_count",

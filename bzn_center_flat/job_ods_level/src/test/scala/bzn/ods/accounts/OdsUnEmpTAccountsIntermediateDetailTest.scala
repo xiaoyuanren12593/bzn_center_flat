@@ -2,7 +2,7 @@ package bzn.ods.accounts
 
 import java.sql.Timestamp
 
-import bzn.job.common.Until
+import bzn.job.common.{MysqlUntil, Until}
 import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/11/28
 * @Describe:
-*/ object OdsUnEmpTAccountsIntermediateDetailTest extends SparkUtil with Until {
+*/ object OdsUnEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with  MysqlUntil{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -46,10 +46,11 @@ import org.apache.spark.{SparkConf, SparkContext}
     val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
     val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
+    finRes.printSchema()
 
-    //106
+ /*   //106
     saveASMysqlTable(finRes, "ods_t_accounts_un_employer_detail", SaveMode.Append, "mysql.username.106",
-      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")*/
 
 
 
@@ -265,7 +266,7 @@ import org.apache.spark.{SparkConf, SparkContext}
     hqlContext.udf.register("clean", (str: String) => clean(str))
 
     val policyAndPlanAndTeamAndProductRes = policyAndPlanAndTeamRes
-      //  .where("policy_start_date>='2019-01-01 00:00:00'")
+      .where("policy_start_date>='2019-01-01 00:00:00'")
       .selectExpr(
         "getUUID() as id",
         "clean('') as batch_no",
@@ -326,6 +327,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
     val dwTAccountsUnEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_un_employer_detail", "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+      .where("(add_batch_code is null or add_batch_code='') and preserve_id is null and (del_batch_code is null or del_batch_code='')")
       .selectExpr("policy_no as policy_no_salve", "business_type as business_type_salve")
 
     val res = policyAndPlanAndTeamAndProductRes.join(dwTAccountsUnEmployerDetail, 'policy_no === 'policy_no_salve
@@ -565,7 +567,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       )
 
     val policyAndPlanAndTeamAndProductPreserveRes = odsHealthPreserceDetail.join(policyAndPlanAndTeamAndProductRes, odsHealthPreserceDetail("policy_code_preserve") === policyAndPlanAndTeamAndProductRes("policy_code"))
-      // .where("policy_start_date >= '2019-01-01 00:00:00'")
+      .where("policy_start_date >= '2019-01-01 00:00:00'")
       .selectExpr(
         "getUUID() as id",
         "clean('')  as batch_no",

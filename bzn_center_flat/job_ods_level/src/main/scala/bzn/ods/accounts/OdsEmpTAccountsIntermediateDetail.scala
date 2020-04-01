@@ -42,10 +42,10 @@ import org.apache.spark.{SparkConf, SparkContext}
   }
 
   /**
-    * 添加保单数据
-    *
-    * @param hqlContext
-    */
+   * 添加保单数据
+   *
+   * @param hqlContext
+   */
   def TAccountsEmployerAddPolicy(hqlContext: HiveContext, sqlContext: SQLContext): DataFrame = {
     import hqlContext.implicits._
     hqlContext.udf.register("clean", (str: String) => clean(str))
@@ -58,8 +58,8 @@ import org.apache.spark.{SparkConf, SparkContext}
       date + ""
     })
     /**
-      * 读取保单明细表
-      */
+     * 读取保单明细表
+     */
 
     val odsPolicyDetail = hqlContext.sql("select distinct policy_code,case source_system when '1.0' then '1' when '2.0' then '2' end as data_source," +
       "policy_status,policy_effect_date,policy_start_date,policy_end_date,product_code,insure_company_name,f" +
@@ -67,15 +67,15 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-      * 读取客户归属表
-      */
+     * 读取客户归属表
+     */
 
     val odsEntGuzhuDetail = hqlContext.sql("select salesman,ent_name,biz_operator,channel_name,business_source from odsdb.ods_ent_guzhu_salesman_detail")
 
 
     /**
-      * 保单明细表关联客户归属信息表
-      */
+     * 保单明细表关联客户归属信息表
+     */
     val policyAndGuzhuRes = odsPolicyDetail.join(odsEntGuzhuDetail, 'holder_name === 'ent_name, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date", "insure_company_name", "first_premium",
         "holder_name", "insured_subject", "invoice_type", "salesman", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no","order_date","policy_source_code","policy_source_name","policy_create_time")
@@ -83,49 +83,49 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-      * 读取销售团队表
-      */
+     * 读取销售团队表
+     */
 
     val odsEntSalesTeam = hqlContext.sql("select team_name,sale_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
-      * 将结果关联销售团队表
-      */
+     * 将结果关联销售团队表
+     */
 
     val policyAndGuzhuSalve = policyAndGuzhuRes.join(odsEntSalesTeam, 'salesman === 'sale_name, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "preserve_policy_no", "order_date","policy_source_code","policy_source_name","policy_create_time")
 
     /**
-      * 读取方案类别表
-      */
+     * 读取方案类别表
+     */
 
     val odsPolicyProductPlanDetail = hqlContext.sql("select policy_code as policy_code_salve,sku_price,sku_ratio,sku_append,sku_coverage,economic_rate,tech_service_rate,sku_charge_type,commission_discount_rate from odsdb.ods_policy_product_plan_detail")
 
 
     /**
-      * 将上述结果关联方案类别表
-      */
+     * 将上述结果关联方案类别表
+     */
     val policyAndProductPlan = policyAndGuzhuSalve.join(odsPolicyProductPlanDetail, 'policy_code === 'policy_code_salve, "leftouter")
       .selectExpr("policy_code", "product_code", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source",
         "sku_price", "sku_ratio", "sku_append", "sku_coverage", "economic_rate", "tech_service_rate", "sku_charge_type", "preserve_policy_no", "commission_discount_rate","order_date","policy_source_code","policy_source_name","policy_create_time")
 
     /**
-      * 读取产品表
-      */
+     * 读取产品表
+     */
     val odsProductDetail = hqlContext.sql("select product_desc,product_code as insure_code,two_level_pdt_cate as product_name,two_level_pdt_cate from odsdb.ods_product_detail")
 
 
     /**
-      * 关联产品表
-      */
+     * 关联产品表
+     */
     val resTempRes = policyAndProductPlan.join(odsProductDetail, 'product_code === 'insure_code, "leftouter")
       .selectExpr("policy_code", "product_code", "product_desc", "product_name", "two_level_pdt_cate", "data_source", "policy_status", "policy_effect_date", "policy_start_date", "policy_end_date",
         "insure_company_name", "first_premium", "holder_name", "insured_subject", "invoice_type", "salesman", "team_name", "ent_name", "channel_name", "biz_operator", "business_source", "sku_price", "sku_ratio", "sku_append", "sku_coverage",
         "economic_rate",
         "tech_service_rate", "sku_charge_type", "preserve_policy_no", "commission_discount_rate","order_date","policy_source_code","policy_source_name", "policy_create_time")
-      .where("policy_code !='' and policy_status in(0,1,-1) and policy_start_date >=cast('2019-01-01' as timestamp) and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
+      .where("policy_code !='' and policy_status in(0,1,-1) and two_level_pdt_cate in ('外包雇主', '骑士保', '大货车', '零工保')")
 
 
     val res = resTempRes.selectExpr(
@@ -155,7 +155,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       "sku_price as plan_price",
       "sku_coverage as plan_coverage",
       "sku_append as plan_append",
-      "cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,sku_ratio))) as decimal(6,2)) as plan_disability_rate",
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,if(sku_ratio = 3,0.01,sku_ratio)))) as decimal(6,2)) as plan_disability_rate",
       "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
       "insure_company_name as underwriting_company",
       "policy_effect_date",
@@ -190,13 +190,13 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-      * 将结果注册成临时表
-      */
+     * 将结果注册成临时表
+     */
     res.registerTempTable("t_accounts_employer_intermediate_temp")
 
     /**
-      * 读取保单和批单的数据
-      */
+     * 读取保单和批单的数据
+     */
     val dwTaccountEmployerIntermeditae = hqlContext.sql("select distinct batch_no,policy_no,preserve_id,add_batch_code,del_batch_code,preserve_status,data_source," +
       "project_name,product_code,product_name,channel_name,business_owner,business_region,business_source,business_type,order_date,policy_source_code,policy_source_name,performance_accounting_day," +
       "operational_name,holder_name,insurer_name,plan_price,plan_coverage,plan_append,plan_disability_rate,plan_pay_type,underwriting_company," +
@@ -207,17 +207,19 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
     /**
-      * 读取业务表的数据
-      */
+     * 读取业务表的数据,只拿保单的数据
+     */
 
-     val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
-     "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+    val dwTAccountsEmployerDetail = readMysqlTable(sqlContext, "ods_t_accounts_employer_detail", "mysql.username.106",
+      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
+      .where("add_batch_code is null and del_batch_code is null and preserve_id is null")
       .selectExpr("policy_no as policy_no_salve")
 
+
     /**
-      * 关联两个表 过滤出保单数据的增量数据
-      */
-    val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
+     * 关联两个表 过滤出保单数据的增量数据
+     */
+    val resTemp_salve = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve, "leftouter")
       .selectExpr("batch_no","policy_no", "policy_no_salve","preserve_id","add_batch_code","del_batch_code","preserve_status", "data_source",
         "project_name", "product_code", "product_name", "channel_name","business_owner", "business_region", "business_source","business_type","order_date","policy_source_code","policy_source_name", "performance_accounting_day",
         "operational_name", "holder_name", "insurer_name","plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type","underwriting_company",
@@ -225,7 +227,19 @@ import org.apache.spark.{SparkConf, SparkContext}
         "has_behalf","behalf_status","premium_invoice_type","economy_company","economy_rates", "economy_fee","technical_service_rates", "technical_service_fee",
         "consulting_service_rates","consulting_service_fee","service_fee_check_time","service_fee_check_status","has_brokerage", "brokerage_ratio", "brokerage_fee",
         "brokerage_pay_status","remake", "create_time", "update_time","operator")
-      .where("policy_no_salve is null and add_batch_code is null and del_batch_code is null and preserve_id is null")
+      .where("policy_no_salve is null")
+
+
+
+    //增量数据判断投保人和渠道不为空的数据
+    val resTemp = resTemp_salve.selectExpr("batch_no", "policy_no", "policy_no_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source",
+      "project_name", "product_code", "product_name", "channel_name", "business_owner", "business_region", "business_source", "business_type", "order_date", "policy_source_code",
+      "policy_source_name", "performance_accounting_day", "operational_name", "holder_name", "insurer_name", "plan_price", "plan_coverage", "plan_append", "plan_disability_rate",
+      "plan_pay_type", "underwriting_company", "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "cur_policy_status", "policy_status", "premium_total",
+      "premium_pay_status", "has_behalf", "behalf_status", "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
+      "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
+      "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
+      .where("channel_name is not null and holder_name is not null")
 
 
     //增量数据
@@ -290,8 +304,8 @@ import org.apache.spark.{SparkConf, SparkContext}
     //更新数据
 
     /**
-      * 读取销售渠道表
-      */
+     * 读取销售渠道表
+     */
 
     val odsGuzhuSalemanDetail = hqlContext.sql("select ent_name as ent_name_salve,channel_name as channel_name_salve,biz_operator as biz_operator_salve," +
       "salesman as salesman_salve,business_source as business_source_salve from odsdb.ods_ent_guzhu_salesman_detail")
@@ -421,6 +435,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
   }
 
+
   /**
    * 批单数据
    *
@@ -546,10 +561,10 @@ import org.apache.spark.{SparkConf, SparkContext}
       "policy_source_code",
       "policy_source_name",
       //业绩核算日期
-      "case when policy_status= -1 and (preserve_start_date is not null and preserve_end_date is not null) " +
+      "case when policy_status=-1 and (preserve_start_date is not null and preserve_end_date is not null) " +
         "then (case when preserve_start_date > preserve_end_date then maxTime_three(policy_start_date,preserve_start_date,create_time) " +
         "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time))) end)" +
-        "when policy_status= -1 and (preserve_start_date is  null or preserve_end_date is  null) then maxTime_four(policy_start_date,preserve_start_date,preserve_end_date,create_time) " +
+        "when policy_status=-1 and (preserve_start_date is  null or preserve_end_date is  null) then maxTime_four(policy_start_date,preserve_start_date,preserve_end_date,create_time) " +
         "else (if(preserve_start_date is null,if(preserve_end_date is not null and preserve_end_date>=create_time,preserve_end_date,create_time),if(preserve_start_date>=create_time,preserve_start_date,create_time))) end as performance_accounting_day",
       "biz_operator as operational_name",
       "holder_name",
@@ -557,7 +572,7 @@ import org.apache.spark.{SparkConf, SparkContext}
       "sku_price as plan_price",
       "sku_coverage as plan_coverage",
       "sku_append  as plan_append",
-      "cast(if(sku_ratio is null,0,if(sku_ratio = 1,0.05,if(sku_ratio=2,0.1,sku_ratio))) as decimal(6,2)) as plan_disability_rate",
+      "cast(if(sku_ratio is null,0,if(sku_ratio = 1, 0.05,if(sku_ratio = 2, 0.1,if(sku_ratio = 3,0.01,sku_ratio)))) as decimal(6,2)) as plan_disability_rate",
       "if(two_level_pdt_cate = '零工保','3',sku_charge_type) as plan_pay_type",
       "insure_company_name as underwriting_company",
       "effective_date as policy_effect_date",
@@ -613,7 +628,7 @@ import org.apache.spark.{SparkConf, SparkContext}
     /**
      * 关联两个表 拿到批单数据的增量数据
      */
-    val resTemp = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
+    val resTemp_salve = dwTaccountEmployerIntermeditae.join(dwTAccountsEmployerDetail, 'policy_no === 'policy_no_salve and 'preserve_id === 'preserve_id_salve, "leftouter")
       .selectExpr("batch_no","policy_no", "preserve_id_salve","preserve_id","add_batch_code","del_batch_code","preserve_status", "data_source",
         "project_name", "product_code", "product_name", "channel_name","business_owner", "business_region", "business_source","business_type","order_date","policy_source_code","policy_source_name", "performance_accounting_day",
         "operational_name", "holder_name", "insurer_name","plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type","underwriting_company",
@@ -622,6 +637,16 @@ import org.apache.spark.{SparkConf, SparkContext}
         "consulting_service_rates","consulting_service_fee","service_fee_check_time","service_fee_check_status","has_brokerage", "brokerage_ratio", "brokerage_fee",
         "brokerage_pay_status","remake", "create_time", "update_time","operator")
       .where("preserve_id is not null and preserve_id_salve is null")
+
+    val resTemp = resTemp_salve.selectExpr("batch_no", "policy_no", "preserve_id_salve", "preserve_id", "add_batch_code", "del_batch_code", "preserve_status", "data_source",
+      "project_name", "product_code", "product_name", "channel_name", "business_owner", "business_region", "business_source", "business_type", "order_date", "policy_source_code", "policy_source_name", "performance_accounting_day",
+      "operational_name", "holder_name", "insurer_name", "plan_price", "plan_coverage", "plan_append", "plan_disability_rate", "plan_pay_type", "underwriting_company",
+      "policy_effect_date", "policy_start_time", "policy_effective_time", "policy_expire_time", "cur_policy_status", "policy_status", "premium_total", "premium_pay_status",
+      "has_behalf", "behalf_status", "premium_invoice_type", "economy_company", "economy_rates", "economy_fee", "technical_service_rates", "technical_service_fee",
+      "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
+      "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
+      .where("channel_name is not null and holder_name is not null")
+
 
 
     val res1 = resTemp.selectExpr(
