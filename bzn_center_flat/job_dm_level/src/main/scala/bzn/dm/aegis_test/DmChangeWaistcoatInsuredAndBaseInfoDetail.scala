@@ -1,16 +1,10 @@
-package bzn.dm.aegis
-
-import java.sql.Timestamp
+package bzn.dm.aegis_test
 
 import bzn.dm.util.SparkUtil
 import bzn.job.common.{DataBaseUtil, Until}
-import org.apache.hadoop.io.{LongWritable, Text}
-import org.apache.hadoop.mapred.TextInputFormat
-import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, Row, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * author:xiaoYuanRen
@@ -18,64 +12,31 @@ import org.apache.spark.sql.types._
   * Time:15:49
   * describe: this is new class
   **/
-object DmChangeWaistcoatInsuredAndBaseInfoDetailTest extends SparkUtil with DataBaseUtil with Until{
+object DmChangeWaistcoatInsuredAndBaseInfoDetail extends SparkUtil with DataBaseUtil with Until{
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "local[8]")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName, "")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
-//    getChangeWaistcoatInsuredData(hiveContext)
-//    getExcelDataToCk(sc,hiveContext)
+    getChangeWaistcoatInsuredData(hiveContext)
     getChangeWaistcoatBaseInfoData(hiveContext)
     getOdsEntGuzhuSalesmanDetailData(hiveContext)
 
     sc.stop()
   }
 
-  def getExcelDataToCk(sc:SparkContext,sqlContext:HiveContext) = {
-    val srcDF = sc.textFile("C:\\Users\\xingyuan\\Desktop\\测试数据(2).csv")
-      .map(_.split(",")).map(p => Row(p:_*))
-    sqlContext.udf.register("getMD5", (ent_name: String) => MD5(ent_name))
-
-    val urlCKTest = "clickhouse.url.odsdb.test"
-    val userCK = "clickhouse.username"
-    val possWordCK = "clickhouse.password"
-    val driverCK = "clickhouse.driver"
-
-    val taxiSchema: StructType = StructType(Array(
-      StructField("insured_name", StringType, true),
-      StructField("insured_cert_no", StringType, true),
-      StructField("day_id", StringType, true),
-      StructField("channel_name", StringType, true),
-      StructField("dw_create_time", StringType, true)
-    ))
-    val odsChangeWaistcoatChannelInsuredDetailTtable = "ods_change_waistcoat_channel_insured_detail"
-
-    val df = sqlContext.createDataFrame(srcDF,taxiSchema)
-      .selectExpr("getMD5(concat(insured_cert_no,channel_name)) as id","getMD5(insured_cert_no) as insured_cert_no_md5",
-      "channel_name","cast('1990-01-01' as date) as day_id","date_format(now(),'yyyy-MM-dd HH:mm:ss') as dw_create_time"
-      )
-
-    if(df.count() > 0){
-      writeClickHouseTable(df:DataFrame,odsChangeWaistcoatChannelInsuredDetailTtable: String,
-        SaveMode.Append,urlCKTest:String,userCK:String,possWordCK:String,driverCK:String)
-    }
-
-    df.show()
-  }
-
   /**
     * 得到渠道以及被保人明细数据
     * @param sqlContext 上下文
     */
-  def getChangeWaistcoatInsuredData(sqlContext:HiveContext) = {
-    import  sqlContext.implicits._
+  def getChangeWaistcoatInsuredData(sqlContext:HiveContext): Unit = {
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getMD5", (ent_name: String) => MD5(ent_name))
 
-    val urlCK = "clickhouse.url"
+//    val urlCK = "clickhouse.url"
+    val urlCKTest = "clickhouse.url.odsdb.test"
     val userCK = "clickhouse.username"
     val possWordCK = "clickhouse.password"
     val driverCK = "clickhouse.driver"
@@ -93,25 +54,21 @@ object DmChangeWaistcoatInsuredAndBaseInfoDetailTest extends SparkUtil with Data
         |group by channel_name,insured_cert_no
       """.stripMargin)
 
-    insuredData.show()
-
-    insuredData.printSchema()
-
-//    if(res.count() > 0){
-//      writeClickHouseTable(res:DataFrame,odsChangeWaistcoatChannelInsuredDetailTtable: String,
-//        SaveMode.Append,urlCK:String,userCK:String,possWordCK:String,driverCK:String)
-//    }
+    if(insuredData.count() > 0){
+      writeClickHouseTable(insuredData:DataFrame,odsChangeWaistcoatChannelInsuredDetailTtable: String,
+        SaveMode.Overwrite,urlCKTest:String,userCK:String,possWordCK:String,driverCK:String)
+    }
   }
 
   def getChangeWaistcoatBaseInfoData(sqlContext:HiveContext): Unit = {
-    import  sqlContext.implicits._
+    import sqlContext.implicits._
     sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getMD5", (ent_name: String) => MD5(ent_name))
     import org.apache.spark.sql.functions.monotonically_increasing_id
 
-    val user103 = "mysql.username.103"
-    val pass103 = "mysql.password.103"
-    val url103 = "mysql_url.103.dmdb"
+//    val user103 = "mysql.username.103"
+//    val pass103 = "mysql.password.103"
+//    val url103 = "mysql_url.103.dmdb"
     val driver = "mysql.driver"
     val user106 = "mysql.username.106"
     val pass106 = "mysql.password.106"
@@ -165,6 +122,7 @@ object DmChangeWaistcoatInsuredAndBaseInfoDetailTest extends SparkUtil with Data
 
     val EmpRiskMonitorKriTableName = "emp_risk_monitor_kri_detail"
     val urlCK = "clickhouse.url"
+    val urlCKTest = "clickhouse.url.odsdb.test"
     val userCK = "clickhouse.username"
     val possWordCK = "clickhouse.password"
     val driverCK = "clickhouse.driver"
@@ -209,13 +167,11 @@ object DmChangeWaistcoatInsuredAndBaseInfoDetailTest extends SparkUtil with Data
       ).withColumn("id",monotonically_increasing_id+1)
       .where("channel_name is not null")
 
-    odsChangeWaistcoatChannelBaseInfo.printSchema()
-
     val odsChangeWaistcoaChannelBaseInfoDetailTable = "ods_change_waistcoat_channel_base_info_detail"
-//    if(odsChangeWaistcoatChannelBaseInfo.count() > 0){
-//      writeClickHouseTable(odsChangeWaistcoatChannelBaseInfo:DataFrame,odsChangeWaistcoaChannelBaseInfoDetailTable: String,
-//        SaveMode.Append,urlCK:String,userCK:String,possWordCK:String,driverCK:String)
-//    }
+    if(odsChangeWaistcoatChannelBaseInfo.count() > 0){
+      writeClickHouseTable(odsChangeWaistcoatChannelBaseInfo:DataFrame,odsChangeWaistcoaChannelBaseInfoDetailTable: String,
+        SaveMode.Overwrite,urlCKTest:String,userCK:String,possWordCK:String,driverCK:String)
+    }
   }
 
   /**
@@ -231,41 +187,15 @@ object DmChangeWaistcoatInsuredAndBaseInfoDetailTest extends SparkUtil with Data
       """.stripMargin)
 
     val empChannelSalemanTableName = "ods_ent_guzhu_salesman_detail"
-    val urlCK = "clickhouse.url"
-    val userCK = "clickhouse.username"
-    val possWordCK = "clickhouse.password"
-    val driverCK = "clickhouse.driver"
-    res.printSchema()
-    if(res.count() > 0){
-//      writeClickHouseTable(res:DataFrame,empChannelSalemanTableName: String,
-//        SaveMode.Overwrite,urlCK:String,userCK:String,possWordCK:String,driverCK:String)
-    }
-  }
-
-  /**
-    * 渠道销售表
-    * @param sqlContext  上下文
-    */
-  def getOdsEntGuzhuSalesmanDetailData1(sqlContext:HiveContext) = {
-    sqlContext.udf.register("getMD5", (ent_name: String) => MD5(ent_name))
-    val res = sqlContext.sql(
-      """
-        |select 'asd' as parameter_id,getMD5(insured_cert_no) as insured_cert_no_md5,policy_code as policy_order_code,
-        |channel_name,holder_name,product_name
-        |from dwdb.dw_employer_baseinfo_person_detail
-        |where product_code not in ('LGB000001','17000001') and insure_company_short_name = '国寿财' and
-        |policy_code in ('815162020339996003662') and end_date >= now()
-      """.stripMargin)
-
-    val empChannelSalemanTableName = "ods_change_waistcoat_holder_insured_detail"
-    val urlCK = "clickhouse.url"
+//    val urlCK = "clickhouse.url"
+    val urlCKTest = "clickhouse.url.odsdb.test"
     val userCK = "clickhouse.username"
     val possWordCK = "clickhouse.password"
     val driverCK = "clickhouse.driver"
 
     if(res.count() > 0){
-//      writeClickHouseTable(res:DataFrame,empChannelSalemanTableName: String,
-//        SaveMode.Append,urlCK:String,userCK:String,possWordCK:String,driverCK:String)
+      writeClickHouseTable(res:DataFrame,empChannelSalemanTableName: String,
+        SaveMode.Overwrite,urlCKTest:String,userCK:String,possWordCK:String,driverCK:String)
     }
   }
 }

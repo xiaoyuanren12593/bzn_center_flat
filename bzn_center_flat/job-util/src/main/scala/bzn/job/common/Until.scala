@@ -21,6 +21,35 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 trait Until {
 
 
+  /**
+    * 将字段替换前两个数据为test
+    * @param cln
+    * @return
+    */
+  def changeColumnData(cln:String): String = {
+    if(cln != null && cln.length >3){
+      "****某".concat(cln.substring(2,cln.length))
+    }else if(cln != null && cln.length <= 3 && cln.length > 1){
+      "****某".concat(cln.substring(1,cln.length))
+    }else{
+      cln
+    }
+  }
+
+  def randowPremium(cln:java.math.BigDecimal): java.math.BigDecimal = {
+    if (cln != null) {
+      java.math.BigDecimal.valueOf(cln.doubleValue()*scala.util.Random.nextDouble())
+    }else
+      null
+  }
+
+  def randowPersonCount(cln:Long): Long = {
+    if (cln != null) {
+      cln*scala.util.Random.nextInt(10)
+    }else
+      0L
+  }
+
 
   /**
    * 当前日期减去15天

@@ -10,26 +10,26 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
   * Description:MySQL DDL 和DML 工具类
   * Date: Created in 2019-11-12
   */
-object MySQLPoolManager {
+object MySQLPoolManagerBlackGray {
   var mysqlManager: MysqlPool = _
 
-  def getMysqlManager: MysqlPool = {
+  def getMysqlManager(): MysqlPool = {
     synchronized {
       if (mysqlManager == null) {
-        mysqlManager = new MysqlPool
+        mysqlManager = new MysqlPool()
       }
     }
     mysqlManager
   }
 
-  class MysqlPool extends Serializable {
+  class MysqlPool() extends Serializable {
     private val cpds: ComboPooledDataSource = new ComboPooledDataSource(true)
     try {
-      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.106.source"))
+      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.url.cloud_test.dmdb"))
       //      cpds.setJdbcUrl(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.url.odsdb"))
       cpds.setDriverClass(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.pool.jdbc.driverClass"))
-      cpds.setUser(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.username.106"))
-      cpds.setPassword(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.password.106"))
+      cpds.setUser(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.username.cloud_test"))
+      cpds.setPassword(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.jdbc.password.cloud_test"))
       cpds.setMinPoolSize(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.pool.jdbc.minPoolSize").toInt)
       cpds.setMaxPoolSize(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.pool.jdbc.maxPoolSize").toInt)
       cpds.setAcquireIncrement(PropertyUtils.getFileProperties("mysql-user.properties", "mysql.pool.jdbc.acquireIncrement").toInt)
@@ -57,4 +57,5 @@ object MySQLPoolManager {
       }
     }
   }
+
 }

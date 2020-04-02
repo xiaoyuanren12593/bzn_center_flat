@@ -32,10 +32,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 /*    saveASMysqlTable(res, "t_accounts_employer", SaveMode.Append, "mysql.username",
       "mysql.password", "mysql.driver", "mysql.url")*/
 
-
     saveASMysqlTable(res, "ods_t_accounts_employer_detail", SaveMode.Append, "mysql.username.106",
       "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")
-
 
     sc.stop()
 

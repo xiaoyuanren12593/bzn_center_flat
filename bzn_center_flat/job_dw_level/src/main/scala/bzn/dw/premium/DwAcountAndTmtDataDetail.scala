@@ -1,7 +1,7 @@
-package bzn.other
+package bzn.dw.premium
 
+import bzn.dw.util.SparkUtil
 import bzn.job.common.{DataBaseUtil, Until}
-import bzn.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:13
   * describe: 统计电子台账和接口2019年的数据
   **/
-object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
+object DwAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -30,6 +30,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
     val url = "mysql.url"
     val urlDwdb = "mysql.url.dwdb"
     val urlTableau = "mysql.url.tableau"
+    val urlDw106 = "mysql.url.106.dwdb"
     val url106 = "mysql.url.106.odsdb"
     val user = "mysql.username"
     val pass = "mysql.password"
@@ -292,13 +293,12 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
         "source"
       )
 
-    sqlContext.sql("truncate table odsdb.ods_accounts_and_tmt_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_accounts_and_tmt_detail")
+    sqlContext.sql("truncate table dw.dw_accounts_and_tmt_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dw.dw_accounts_and_tmt_detail")
 
-    val tableName = "accounts_and_tmt_detail"
-    val tableNameRes = "ods_accounts_and_tmt_detail"
+    val tableNameRes = "dw_accounts_and_tmt_detail"
 //    saveASMysqlTable(res.repartition(100): DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
-    saveASMysqlTable(res.repartition(100): DataFrame, tableNameRes: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,url106:String)
+    saveASMysqlTable(res.repartition(100): DataFrame, tableNameRes: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,urlDw106:String)
 
     res
   }

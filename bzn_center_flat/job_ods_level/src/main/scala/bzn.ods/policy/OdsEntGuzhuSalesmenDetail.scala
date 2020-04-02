@@ -61,6 +61,8 @@ object OdsEntGuzhuSalesmenDetail extends SparkUtil with Until with DataBaseUtil{
       * 读取2020年销售表
       */
     val odsSaleDist2020DimensionData = readMysqlTable(sqlContext: SQLContext, odsSaleDist2020Dimension: String,officialUser:String,officialPass:String,driver:String,officialUrlOdsdb:String)
+      .selectExpr("province","biz_operator")
+      .distinct()
 
     /**
       * 读取投保单表

@@ -137,6 +137,7 @@ object DmAegisGscRiskTargetTrackingInfoAndSumDetail extends SparkUtil with DataB
       hisDiskPartition(	"湖南潇湘人力资源服务有限公司",	"A"	),
       hisDiskPartition(	"青岛钰琳前程人力资源有限公司东营分公司",	"B"	),
       hisDiskPartition(	"保定领驭人力资源服务有限公司",	"A"	),
+      hisDiskPartition(	"青岛联智达企业管理有限公司",	"A"	),
       hisDiskPartition(	"常州市奇波机械厂",	"B"	),
       hisDiskPartition(	"石家庄森海人力资源服务有限公司",	"A"	),
       hisDiskPartition(	"贵州三赢劳务有限责任公司",	"A"	),

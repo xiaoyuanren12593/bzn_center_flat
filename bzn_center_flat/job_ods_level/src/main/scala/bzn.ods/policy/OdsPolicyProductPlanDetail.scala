@@ -334,6 +334,8 @@ object OdsPolicyProductPlanDetail extends SparkUtil with Until{
           injurePercentRes = "1"
         }else if (injurePercent == 0.10){
           injurePercentRes = "2"
+        }else if (injurePercent == 0.01) {
+          injurePercentRes = "3"
         }else {
           injurePercentRes = null
         }

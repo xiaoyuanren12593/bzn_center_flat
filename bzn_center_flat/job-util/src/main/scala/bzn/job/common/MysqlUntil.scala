@@ -107,7 +107,7 @@ trait MysqlUntil {
       }
     }
     dataFrame.write.mode(SaveMode.Append)
-      .option("batchsize","10000")
+      .option("batchsize","50000")
       .option("isolationLevel","NONE")
       .jdbc(prop.getProperty("url"), table, prop)
 

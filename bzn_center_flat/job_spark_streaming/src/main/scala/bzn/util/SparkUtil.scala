@@ -23,6 +23,7 @@ trait SparkUtil {
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.sql.broadcastTimeout", "36000")
       .set("spark.network.timeout", "36000")
+
     if(exceType != ""){
       conf.setMaster(exceType)
     }else {
