@@ -123,7 +123,7 @@ object OdsPreservationDetail extends SparkUtil with Until{
           currentTimeL(preStartDate.toString.substring(0, 19)).toDouble
         }
         val two = if (preEndDate == "null" || preEndDate == null) {
-          if(preStartDate != null){  x
+          if(preStartDate != null){
             currentTimeL(preStartDate.toString.substring(0, 19)).toDouble
           }else{
             0.0

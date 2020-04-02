@@ -3,7 +3,8 @@ package bzn.ods.policy
 import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
-import bzn.ods.util.{SparkUtil, Until}
+import bzn.job.common.Until
+import bzn.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -16,7 +17,7 @@ import scala.io.Source
   * Time:15:08
   * describe: this is new class
   **/
-object OdsPolicyInsuredSlaveDetailTest extends SparkUtil with bzn.job.common.Until {
+object OdsPolicyInsuredSlaveDetailTest extends SparkUtil with Until {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName

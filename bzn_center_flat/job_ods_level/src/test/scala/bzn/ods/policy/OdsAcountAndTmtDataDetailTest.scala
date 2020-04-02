@@ -1,10 +1,9 @@
-package bzn.dw.premium
+package bzn.ods.policy
 
-import bzn.job.common.MysqlUntil
-
+import bzn.job.common.{DataBaseUtil, Until}
 import bzn.util.SparkUtil
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -13,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:13
   * describe: 统计电子台账和接口2019年的数据
   **/
-object OdsAcountAndTmtDataDetailTest extends SparkUtil with MysqlUntil {
+object OdsAcountAndTmtDataDetailTest extends SparkUtil with DataBaseUtil with Until {
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -30,7 +29,7 @@ object OdsAcountAndTmtDataDetailTest extends SparkUtil with MysqlUntil {
   def getAcountAndTmtData(sqlContext:HiveContext): DataFrame = {
     import sqlContext.implicits._
 
-//    sqlContext.udf.register("clean", (str: String) => clean(str))
+    sqlContext.udf.register("clean", (str: String) => clean(str))
     val url = "mysql.url"
     val urlDwdb = "mysql.url.dwdb"
     val urlTableau = "mysql.url.tableau"
@@ -42,7 +41,6 @@ object OdsAcountAndTmtDataDetailTest extends SparkUtil with MysqlUntil {
     val pass106 =   "mysql.password.106"
     val tableName1 = "ods_t_accounts_un_employer_detail"
     val tableName2 = "ods_t_accounts_employer_detail"
-    val tableName3 = "ods_ent_sales_team"
     val tableName5 = "ods_ent_tmt_salesman"
     val tableName4 = "dw_product_detail"
     val tableName6 = "ods_t_accounts_agency_detail"
@@ -166,8 +164,8 @@ object OdsAcountAndTmtDataDetailTest extends SparkUtil with MysqlUntil {
     /**
       * 销售团队表
       */
-    val odsEntSalesTeam = readMysqlTable(sqlContext: SQLContext, tableName3: String,user:String,pass:String,driver:String,url:String)
-      .selectExpr("sale_name as sale_name_salve","team_name")
+    val odsEntSalesTeam =
+      sqlContext.sql("select sale_name as sale_name_salve,team_name from odsdb.ods_ent_sales_team_dimension")
 
     /**
       * 雇主初投三月的数据
@@ -265,24 +263,33 @@ object OdsAcountAndTmtDataDetailTest extends SparkUtil with MysqlUntil {
       */
     val newAndOldData = sqlContext.sql(
       """
-        |select channel_name as channel_name_slave,case when min(policy_start_date) >= '2020-01-01' then '新客' else '老客' end as new_and_old
-        |from dwdb.dw_employer_baseinfo_detail
-        |group by channel_name
+        |select if(c.channel_name = '直客',c.ent_name,c.channel_name) as channel_name_slave,to_date(min(a.policy_start_date)),
+        |if(to_date(min(a.policy_start_date)) >= to_date('2020-01-01'),'新客','老客') as new_and_old
+        |from odsdb.ods_policy_detail  a
+        |left join odsdb.ods_product_detail b
+        |on a.product_code = b.product_code
+        |left join odsdb.ods_ent_guzhu_salesman_detail c
+        |on a.holder_name = c.ent_name
+        |where policy_status in (0,1,-1) and b.one_level_pdt_cate = '蓝领外包'
+        |group by if(c.channel_name = '直客',c.ent_name,c.channel_name),c.consumer_new_old
       """.stripMargin)
 
     val res = resData.join(newAndOldData,'channel_name==='channel_name_slave,"leftouter")
       .selectExpr(
-        "policy_code","project_name","product_code","product_name",
-        "channel_name",
-        "biz",
-        "performance_accounting_day","holder_name","premium_total",
-        "economic_rate",
-        "economy_fee",
-        "sale_name","policy_effective_time", "policy_expire_time","underwriting_company",
-        "insurance_company_short_name",
+        "clean(policy_code) as policy_code","clean(project_name) as project_name",
+        "clean(product_code) as product_code","clean(product_name) as product_name",
+        "clean(channel_name) as channel_name",
+        "clean(biz) as biz",
+        "performance_accounting_day","clean(holder_name) as holder_name",
+        "cast(premium_total as decimal(14,4)) as premium_total",
+        "cast(economic_rate as decimal(14,4)) as economic_rate",
+        "cast(economy_fee  as decimal(14,4)) as economy_fee",
+        "clean(sale_name) as sale_name",
+          "policy_effective_time", "policy_expire_time","clean(underwriting_company) as underwriting_company",
+        "clean(insurance_company_short_name) as insurance_company_short_name",
         "technical_service_rates",
         "technical_service_fee",
-        "has_brokerage","brokerage_ratio","brokerage_fee",
+        "has_brokerage","brokerage_ratio","cast(brokerage_fee as decimal(14,4)) as brokerage_fee",
         "num_person","business_line", "short_name","province",
         "case when channel_name_slave is null then null when channel_name_slave is not null and business_line = '雇主' then new_and_old else null end as new_old_cus",
         "source"

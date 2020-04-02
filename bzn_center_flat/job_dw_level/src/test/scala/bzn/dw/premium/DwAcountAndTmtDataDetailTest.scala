@@ -1,9 +1,9 @@
-package bzn.other
+package bzn.dw.premium
 
+import bzn.dw.util.SparkUtil
 import bzn.job.common.{DataBaseUtil, Until}
-import bzn.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -12,24 +12,28 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:16:13
   * describe: 统计电子台账和接口2019年的数据
   **/
-object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
+object DwAcountAndTmtDataDetailTest extends SparkUtil with DataBaseUtil with Until {
   def main (args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
-    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"")
+    val sparkConf: (SparkConf, SparkContext, SQLContext, HiveContext) = sparkConfInfo(appName,"local[*]")
 
     val sc = sparkConf._2
     val hiveContext = sparkConf._4
     getAcountAndTmtData(hiveContext)
+//    hiveContext.sql("truncate table odsdb.accounts_and_tmt_detail")
+//    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.accounts_and_tmt_detail")
     sc.stop()
   }
 
   def getAcountAndTmtData(sqlContext:HiveContext): DataFrame = {
     import sqlContext.implicits._
+
     sqlContext.udf.register("clean", (str: String) => clean(str))
     val url = "mysql.url"
     val urlDwdb = "mysql.url.dwdb"
     val urlTableau = "mysql.url.tableau"
+    val urlDw106 = "mysql.url.106.dwdb"
     val url106 = "mysql.url.106.odsdb"
     val user = "mysql.username"
     val pass = "mysql.password"
@@ -48,22 +52,22 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
       */
     val tAccountsUnEmployer =
       readMysqlTable(sqlContext: SQLContext, tableName1: String,user106:String,pass106:String,driver:String,url106:String)
-        //      .where("performance_accounting_day >= '2019-01-01 00:00:00'")
-        .selectExpr("policy_no","preserve_id","data_source","project_name","product_code","product_name","channel_name","business_region",
+//      .where("performance_accounting_day >= '2019-01-01 00:00:00'")
+      .selectExpr("policy_no","preserve_id","data_source","project_name","product_code","product_name","channel_name","business_region",
         "performance_accounting_day","regexp_replace(holder_name,'\\n','') as holder_name","premium_total","economy_rates",
         "economy_fee","business_owner","policy_effective_time","policy_expire_time","underwriting_company",
-        "technical_service_rates","technical_service_fee","has_brokerage","brokerage_ratio","brokerage_fee")
+         "technical_service_rates","technical_service_fee","has_brokerage","brokerage_ratio","brokerage_fee")
 
     /**
       * 雇主电子台账的数据
       */
     val tAccountsEmployer =
       readMysqlTable(sqlContext: SQLContext, tableName2: String,user106:String,pass106:String,driver:String,url106:String)
-        //        .where("performance_accounting_day >= '2019-01-01 00:00:00'")
+//        .where("performance_accounting_day >= '2019-01-01 00:00:00'")
         .selectExpr("policy_no","preserve_id","data_source","'雇主' as project_name","product_code","product_name","channel_name","business_region",
-        "performance_accounting_day","regexp_replace(holder_name,'\\n','') as holder_name","premium_total","economy_rates","economy_fee","business_owner","policy_effective_time",
-        "policy_expire_time","underwriting_company",
-        "technical_service_rates","technical_service_fee","has_brokerage","brokerage_ratio","brokerage_fee")
+          "performance_accounting_day","regexp_replace(holder_name,'\\n','') as holder_name","premium_total","economy_rates","economy_fee","business_owner","policy_effective_time",
+          "policy_expire_time","underwriting_company",
+          "technical_service_rates","technical_service_fee","has_brokerage","brokerage_ratio","brokerage_fee")
 
     /**
       * 合并雇主和非雇主的电子台账
@@ -76,18 +80,18 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
     val odsPolicyDetail =
       sqlContext.sql(
         """
-          |select t.policy_code,t.belongs_regional,t.num_of_preson_first_policy,t.product_code,t.product_name,t.business_line from (
-          |select distinct a.policy_code,concat(substr(a.belongs_regional,1,4),'00') as belongs_regional ,
-          |a.num_of_preson_first_policy,b.product_code,b.product_name,b.business_line
-          |from odsdb.ods_policy_detail  a
-          |left join (
-          |  select if(business_line='接口','场景',business_line) as business_line ,product_code,product_name
-          |  from odsdb.ods_product_detail
-          |  group by business_line,product_code,product_name
-          |) b
-          |on a.product_code = b.product_code
-          |where policy_status in (0,1,-1) and a.policy_code is not null
-          |) t group by t.policy_code,t.belongs_regional,t.num_of_preson_first_policy,t.product_code,t.product_name,t.business_line
+         |select t.policy_code,t.belongs_regional,t.num_of_preson_first_policy,t.product_code,t.product_name,t.business_line from (
+         |select distinct a.policy_code,concat(substr(a.belongs_regional,1,4),'00') as belongs_regional ,
+         |a.num_of_preson_first_policy,b.product_code,b.product_name,b.business_line
+         |from odsdb.ods_policy_detail  a
+         |left join (
+         |  select if(business_line='接口','场景',business_line) as business_line ,product_code,product_name
+         |  from odsdb.ods_product_detail
+         |  group by business_line,product_code,product_name
+         |) b
+         |on a.product_code = b.product_code
+         |where policy_status in (0,1,-1) and a.policy_code is not null
+         |) t group by t.policy_code,t.belongs_regional,t.num_of_preson_first_policy,t.product_code,t.product_name,t.business_line
         """.stripMargin).cache()
 
     /**
@@ -105,7 +109,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
       */
     val policyData = odsPolicyDetail.join(odsAreaInfoDimension,odsPolicyDetail("belongs_regional")===odsAreaInfoDimension("code"),"leftouter")
       .selectExpr("policy_code as policy_code_slave","belongs_regional","num_of_preson_first_policy","business_line",
-        "short_name","province")
+          "short_name","province")
 
     /**
       * 台账的数据与保单地域数据
@@ -141,9 +145,9 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
       * 得到接口的数据，接口的数据是汇总的，最细粒度是产品。
       */
     val dwProductDetail = readMysqlTable(sqlContext: SQLContext, tableName4: String,user:String,pass:String,driver:String,urlDwdb:String)
-      //      .where("cast(add_date as timestamp) >= '2019-01-01 00:00:00'")
+//      .where("cast(add_date as timestamp) >= '2019-01-01 00:00:00'")
       .selectExpr("'' as policy_code","product_code","'' as holder","policy_cnt as num_person","policy_sum as premium",
-      "cast(add_date as timestamp) as start_date","cast('' as timestamp) as end_date")
+        "cast(add_date as timestamp) as start_date","cast('' as timestamp) as end_date")
 
     /**
       * 接口的销售码表，产品对应的销售、渠道、手续费、返佣费
@@ -200,20 +204,20 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
         "sale_name","start_date as policy_effective_time","end_date as policy_expire_time","company_name as underwriting_company",
         "cast('' as decimal(14,4)) as technical_service_rates","cast('' as decimal(14,4)) as technical_service_fee",
         "'' as has_brokerage","brokerage_ratio","(premium_total*brokerage_ratio) as brokerage_fee","num_person","business_line",
-        "'' as short_name","'' as province","'inter' as source"
+       "'' as short_name","'' as province","'inter' as source"
       )
 
     /**
       * 平台数据
       */
     val tAccountsAgency = readMysqlTable(sqlContext: SQLContext, tableName6: String,user106:String,pass106:String,driver:String,url106:String)
-      //      .where("performance_accounting_day >= '2019-01-01 00:00:00'")
+//      .where("performance_accounting_day >= '2019-01-01 00:00:00'")
       .selectExpr("policy_no as policy_code","project_name","'' as product_code","product_name","channel_name",
-      "performance_accounting_day","holder_name","premium_total","economy_rates as economic_rate","economy_fee",
-      "business_owner as sale_name","policy_effective_time","policy_expire_time","underwriting_company",
-      "cast('' as decimal(14,4)) as technical_service_rates","cast('' as decimal(14,4)) as technical_service_fee",
-      "'' as has_brokerage","brokerage_ratio","brokerage_fee","cast('' as int) as num_person","'平台' as business_line",
-      "'' as short_name","'' as province","'plat' as source")
+        "performance_accounting_day","holder_name","premium_total","economy_rates as economic_rate","economy_fee",
+        "business_owner as sale_name","policy_effective_time","policy_expire_time","underwriting_company",
+        "cast('' as decimal(14,4)) as technical_service_rates","cast('' as decimal(14,4)) as technical_service_fee",
+        "'' as has_brokerage","brokerage_ratio","brokerage_fee","cast('' as int) as num_person","'平台' as business_line",
+        "'' as short_name","'' as province","'plat' as source")
 
     /**
       * 平台的数据和公司全部销售表进行关联
@@ -252,7 +256,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
           "technical_service_rates",
           "technical_service_fee",
           "case when brokerage_ratio is null or brokerage_ratio = 0 then '0' else '1' end has_brokerage","brokerage_ratio","brokerage_fee",
-          "num_person","business_line","short_name","province","source"
+          "num_person","business_line", "short_name","province","source"
         )
 
     /**
@@ -282,7 +286,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
         "cast(economic_rate as decimal(14,4)) as economic_rate",
         "cast(economy_fee  as decimal(14,4)) as economy_fee",
         "clean(sale_name) as sale_name",
-        "policy_effective_time", "policy_expire_time","clean(underwriting_company) as underwriting_company",
+          "policy_effective_time", "policy_expire_time","clean(underwriting_company) as underwriting_company",
         "clean(insurance_company_short_name) as insurance_company_short_name",
         "technical_service_rates",
         "technical_service_fee",
@@ -292,14 +296,7 @@ object OdsAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
         "source"
       )
 
-    sqlContext.sql("truncate table odsdb.ods_accounts_and_tmt_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("odsdb.ods_accounts_and_tmt_detail")
-
-    val tableName = "accounts_and_tmt_detail"
-    val tableNameRes = "ods_accounts_and_tmt_detail"
-//    saveASMysqlTable(res.repartition(100): DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
-    saveASMysqlTable(res.repartition(100): DataFrame, tableNameRes: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,url106:String)
-
+    res.printSchema()
     res
   }
 }

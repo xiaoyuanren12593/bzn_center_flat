@@ -68,6 +68,8 @@ object OdsEntGuzhuSalesmenDetailTest extends SparkUtil with Until with DataBaseU
       * 读取2020年销售表
       */
     val odsSaleDist2020DimensionData = readMysqlTable(sqlContext: SQLContext, odsSaleDist2020Dimension: String,officialUser:String,officialPass:String,driver:String,officialUrlOdsdb:String)
+      .selectExpr("province","biz_operator")
+      .distinct()
 
     /**
       * 读取投保单表
@@ -111,10 +113,13 @@ object OdsEntGuzhuSalesmenDetailTest extends SparkUtil with Until with DataBaseU
       .where("ent_id_salve is null")
       .selectExpr("ent_id","holder_name as ent_name", "channel_id", "channel_name", "salesman","province_name as province_name_master"
       )
+    newData.show()
 
     val resTemp = newData.join(odsSaleDist2020DimensionData,'province_name_master==='province,"leftouter")
       .selectExpr("ent_id","ent_name", "channel_id", "channel_name","case when channel_name = '直客' then ent_name else channel_name end as channel_name_master",
         "salesman","biz_operator")
+
+    resTemp.show(100)
 
     /**
       * 如果这个渠道是历史有的 用历史渠道的销售和运营

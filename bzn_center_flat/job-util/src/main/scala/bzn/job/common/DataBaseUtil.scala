@@ -359,7 +359,7 @@ trait DataBaseUtil {
       }
     }
     dataFrame.write.mode(SaveMode.Append)
-      .option("batchsize","10000")
+      .option("batchsize","20000")
       .option("isolationLevel","NONE")
       .jdbc(prop.getProperty("url"), table, prop)
 

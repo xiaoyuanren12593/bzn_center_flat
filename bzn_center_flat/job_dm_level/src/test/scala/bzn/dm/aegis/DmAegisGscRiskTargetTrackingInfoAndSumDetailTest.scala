@@ -240,6 +240,7 @@ object DmAegisGscRiskTargetTrackingInfoAndSumDetailTest extends SparkUtil with D
       hisDiskPartition(	"上海琮玺企业服务外包有限公司",	"C"	),
       //      hisDiskPartition(	"中联达人力资源(山东)有限公司",	"A"	),
       hisDiskPartition(	"云南高创人才服务有限公司",	"A"	),
+      hisDiskPartition(	"青岛联智达企业管理有限公司",	"A"	),
       hisDiskPartition(	"日照益百家企业服务有限公司",	"B"	),
       hisDiskPartition(	"湖南蓝桥人力资源集团有限公司",	"A"	),
       hisDiskPartition(	"武汉衡业人力资源有限公司",	"B"	),

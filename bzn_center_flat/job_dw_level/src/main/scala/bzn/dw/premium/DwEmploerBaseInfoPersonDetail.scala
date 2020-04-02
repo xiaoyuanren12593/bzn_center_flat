@@ -157,7 +157,6 @@ import org.apache.spark.sql.hive.HiveContext
      */
     val insuredAndClaimRes = resProductAndInsuredDetail.join(tenmpTbles, 'policy_id === 'id and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp,"leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "policy_start_date","policy_end_date","proposal_time","holder_name","insured_subject","product_code","product_name","insured_name","insured_cert_no",
-
         "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName","insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay","belongs_industry_name")
 
     //读取方案信息表
