@@ -161,12 +161,8 @@ import org.apache.spark.sql.hive.HiveContext
      */
     val insuredAndClaimRes = resProductAndInsuredDetail.join(tenmpTbles, 'policy_id === 'id and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp,"leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "policy_start_date","policy_end_date","proposal_time","holder_name","insured_subject","product_code","product_name","insured_name","insured_cert_no",
-<<<<<<< HEAD
         "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName",
         "insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay","belongs_industry_name","department","group_name","consumer_new_old")
-=======
-        "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName","insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay","belongs_industry_name")
->>>>>>> fea-xwc-add-user-label
 
     //读取方案信息表
     val odsPolicyProductPlanDetailTemp: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +

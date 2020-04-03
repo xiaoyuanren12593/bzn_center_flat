@@ -76,8 +76,9 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with ClickHouseU
           "policy_end_date",//投保止期
           "preserve_start_date",
           "preserve_end_date",
+          "0 as refer_insured_count",
           "0 as now_insured_count",
-          "insured_count as next_month_insured_count",
+          "insured_count as match_insured_count",
           "insured_company",//被保人企业
           "insurance_name as insure_company_name",
           "insurance_company_short_name",
@@ -90,19 +91,65 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with ClickHouseU
     /**
       * 读取雇主基础数据
       */
+//    sqlContext.sql("select policy_code,policy_no,policy_id,holder_name,7 as status,ent_id,ent_name,channel_id,channel_name,insure_company_short_name," +
+//      "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
+//      "insured_subject,regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
+//      " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
     val dwEmployerBaseinfoDetail =
+    if(getNowTime.substring (8, 10).toInt < 5){
       sqlContext.sql("select policy_code,policy_no,policy_id,holder_name,7 as status,ent_id,ent_name,channel_id,channel_name,insure_company_short_name," +
         "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
-        "insured_subject,regexp_replace(substr(cast(now() as string),1,10),'-','') as now_day_id," +
-        " regexp_replace(date_add(last_day(now()),1),'-','') as next_month_day_id  from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
+        "insured_subject,regexp_replace(last_day(add_months(now(),-1)),'-','') as refer_day_id, " +
+        " regexp_replace(cast(current_date() as string),'-','') as now_day_id, " +
+        " regexp_replace(date_format(current_date(),'yyyy-MM-05'),'-','') as match_day_id  from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
+    } else if(getNowTime.substring (8, 10).toInt == 5) {
+      sqlContext.sql("select policy_code,policy_no,policy_id,holder_name,7 as status,ent_id,ent_name,channel_id,channel_name,insure_company_short_name," +
+        "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
+        "insured_subject,regexp_replace(last_day(add_months(now(),-1)),'-','') as refer_day_id," +
+        " regexp_replace(date_format(current_date(),'yyyy-MM-05'),'-','') as match_day_id ," +
+        " regexp_replace(cast(current_date() as string),'-','') as now_day_id, " +
+        "from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
+    }else{
+      sqlContext.sql("select policy_code,policy_no,policy_id,holder_name,7 as status,ent_id,ent_name,channel_id,channel_name,insure_company_short_name," +
+        "big_policy,sale_name,biz_operator,proposal_time, policy_start_date,policy_end_date,insure_company_name,sku_charge_type, " +
+        " regexp_replace(cast(current_date() as string),'-','') as refer_day_id, " +
+        " regexp_replace(cast(current_date() as string),'-','') as now_day_id,  " +
+        " regexp_replace(date_format(date_add(last_day(current_date()),1),'yyyy-MM-05'),'-','') as match_day_id  from dwdb.dw_employer_baseinfo_detail where product_code not in ('17000001','LGB000001')")
+    }
+
 
     /**
       * 读取当前在保人表
+      * [6-月底]：下月5号在保人数+新投+新批单/当前在保人数
+      * [1-5]：本月5号在保人数+新投+新批单/上月月底在保人数
       */
-    val dwPolicyCurrInsuredDetail = sqlContext.sql("select policy_id as policy_id_insued,day_id,count as insured_count from dwdb.dw_policy_curr_insured_detail")
-      .where("regexp_replace(substr(cast(now() as string),1,10),'-','') = day_id or regexp_replace(date_add(last_day(now()),1),'-','') = day_id")
+//    sqlContext.sql("select policy_id as policy_id_insued,day_id,count as insured_count from dwdb.dw_policy_curr_insured_detail")
+//      .where("regexp_replace(substr(cast(now() as string),1,10),'-','') = day_id or regexp_replace(date_add(last_day(now()),1),'-','') = day_id")
+    val dwPolicyCurrInsuredDetail =
+    if(getNowTime.substring (8, 10).toInt < 5){
+      sqlContext.sql("select policy_id as policy_id_insured,day_id,count as insured_count from dwdb.dw_policy_curr_insured_detail")
+        .where("regexp_replace(date_format(current_date(),'yyyy-MM-05'),'-','') = day_id or" +
+          " regexp_replace(cast(current_date() as string),'-','') = day_id or regexp_replace(last_day(add_months(now(),-1)),'-','') = day_id")
+//      sqlContext.sql(
+//        """
+//          |select regexp_replace(date_format(current_date(),'yyyy-MM-05'),'-','') as curr_month_5,regexp_replace(last_day(add_months(now(),-1)),'-','') as last_month_end
+//          |from dwdb.dw_policy_streaming_detail
+//        """.stripMargin)
+    } else if(getNowTime.substring (8, 10).toInt == 5){
+      sqlContext.sql("select policy_id as policy_id_insured,day_id,count as insured_count from dwdb.dw_policy_curr_insured_detail")
+        .where("regexp_replace(date_format(current_date(),'yyyy-MM-05'),'-','') = day_id or regexp_replace(last_day(add_months(now(),-1)),'-','') = day_id")
+    } else{
+      sqlContext.sql("select policy_id as policy_id_insured,day_id,count as insured_count from dwdb.dw_policy_curr_insured_detail")
+        .where("regexp_replace(date_format(date_add(last_day(current_date()),1),'yyyy-MM-05'),'-','') = day_id or regexp_replace(cast(current_date() as string),'-','') = day_id")
+//      sqlContext.sql(
+//        """
+//          |select regexp_replace(date_format(date_add(last_day(current_date()),1),'yyyy-MM-05'),'-','') as next_month_5,regexp_replace(cast(current_date() as string),'-','') as curr_day
+//          |from dwdb.dw_policy_streaming_detail
+//        """.stripMargin)
+    }
 
-    val nowDataRes = dwEmployerBaseinfoDetail.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insued and 'now_day_id === 'day_id,"leftouter")
+
+    val referDataRes = dwEmployerBaseinfoDetail.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insured and 'refer_day_id === 'day_id,"leftouter")
       .selectExpr(
         "policy_id",
         "policy_no",
@@ -122,13 +169,15 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with ClickHouseU
         "status",
         "sale_name",
         "biz_operator",
-        "insured_count as now_insured_count",
+        "insured_count as refer_insured_count",
         "now_day_id",
-        "next_month_day_id"
+        "refer_day_id",
+        "match_day_id"
       )
 
-    val nextMonthData = nowDataRes.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insued and 'next_month_day_id === 'day_id,"leftouter")
+    val matchData = referDataRes.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insured and 'match_day_id === 'day_id,"leftouter")
       .selectExpr(
+        "policy_id",
         "'' as proposal_no",
         "policy_code",
         "policy_no",
@@ -144,18 +193,48 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with ClickHouseU
         "policy_end_date",//投保止期
         "cast('' as timestamp) as preserve_start_date",
         "cast('' as timestamp) as preserve_end_date",
-        "now_insured_count",
-        "insured_count as next_month_insured_count",
+        "refer_insured_count",
+        "insured_count as match_insured_count",
         "insured_subject as insured_company",//被保人企业
         "insure_company_name",
         "insurance_company_short_name",
         "sku_charge_type",
         "'' as inc_dec_order_no",
         "sale_name",
-        "biz_operator"
+        "biz_operator",
+        "now_day_id"
       )
 
-    val res = dwPolicyStreamingDetail.unionAll(nextMonthData)
+    val nowDataRes = matchData.join(dwPolicyCurrInsuredDetail,'policy_id === 'policy_id_insured and 'now_day_id === 'day_id,"leftouter")
+      .selectExpr(
+          "proposal_no",
+          "policy_code",
+          "policy_no",
+          "ent_id",
+          "ent_name",
+          "channel_id",
+          "channel_name",
+          "status",
+          "big_policy",
+          "proposal_time_preserve",//批单投保时间
+          "proposal_time_policy",//保单投保时间
+          "policy_start_date",//保单起期
+          "policy_end_date",//投保止期
+          "preserve_start_date",
+          "preserve_end_date",
+          "refer_insured_count",
+          "match_insured_count",
+          "insured_count as now_insured_count",
+          "insured_company",//被保人企业
+          "insure_company_name",
+          "insurance_company_short_name",
+          "sku_charge_type",
+          "inc_dec_order_no",
+          "sale_name",
+          "biz_operator"
+      )
+
+    val res = dwPolicyStreamingDetail.unionAll(nowDataRes)
       .selectExpr(
         "getUUID() as id",
         "clean(proposal_no) as proposal_no",
@@ -173,8 +252,9 @@ object DmPolicyStreamingDetailTest extends SparkUtil with Until with ClickHouseU
         "policy_end_date",//投保止期
         "preserve_start_date",
         "preserve_end_date",
+        "refer_insured_count",
         "now_insured_count as curr_insured",
-        "next_month_insured_count as pre_continue_person_count",
+        "match_insured_count as pre_continue_person_count",
         "clean(insured_company) as insured_company",//被保人企业
         "clean(insure_company_name) as insure_company_name",
         "clean(insurance_company_short_name) as insurance_company_short_name",

@@ -28,7 +28,7 @@ object DwAcountAndTmtDataDetailTest extends SparkUtil with DataBaseUtil with Unt
 
   def getAcountAndTmtData(sqlContext:HiveContext): DataFrame = {
     import sqlContext.implicits._
-
+    sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     val url = "mysql.url"
     val urlDwdb = "mysql.url.dwdb"
@@ -277,6 +277,7 @@ object DwAcountAndTmtDataDetailTest extends SparkUtil with DataBaseUtil with Unt
 
     val res = resData.join(newAndOldData,'channel_name==='channel_name_slave,"leftouter")
       .selectExpr(
+        "getUUID() as id",
         "clean(policy_code) as policy_code","clean(project_name) as project_name",
         "clean(product_code) as product_code","clean(product_name) as product_name",
         "clean(channel_name) as channel_name",
@@ -293,7 +294,8 @@ object DwAcountAndTmtDataDetailTest extends SparkUtil with DataBaseUtil with Unt
         "has_brokerage","brokerage_ratio","cast(brokerage_fee as decimal(14,4)) as brokerage_fee",
         "num_person","business_line", "short_name","province",
         "case when channel_name_slave is null then null when channel_name_slave is not null and business_line = '雇主' then new_and_old else null end as new_old_cus",
-        "source"
+        "source",
+        "cast(date_format(now(),'yyyy-MM-dd HH:mm:ss') as timestamp) as dw_create_time"
       )
 
     res.printSchema()

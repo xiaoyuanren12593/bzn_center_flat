@@ -1,9 +1,9 @@
-package bzn.dw.saleeasy
+package bzn.dm.saleeasy
 
-import bzn.dw.util.SparkUtil
+import bzn.dm.util.SparkUtil
 import bzn.job.common.{DataBaseUtil, Until}
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -12,7 +12,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * Time:15:47
   * describe: 销售e 业绩核算统计
   **/
-object DwSaleseasyPerformanceStatisticalDetailTest extends SparkUtil with DataBaseUtil with Until{
+object DmSaleseasyPerformanceStatisticalDetailTest extends SparkUtil with DataBaseUtil with Until{
   def main (args: Array[String]): Unit = {
     System.setProperty ("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -62,7 +62,7 @@ object DwSaleseasyPerformanceStatisticalDetailTest extends SparkUtil with DataBa
         |    cast(sum(a.premium_total) as decimal(14,4)) as premium_total,
         |    a.business_line as product_category,
         |    (case when a.business_line <> '雇主' then a.sale_name when a.business_line = '雇主' and b.consumer_new_old = 'new' then a.sale_name else b.biz_operator end) as salesman
-        |    from odsdb.ods_accounts_and_tmt_detail a
+        |    from dwdb.dw_accounts_and_tmt_detail a
         |    left join odsdb.ods_ent_guzhu_salesman_detail b
         |    on a.holder_name = b.ent_name and a.business_line = '雇主'
         |    where a.source != 'inter' and to_date(a.performance_accounting_day) >= to_date('2020-01-01')

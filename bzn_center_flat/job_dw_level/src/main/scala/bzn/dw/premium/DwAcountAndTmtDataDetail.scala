@@ -27,9 +27,10 @@ object DwAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
   def getAcountAndTmtData(sqlContext:HiveContext): DataFrame = {
     import sqlContext.implicits._
     sqlContext.udf.register("clean", (str: String) => clean(str))
+    sqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
+
     val url = "mysql.url"
     val urlDwdb = "mysql.url.dwdb"
-    val urlTableau = "mysql.url.tableau"
     val urlDw106 = "mysql.url.106.dwdb"
     val url106 = "mysql.url.106.odsdb"
     val user = "mysql.username"
@@ -274,6 +275,7 @@ object DwAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
 
     val res = resData.join(newAndOldData,'channel_name==='channel_name_slave,"leftouter")
       .selectExpr(
+        "getUUID() as id",
         "clean(policy_code) as policy_code","clean(project_name) as project_name",
         "clean(product_code) as product_code","clean(product_name) as product_name",
         "clean(channel_name) as channel_name",
@@ -290,15 +292,16 @@ object DwAcountAndTmtDataDetail extends SparkUtil with DataBaseUtil with Until{
         "has_brokerage","brokerage_ratio","cast(brokerage_fee as decimal(14,4)) as brokerage_fee",
         "num_person","business_line", "short_name","province",
         "case when channel_name_slave is null then null when channel_name_slave is not null and business_line = '雇主' then new_and_old else null end as new_old_cus",
-        "source"
+        "source",
+        "cast(date_format(now(),'yyyy-MM-dd HH:mm:ss') as timestamp) as dw_create_time"
       )
 
-    sqlContext.sql("truncate table dw.dw_accounts_and_tmt_detail")
-    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dw.dw_accounts_and_tmt_detail")
+    sqlContext.sql("truncate table dwdb.dw_accounts_and_tmt_detail")
+    res.repartition(10).write.mode(SaveMode.Append).saveAsTable("dwdb.dw_accounts_and_tmt_detail")
 
     val tableNameRes = "dw_accounts_and_tmt_detail"
 //    saveASMysqlTable(res.repartition(100): DataFrame, tableName: String, SaveMode.Overwrite,user:String,pass:String,driver:String,urlTableau:String)
-    saveASMysqlTable(res.repartition(100): DataFrame, tableNameRes: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,urlDw106:String)
+    saveASMysqlTable(res.drop("id"): DataFrame, tableNameRes: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,urlDw106:String)
 
     res
   }

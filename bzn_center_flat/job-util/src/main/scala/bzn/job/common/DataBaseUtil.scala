@@ -135,7 +135,7 @@ trait DataBaseUtil {
     * @param tableName 表名字
     * @param rdd rdd结果集
     */
-  def  insertOrUpdateDFtoDBUsePool(tableName: String, rdd: DataFrame,
+  def insertOrUpdateDFtoDBUsePool(tableName: String, rdd: DataFrame,
                                    insertColumns:Array[String],columnDataTypes:Array[String],
                                    colNumbers:Int,sql:String,urlFormat:String,userFormat:String,possWordFormat:String,driverFormat:String): Unit = {
 
