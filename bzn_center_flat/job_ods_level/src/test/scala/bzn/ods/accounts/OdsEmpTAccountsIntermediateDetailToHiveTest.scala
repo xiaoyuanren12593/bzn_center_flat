@@ -25,7 +25,7 @@ object OdsEmpTAccountsIntermediateDetailToHiveTest extends SparkUtil with Until 
     val sc = sparkConf._2
     val sqlContext = sparkConf._3
     val hqlContext: HiveContext = sparkConf._4
-    val res = readMysqlTable(hqlContext)
+    val res = readMysqlTableTohive(hqlContext)
     res.printSchema()
     hqlContext.sql("truncate table odsdb.ods_t_accounts_employer_intermediate")
 
@@ -37,7 +37,7 @@ object OdsEmpTAccountsIntermediateDetailToHiveTest extends SparkUtil with Until 
     sc.stop()
   }
 
-  def readMysqlTable(hiveContext: HiveContext): DataFrame = {
+  def readMysqlTableTohive(hiveContext: HiveContext): DataFrame = {
     hiveContext.udf.register("getNow", () => {
       val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")//设置日期格式
       val date = df.format(new Date())// new Date()为获取当前系统时间
