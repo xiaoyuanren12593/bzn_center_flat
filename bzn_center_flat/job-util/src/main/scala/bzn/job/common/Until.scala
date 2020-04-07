@@ -36,14 +36,14 @@ trait Until {
     }
   }
 
-  def randowPremium(cln:java.math.BigDecimal): java.math.BigDecimal = {
+  def randomPremium(cln:java.math.BigDecimal): java.math.BigDecimal = {
     if (cln != null) {
       java.math.BigDecimal.valueOf(cln.doubleValue()*scala.util.Random.nextDouble())
     }else
       null
   }
 
-  def randowPersonCount(cln:Long): Long = {
+  def randomPersonCount(cln:Long): Long = {
     if (cln != null) {
       cln*scala.util.Random.nextInt(10)
     }else

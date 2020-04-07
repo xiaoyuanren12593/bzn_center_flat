@@ -22,7 +22,8 @@ object DmSaleseasyPerformanceStatisticalDetail extends SparkUtil with DataBaseUt
     val hiveContext = sparkConf._4
 
     val res = getPerformanceStatisticalData (hiveContext)
-    res.printSchema()
+    val resTest = getPerformanceStatisticalDataTest (hiveContext)
+
     val tableName = "dm_saleseasy_performance_statistical_detail"
     val user103 = "mysql.username.103"
     val pass103 = "mysql.password.103"
@@ -32,8 +33,8 @@ object DmSaleseasyPerformanceStatisticalDetail extends SparkUtil with DataBaseUt
     val pass106 = "mysql.password.106"
     val url106 = "mysql.url.106.dmdb"
     if(res.count() > 0){
-      saveASMysqlTable(res: DataFrame, tableName: String, SaveMode.Overwrite,user103:String,pass103:String,driver:String,url103:String)
-      saveASMysqlTable(res: DataFrame, tableName: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,url106:String)
+      saveASMysqlTable(resTest.unionAll(resTest).unionAll(resTest): DataFrame, tableName: String, SaveMode.Overwrite,user103:String,pass103:String,driver:String,url103:String)
+//      saveASMysqlTable(res: DataFrame, tableName: String, SaveMode.Overwrite,user106:String,pass106:String,driver:String,url106:String)
     }
     sc.stop ()
   }
@@ -44,13 +45,13 @@ object DmSaleseasyPerformanceStatisticalDetail extends SparkUtil with DataBaseUt
     */
   def getPerformanceStatisticalData(sqlContext:HiveContext): DataFrame = {
     sqlContext.udf.register("changeColumnData", (str: String) => changeColumnData(str))
-    sqlContext.udf.register("randowPremium", (cln: java.math.BigDecimal) => randowPremium(cln))
-    sqlContext.udf.register("randowPersonCount", (cln: Long) => randowPersonCount(cln))
+    sqlContext.udf.register("randomPremium", (cln: java.math.BigDecimal) => randomPremium(cln))
+    sqlContext.udf.register("randomPersonCount", (cln: Long) => randomPersonCount(cln))
     val res = sqlContext.sql(
       """
-        |select  changeColumnData(case when x.channel_name is null then '未知' else x.channel_name end) as channel_name,
-        |x.performance_accounting_day,cast(randowPremium(x.premium_total) as decimal(14,4)) as premium_total,x.product_category,if(x.salesman is null,'公司',x.salesman) as salesman,
-        |'boss' as top_level,y.department as business_line,y.team_name as sales_team,if(length(y.group_name) = 0,x.salesman,y.group_name) as sales_group
+        |select case when x.channel_name is null then '未知' else x.channel_name end as channel_name,
+        |x.performance_accounting_day,cast(x.premium_total as decimal(14,4)) as premium_total,x.product_category,if(x.salesman is null,'公司',x.salesman) as salesman,
+        |'boss' as top_level,y.department as business_line,y.team_name_ps as sales_team,if(length(y.group_name) = 0,x.salesman,y.group_name) as sales_group
         |,
         |date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time,
         |date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time
@@ -71,7 +72,43 @@ object DmSaleseasyPerformanceStatisticalDetail extends SparkUtil with DataBaseUt
         |) x
         |left join
         |(
-        |    select sale_name,team_name,department,group_name from odsdb.ods_ent_sales_team_dimension
+        |    select sale_name,team_name_ps,department,group_name from odsdb.ods_ent_sales_team_dimension
+        |) y
+        |on if(x.salesman is null,'公司',x.salesman) = y.sale_name
+      """.stripMargin)
+    res
+  }
+
+  def getPerformanceStatisticalDataTest(sqlContext:HiveContext): DataFrame = {
+    sqlContext.udf.register("changeColumnData", (str: String) => changeColumnData(str))
+    sqlContext.udf.register("randomPremium", (cln: java.math.BigDecimal) => randomPremium(cln))
+    sqlContext.udf.register("randomPersonCount", (cln: Long) => randomPersonCount(cln))
+    val res = sqlContext.sql(
+      """
+        |select changeColumnData(case when x.channel_name is null then '未知' else x.channel_name end) as channel_name,
+        |x.performance_accounting_day,cast(randomPremium(x.premium_total) as decimal(14,4)) as premium_total,x.product_category,if(x.salesman is null,'公司',x.salesman) as salesman,
+        |'boss' as top_level,y.department as business_line,y.team_name_ps as sales_team,if(length(y.group_name) = 0,x.salesman,y.group_name) as sales_group
+        |,
+        |date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time,
+        |date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time
+        |from
+        |(
+        |    select if(a.channel_name is null , a.holder_name,a.channel_name) as channel_name,
+        |    to_date(a.performance_accounting_day) as performance_accounting_day,
+        |    cast(sum(a.premium_total) as decimal(14,4)) as premium_total,
+        |    a.business_line as product_category,
+        |    (case when a.business_line <> '雇主' then a.sale_name when a.business_line = '雇主' and b.consumer_new_old = 'new' then a.sale_name else b.biz_operator end) as salesman
+        |    from dwdb.dw_accounts_and_tmt_detail a
+        |    left join odsdb.ods_ent_guzhu_salesman_detail b
+        |    on a.holder_name = b.ent_name and a.business_line = '雇主'
+        |    where a.source != 'inter' and to_date(a.performance_accounting_day) >= to_date('2020-01-01')
+        |    group by if(a.channel_name is null , a.holder_name,a.channel_name),to_date(a.performance_accounting_day),
+        |    a.business_line,
+        |    (case when a.business_line <> '雇主' then a.sale_name when a.business_line = '雇主' and b.consumer_new_old = 'new' then a.sale_name else b.biz_operator end)
+        |) x
+        |left join
+        |(
+        |    select sale_name,team_name_ps,department,group_name from odsdb.ods_ent_sales_team_dimension
         |) y
         |on if(x.salesman is null,'公司',x.salesman) = y.sale_name
       """.stripMargin)

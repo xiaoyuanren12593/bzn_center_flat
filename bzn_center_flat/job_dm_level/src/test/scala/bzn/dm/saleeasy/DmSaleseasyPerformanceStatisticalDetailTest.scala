@@ -45,13 +45,13 @@ object DmSaleseasyPerformanceStatisticalDetailTest extends SparkUtil with DataBa
   def getPerformanceStatisticalData(sqlContext:HiveContext): DataFrame = {
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("changeColumnData", (str: String) => changeColumnData(str))
-    sqlContext.udf.register("randowPremium", (cln: java.math.BigDecimal) => randowPremium(cln))
-    sqlContext.udf.register("randowPersonCount", (cln: Long) => randowPersonCount(cln))
+    sqlContext.udf.register("randowPremium", (cln: java.math.BigDecimal) => randomPremium(cln))
+    sqlContext.udf.register("randowPersonCount", (cln: Long) => randomPersonCount(cln))
     val res = sqlContext.sql(
       """
-        |select  changeColumnData(case when x.channel_name is null then '未知' else x.channel_name end) as channel_name,
-        |x.performance_accounting_day,cast(randowPremium(x.premium_total) as decimal(14,4)) as premium_total,x.product_category,if(x.salesman is null,'公司',x.salesman) as salesman,
-        |'boss' as top_level,y.department as business_line,y.team_name as sales_team,if(length(y.group_name) = 0,x.salesman,y.group_name) as sales_group
+        |select  case when x.channel_name is null then '未知' else x.channel_name end as channel_name,
+        |x.performance_accounting_day,cast(x.premium_total as decimal(14,4)) as premium_total,x.product_category,if(x.salesman is null,'公司',x.salesman) as salesman,
+        |'boss' as top_level,y.department as business_line,y.team_name_ps as sales_team,if(length(y.group_name) = 0,x.salesman,y.group_name) as sales_group
         |,
         |date_format(now(),'yyyy-MM-dd HH:mm:ss') as create_time,
         |date_format(now(),'yyyy-MM-dd HH:mm:ss') as update_time
@@ -72,7 +72,7 @@ object DmSaleseasyPerformanceStatisticalDetailTest extends SparkUtil with DataBa
         |) x
         |left join
         |(
-        |    select sale_name,team_name,department,group_name from odsdb.ods_ent_sales_team_dimension
+        |    select sale_name,team_name_ps,department,group_name from odsdb.ods_ent_sales_team_dimension
         |) y
         |on if(x.salesman is null,'公司',x.salesman) = y.sale_name
       """.stripMargin)
