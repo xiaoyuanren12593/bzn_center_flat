@@ -1,8 +1,11 @@
 package bzn.ods.accounts
 
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Date
 
 import bzn.job.common.{MysqlUntil, Until}
+import bzn.ods.accounts.OdsUnEmpTAccountsIntermediateDetailToHive.clean
 import bzn.ods.util.SparkUtil
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
@@ -12,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 * @Author:liuxiang
 * @Date：2019/11/28
 * @Describe:
-*/ object OdsUnEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with  MysqlUntil{
+*/ object OdsUnEmpTAccountsIntermediateDetailTest extends SparkUtil with Until with MysqlUntil {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME", "hdfs")
     val appName = this.getClass.getName
@@ -22,24 +25,6 @@ import org.apache.spark.{SparkConf, SparkContext}
     val sqlContext = sparkConf._3
     val hiveContext = sparkConf._4
 
-  /*  val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
-    val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)*/
-    //val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
-
-  /*
-    val finRes = frame1.unionAll(frame2).unionAll(frame3)
-
-    finRes.printSchema()*/
-    // res.printSchema()
-   // val frame2 = getSportsScenMemberPreserveDetail(hiveContext, sqlContext, res)
-    // val frame3 = getHealthMemberPreserveDetail(hiveContext, sqlContext, res)
-
-    // frame2.printSchema()
-    //  val finRes = frame1.unionAll(frame2).unionAll(frame3)
-    // finRes.printSchema()
-    //    res.write.mode(SaveMode.Overwrite).saveAsTable("dwdb.dw_policy_premium_detail")
-    //frame2.printSchema()
-
 
     val res = getAllBusinessPolicyDetail(hiveContext)
     val frame1 = getSportsScenMemberHealthPolicyDetail(hiveContext, sqlContext, res)
@@ -48,9 +33,11 @@ import org.apache.spark.{SparkConf, SparkContext}
     val finRes = frame1.unionAll(frame2).unionAll(frame3)
     finRes.printSchema()
 
- /*   //106
-    saveASMysqlTable(finRes, "ods_t_accounts_un_employer_detail", SaveMode.Append, "mysql.username.106",
-      "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")*/
+    val resTohive = readMysqlTableTohive(hiveContext)
+    resTohive.printSchema()
+    /*   //106
+       saveASMysqlTable(finRes, "ods_t_accounts_un_employer_detail", SaveMode.Append, "mysql.username.106",
+         "mysql.password.106", "mysql.driver", "mysql.url.106.odsdb")*/
 
 
 
@@ -365,8 +352,8 @@ import org.apache.spark.{SparkConf, SparkContext}
    */
   def getSportsScenMemberPreserveDetail(hqlContext: HiveContext, sqlContext: SQLContext, policyAndPlanAndTeamRes: DataFrame): DataFrame = {
     import hqlContext.implicits._
-    hqlContext.udf.register("maxTime_three",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp)=>maxTime_three(time_one,times_two,times_three))
-    hqlContext.udf.register("maxTime_four",(time_one:Timestamp,times_two:Timestamp,times_three:Timestamp,times_four:Timestamp)=>maxTime_four(time_one,times_two,times_three,times_four))
+    hqlContext.udf.register("maxTime_three", (time_one: Timestamp, times_two: Timestamp, times_three: Timestamp) => maxTime_three(time_one, times_two, times_three))
+    hqlContext.udf.register("maxTime_four", (time_one: Timestamp, times_two: Timestamp, times_three: Timestamp, times_four: Timestamp) => maxTime_four(time_one, times_two, times_three, times_four))
     hqlContext.udf.register("getUUID", () => (java.util.UUID.randomUUID() + "").replace("-", ""))
     hqlContext.udf.register("clean", (str: String) => clean(str))
 
@@ -507,7 +494,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 
   }
-
 
 
   /**
@@ -652,6 +638,93 @@ import org.apache.spark.{SparkConf, SparkContext}
         "consulting_service_rates", "consulting_service_fee", "service_fee_check_time", "service_fee_check_status", "has_brokerage", "brokerage_ratio", "brokerage_fee",
         "brokerage_pay_status", "remake", "create_time", "update_time", "operator")
     resfin
+  }
+
+
+  /**
+   * 读取全量表,写入hive
+   * @param hiveContext
+   * @return
+   */
+
+
+  def readMysqlTableTohive(hiveContext: HiveContext): DataFrame = {
+    hiveContext.udf.register("getNow", () => {
+      val df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") //设置日期格式
+      val date = df.format(new Date()) // new Date()为获取当前系统时间
+      date + ""
+    })
+
+    hiveContext.udf.register("clean", (str: String) => clean(str))
+    val tablename = "ods_t_accounts_un_employer_detail"
+    val username = "mysql.username.106"
+    val password = "mysql.password.106"
+    val driver = "mysql.driver"
+    val url = "mysql.url.106.odsdb"
+
+    val res = readMysqlTable(hiveContext, tablename, username, password, driver, url)
+      .selectExpr(
+        "id",
+        "clean(batch_no) as batch_no",
+        "clean(policy_no) as policy_no",
+        "clean(preserve_id) as preserve_id",
+        "clean(preserve_status) as preserve_status",
+        "clean(add_batch_code) as add_batch_code",
+        "clean(del_batch_code) as del_batch_code",
+        "clean(data_source) as data_source",
+        "clean(project_name) as project_name",
+        "clean(product_code) as product_code",
+        "clean(product_name) as product_name",
+        "clean(product_detail) as product_detail",
+        "payment_years",
+        "clean(channel_name) as channel_name",
+        "clean(distribution_type) as distribution_type",
+        "clean(distribution_ent_name) as distribution_ent_name",
+        "clean(business_owner)  as business_owner",
+        "clean(business_region) as business_region",
+        "clean(business_source) as business_source",
+        "clean(business_type) as business_type",
+        "clean(policy_source_code) as policy_source_code",
+        "clean(policy_source_name) as policy_source_name",
+        "order_date",
+        "performance_accounting_day",
+        "clean(holder_name) as holder_name",
+        "clean(insurer_name) as insurer_name",
+        "clean(underwriting_company) as underwriting_company",
+        "policy_effect_date",
+        "policy_effective_time",
+        "policy_expire_time",
+        "clean(policy_status) as policy_status",
+        "plan_coverage",
+        "premium_total",
+        "clean(premium_pay_status) as premium_pay_status",
+        "clean(has_behalf) as has_behalf",
+        "clean(behalf_status) as behalf_status",
+        "clean(behalf_number) as behalf_number",
+        "clean(premium_invoice_type) as premium_invoice_type",
+        "clean(economy_company) as economy_company",
+        "economy_rates",
+        "economy_fee",
+        "technical_service_rates",
+        "technical_service_fee",
+        "consulting_service_rates",
+        "consulting_service_fee",
+        "service_fee_check_time",
+        "clean(service_fee_check_status) as service_fee_check_status",
+        "clean(has_brokerage) as has_brokerage",
+        "brokerage_ratio",
+        "brokerage_fee",
+        "clean(brokerage_pay_status) as brokerage_pay_status",
+        "manage_rate",
+        "manage_fee",
+        "clean(remake) as remake",
+        "create_time",
+        "update_time",
+        "operator",
+        "getNow() as dw_create_time")
+
+    res
+
   }
 
 

@@ -37,6 +37,7 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
    * @return
    */
 
+
   def DwEmployerBaseInfoDetail(sqlContext: HiveContext) = {
     import sqlContext.implicits._
     sqlContext.udf.register("getUUID",()=>(java.util.UUID.randomUUID() + "").replace("-", ""))
@@ -52,8 +53,8 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
     val odsPolicyDetailTemp: DataFrame = sqlContext.sql(
       """
       select policy_id,policy_code,policy_no,big_policy,holder_name,insured_subject,product_code, +
-      policy_status,policy_start_date,policy_end_date,order_date as proposal_time,insure_company_name,channel_id as channelId, belongs_regional, +
-      concat(substring(belongs_regional,1,4),'00') as belongs_regional_salve,first_premium,sum_premium,num_of_preson_first_policy,+
+      policy_status,policy_start_date,policy_end_date,order_date as proposal_time,insure_company_name,channel_id as channelId,
+      belongs_regional,first_premium,sum_premium,num_of_preson_first_policy,+
       channel_name as channelName,sales_name as salesName,belongs_industry_name from odsdb.ods_policy_detail
       """)
       .where("policy_status in (1,0,-1)")
@@ -64,15 +65,18 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
 
     //保单明细关联 保险公司表
     val odsPolicyDetailInsureTempSalve = odsPolicyDetailTemp.join(insuranceCompany, odsPolicyDetailTemp("insure_company_name") === insuranceCompany("insurance_company"), "leftouter")
-      .selectExpr("policy_id", "policy_code","policy_no","big_policy", "policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject","first_premium",
-        "belongs_regional","belongs_regional_salve","sum_premium","num_of_preson_first_policy","product_code","channelId", "channelName", "salesName","belongs_industry_name")
+      .selectExpr("policy_id", "policy_code","policy_no","big_policy", "policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name",
+        "short_name", "holder_name", "insured_subject","first_premium", "belongs_regional",
+        "sum_premium","num_of_preson_first_policy","product_code","channelId", "channelName", "salesName","belongs_industry_name")
 
-    val frame = odsPolicyDetailInsureTempSalve.selectExpr("holder_name", "policy_start_date", "belongs_regional_salve").map(x => {
-      val holderName = x.getAs[String]("holder_name")
-      val belongsRegional = x.getAs[String]("belongs_regional_salve")
-      val policyStartDate = x.getAs[Timestamp]("policy_start_date")
-      ((holderName), (belongsRegional, policyStartDate))
-    }).reduceByKey((x, y) => {
+
+    val frame = odsPolicyDetailInsureTempSalve.selectExpr("holder_name", "policy_start_date", "belongs_regional")
+      .map(x => {
+        val holderName = x.getAs[String]("holder_name")
+        val belongsRegional = x.getAs[String]("belongs_regional")
+        val policyStartDate = x.getAs[Timestamp]("policy_start_date")
+        ((holderName), (belongsRegional, policyStartDate))
+      }).reduceByKey((x, y) => {
       val res = if (x._1 == null) {
         y
       } else if (y._1 == null) {
@@ -87,11 +91,12 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
       res
     }).map(x => {
       (x._1, x._2._1, x._2._2)
-    }).toDF("holderName", "belongs_regional_salve_temp", "policy_start_date_temp")
+    }).toDF("holderName", "belongs_regional_temp", "policy_start_date_temp")
 
     val odsPolicyDetailInsureTemp = odsPolicyDetailInsureTempSalve.join(frame, 'holder_name === 'holderName, "leftouter")
       .selectExpr("policy_id", "policy_code","policy_no","big_policy","policy_status","policy_start_date", "policy_end_date","proposal_time","insure_company_name", "short_name", "holder_name", "insured_subject", "first_premium",
-        "belongs_regional", "belongs_regional_salve_temp as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName","belongs_industry_name")
+        "belongs_regional_temp as belongs_regional","concat(substring(belongs_regional_temp,1,4),'00') as belongs_regional_salve", "sum_premium", "num_of_preson_first_policy", "product_code", "channelId", "channelName", "salesName","belongs_industry_name")
+
 
     /**
      * 读取地域信息码表
@@ -236,5 +241,4 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
 
     res
   }
-
 }
