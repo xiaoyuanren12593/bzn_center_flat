@@ -38,6 +38,7 @@ import org.apache.spark.sql.hive.HiveContext
 
   def EmployerBaseInfoPersonDetail(sqlContext: HiveContext) = {
     import sqlContext.implicits._
+    sqlContext.udf.register("MD5", (str: String) => MD5(str))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID",()=>(java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
@@ -98,7 +99,7 @@ import org.apache.spark.sql.hive.HiveContext
       .where("one_level_pdt_cate = '蓝领外包'")
 
     //读取被保人表
-    val odsPolicyInsured = sqlContext.sql("select policy_id as policy_id_salve,insured_name,insured_cert_no,insured_mobile,start_date,end_date,work_type from odsdb.ods_policy_insured_detail")
+    val odsPolicyInsured = sqlContext.sql("select policy_id as policy_id_salve,insured_name,insured_cert_no,insured_mobile,start_date,end_date,work_type,job_company from odsdb.ods_policy_insured_detail")
 
     /**
      * 将上述结果与被保人表关联
@@ -109,7 +110,7 @@ import org.apache.spark.sql.hive.HiveContext
         "case when start_date <= policy_start_date then policy_start_date else start_date end as start_date",
         "case when end_date >= policy_end_date then policy_end_date else end_date end as end_date",
         "proposal_time","work_type",
-        "product_code","product_name","policy_status",
+        "product_code","product_name","policy_status","job_company",
         "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name",
         "channel_id", "channelId","channel_name","channelName", "salesman","salesName",
         "insure_company_name","short_name","team_name","biz_operator","belongs_industry_name","department","group_name","consumer_new_old")
@@ -162,7 +163,7 @@ import org.apache.spark.sql.hive.HiveContext
     val insuredAndClaimRes = resProductAndInsuredDetail.join(tenmpTbles, 'policy_id === 'id and 'insured_cert_no === 'risk_cert_no and 'start_date === 'start_date_temp,"leftouter")
       .selectExpr("policy_id","policy_no", "policy_code", "policy_start_date","policy_end_date","proposal_time","holder_name","insured_subject","product_code","product_name","insured_name","insured_cert_no",
         "insured_mobile","start_date","end_date","work_type","policy_status", "one_level_pdt_cate","two_level_pdt_cate","ent_id", "ent_name", "channel_id", "channelId","channel_name","channelName",
-        "insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay","belongs_industry_name","department","group_name","consumer_new_old")
+        "insure_company_name","short_name","salesman","salesName", "team_name", "biz_operator", "res_pay","belongs_industry_name","department","group_name","consumer_new_old","job_company")
 
     //读取方案信息表
     val odsPolicyProductPlanDetailTemp: DataFrame = sqlContext.sql("select policy_code as policy_code_temp,product_code as product_code_temp,sku_coverage,sku_append," +
@@ -203,6 +204,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(insured_name) as insured_name",
         "clean(insured_cert_no) as insured_cert_no",
         "clean(work_type) as work_type",
+        "clean(job_company) as job_company",
         "clean(insured_mobile) as insured_mobile",
         "start_date",
         "end_date",
@@ -213,7 +215,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(profession_type) as profession_type",
         "clean(ent_id) as ent_id ",
         "clean(ent_name) as ent_name",
-        "clean(case when channel_id is null or channel_id='' then channelId else channel_id end) as channel_id ",
+        "clean(case when channel_id is null or channel_id='' then MD5(channelName) else channel_id end) as channel_id ",
         "clean(case when channel_name is null or channel_name ='' then channelName else channel_name end) as channel_name",
         "clean(consumer_new_old) as consumer_new_old",
         "clean(insure_company_name) as insure_company_name ",
@@ -237,5 +239,4 @@ import org.apache.spark.sql.hive.HiveContext
     res
 
   }
-
 }

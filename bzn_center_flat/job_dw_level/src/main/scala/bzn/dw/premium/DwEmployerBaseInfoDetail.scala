@@ -40,6 +40,7 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
 
   def DwEmployerBaseInfoDetail(sqlContext: HiveContext) = {
     import sqlContext.implicits._
+    sqlContext.udf.register("MD5", (str: String) => MD5(str))
     sqlContext.udf.register("getUUID",()=>(java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getNow", () => {
@@ -218,7 +219,7 @@ object DwEmployerBaseInfoDetail extends SparkUtil with Until {
         "num_of_preson_first_policy",
         "clean(ent_id) as ent_id ",
         "clean(ent_name) as ent_name",
-        "clean(case when channel_id is null or channel_id = '' then channelId else channel_id end)as channel_id ",
+        "clean(case when channel_id is null or channel_id = '' then MD5(channelName) else channel_id end)as channel_id ",
         "clean(case when channel_name is null or channel_name = '' then channelName else channel_name end)as channel_name",
         "clean(consumer_new_old) as consumer_new_old",
         "clean(case when salesman is null or salesman = '' then salesName else salesman end) as sale_name",

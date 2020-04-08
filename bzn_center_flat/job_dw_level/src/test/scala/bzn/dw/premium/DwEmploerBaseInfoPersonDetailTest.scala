@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import bzn.dw.premium.DwEmploerBaseInfoPersonDetail.{getBeginTime, getFormatTime}
-import bzn.dw.premium.DwEmployerBaseInfoDetailTest.{DwEmployerBaseInfoDetail, clean, sparkConfInfo}
+import bzn.dw.premium.DwEmployerBaseInfoDetailTest.{DwEmployerBaseInfoDetail, MD5, clean, sparkConfInfo}
 import bzn.dw.premium.DwTypeOfWorkClaimDetailTest.{getBeginTime, getFormatTime}
 import bzn.dw.util.SparkUtil
 import bzn.job.common.Until
@@ -40,6 +40,7 @@ import org.apache.spark.sql.hive.HiveContext
 
   def EmployerBaseInfoPersonDetail(sqlContext: HiveContext) = {
     import sqlContext.implicits._
+    sqlContext.udf.register("MD5", (str: String) => MD5(str))
     sqlContext.udf.register("clean", (str: String) => clean(str))
     sqlContext.udf.register("getUUID",()=>(java.util.UUID.randomUUID() + "").replace("-", ""))
     sqlContext.udf.register("getNow", () => {
@@ -216,7 +217,7 @@ import org.apache.spark.sql.hive.HiveContext
         "clean(profession_type) as profession_type",
         "clean(ent_id) as ent_id ",
         "clean(ent_name) as ent_name",
-        "clean(case when channel_id is null or channel_id='' then channelId else channel_id end) as channel_id ",
+        "clean(case when channel_id is null or channel_id='' then MD5(channelName) else channel_id end) as channel_id ",
         "clean(case when channel_name is null or channel_name ='' then channelName else channel_name end) as channel_name",
         "clean(consumer_new_old) as consumer_new_old",
         "clean(insure_company_name) as insure_company_name ",
