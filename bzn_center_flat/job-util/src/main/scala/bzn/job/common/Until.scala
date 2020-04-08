@@ -123,10 +123,10 @@ trait Until {
     if(input!=null)
     {
       val byteArray: Array[Byte] = input.trim.getBytes
-    val md5Bytes: Array[Byte] = md5.digest(byteArray)
-    var hexValue: String = ""
-    var i: Integer = 0
-    for (i <- 0 to md5Bytes.length - 1) {
+      val md5Bytes: Array[Byte] = md5.digest(byteArray)
+      var hexValue: String = ""
+      var i: Integer = 0
+      for (i <- 0 to md5Bytes.length - 1) {
       val str: Int = (md5Bytes(i).toInt) & 0xff
       if (str < 16) {
         hexValue = hexValue + "0"

@@ -37,12 +37,12 @@ import scala.io.Source
 //    res.repartition(1).write.mode(SaveMode.Overwrite).parquet("/dw_data/dw_data/dw_t_accounts_employer")
 
     val url = "clickhouse.url"
-//    val urlTest = "clickhouse.url.odsdb.test"
+    val urlTest = "clickhouse.url.odsdb.test"
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
-    writeClickHouseTable(res:DataFrame,tableNameCK: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
-//    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
+//    writeClickHouseTable(res:DataFrame,tableNameCK: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+    writeClickHouseTable(res:DataFrame,tableNameCK: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
 
     sc.stop()
 
