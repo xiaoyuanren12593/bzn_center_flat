@@ -32,8 +32,8 @@ object DmSaleEasyPolicyCurrInsuredAndPremiumDetail extends SparkUtil with Until 
     val user = "clickhouse.username"
     val possWord = "clickhouse.password"
     val driver = "clickhouse.driver"
-    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
-//    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
+//    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,url:String,user:String,possWord:String,driver:String)
+    writeClickHouseTable(res:DataFrame,tableName: String,SaveMode.Overwrite,urlTest:String,user:String,possWord:String,driver:String)
 
     sc.stop()
   }

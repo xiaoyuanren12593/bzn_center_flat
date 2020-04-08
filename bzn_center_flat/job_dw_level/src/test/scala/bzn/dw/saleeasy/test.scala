@@ -21,8 +21,8 @@ object test extends Until{
 
     println (changeColumnData ("宿迁联业人力资源有限公司"))
     println (changeColumnData ("宿迁前"))
-    println (randowPremium (java.math.BigDecimal.valueOf(666666.12)))
-    println (randowPersonCount (13212))
+    println (randomPremium (java.math.BigDecimal.valueOf(666666.12)))
+    println (randomPersonCount (13212))
     java.sql.Timestamp.valueOf(getFormatTime(getBeginTime("2019/4/7".replaceAll("/", "-").concat(" 00:00:00"))))
     val timePara = java.sql.Timestamp.valueOf("2017-11-03 00:00:00")
     val timePara1 = "20171103"
