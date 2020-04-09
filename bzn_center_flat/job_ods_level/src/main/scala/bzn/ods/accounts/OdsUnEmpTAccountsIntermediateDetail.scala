@@ -77,6 +77,7 @@ import org.apache.spark.{SparkConf, SparkContext}
      * 读取体育销售表
      */
     val odsSportsCustomersDimension = sqlContext.sql("select name,sales_name as sales_name_slave,type from odsdb.ods_sports_customers_dimension")
+
     /**
      * 读取销售团队表
      */
